@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Bluetooth,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -33,11 +34,15 @@ import {
   transposeKeyInfo,
 } from './lib/musicTheory';
 import { pianoSynth, transcodeFileToMonoWav } from './lib/pianoSynth';
+import { apiFetch } from './lib/api';
+import { isAndroidNative, subscribeNativeMidi } from './lib/nativeBridge';
+import { buildMidiFromAnalysis, downloadBytes } from './lib/midiExport';
 import { WaveformTimeline } from './components/WaveformTimeline';
 import { StudioPiano } from './components/StudioPiano';
 import { ChordDictionaryGrid } from './components/ChordDictionaryGrid';
 import { KeyHarmonyPanel } from './components/KeyHarmonyPanel';
 import { LiveMicModal } from './components/LiveMicModal';
+import { MidiPanel } from './components/MidiPanel';
 
 export const App: React.FC = () => {
   const [demos, setDemos] = useState<DemoTrack[]>([]);
@@ -75,6 +80,10 @@ export const App: React.FC = () => {
   const [liveMicMidi, setLiveMicMidi] = useState<number[]>([]);
   const [exportingMidi, setExportingMidi] = useState<boolean>(false);
 
+  // Native MIDI / Bluetooth (USB + BLE) input panel (Android APK)
+  const [midiOpen, setMidiOpen] = useState<boolean>(false);
+  const nativeMidiNotesRef = useRef<Set<number>>(new Set());
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const customBlobUrlRef = useRef<string | null>(null);
   const lastAutoPlayedChordRef = useRef<number | null>(null);
@@ -100,6 +109,27 @@ export const App: React.FC = () => {
     }
   }, [playbackRate, audioUrl]);
 
+  // Native MIDI (USB / Bluetooth BLE) events -> studio synth + piano highlight
+  useEffect(() => {
+    if (!isAndroidNative()) return;
+    const unsub = subscribeNativeMidi((ev) => {
+      if (ev.type === 'noteOn') {
+        pianoSynth.noteOn(ev.note, Math.max(0.15, (ev.vel || 100) / 127), 3.2);
+        nativeMidiNotesRef.current.add(ev.note);
+        setLiveMicMidi([...nativeMidiNotesRef.current].sort((a, b) => a - b));
+      } else if (ev.type === 'noteOff') {
+        pianoSynth.noteOff(ev.note);
+        nativeMidiNotesRef.current.delete(ev.note);
+        setLiveMicMidi([...nativeMidiNotesRef.current].sort((a, b) => a - b));
+      } else if (ev.type === 'deviceDisconnected') {
+        pianoSynth.stopAll();
+        nativeMidiNotesRef.current.clear();
+        setLiveMicMidi([]);
+      }
+    });
+    return unsub;
+  }, []);
+
   // Load Demo Tracks Manifest & Initial Demo on Mount
   const loadDemoTrack = useCallback(async (demoId: string, trackList?: DemoTrack[]) => {
     setErrorBanner(null);
@@ -112,7 +142,7 @@ export const App: React.FC = () => {
     lastAutoPlayedChordRef.current = null;
 
     try {
-      const res = await fetch(`/api/demos/${encodeURIComponent(demoId)}`);
+      const res = await apiFetch(`/api/demos/${encodeURIComponent(demoId)}`);
       if (!res.ok) throw new Error(`Failed to load demo track (${res.status})`);
       const data: SongAnalysis = await res.json();
       setAnalysis(data);
@@ -132,7 +162,7 @@ export const App: React.FC = () => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/demos');
+        const res = await apiFetch('/api/demos');
         const json = await res.json();
         if (cancelled) return;
         const list: DemoTrack[] = json.demos || [];
@@ -231,7 +261,7 @@ export const App: React.FC = () => {
       const wavBlob = await transcodeFileToMonoWav(fileOrBlob);
       setAnalyzeStatus('Extracting piano keys, chords, basslines & key signature...');
 
-      const res = await fetch('/api/analyze', {
+      const res = await apiFetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'audio/wav',
@@ -364,12 +394,23 @@ export const App: React.FC = () => {
     setTranspose(diff);
   };
 
-  // Export Multi-Track MIDI (.mid)
+  // Export Multi-Track MIDI (.mid) — server-side on web, client-side in the Android APK
   const handleExportMidi = async () => {
     if (!analysis) return;
     setExportingMidi(true);
     try {
-      const res = await fetch('/api/export-midi', {
+      if (isAndroidNative()) {
+        const bytes = buildMidiFromAnalysis(
+          analysis,
+          voicingMode === 'detected' ? 'smooth' : voicingMode,
+          transpose
+        );
+        const cleanName = analysis.filename.replace(/\.[^.]+$/, '');
+        const fileName = `${cleanName}_${shiftedKey?.name.replace(/\s+/g, '') || 'KeySense'}.mid`;
+        downloadBytes(fileName, bytes, 'audio/midi');
+        return;
+      }
+      const res = await apiFetch('/api/export-midi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -546,6 +587,19 @@ export const App: React.FC = () => {
             >
               <Mic className="w-4 h-4" />
               Live Mic
+            </button>
+
+            <button
+              onClick={() => setMidiOpen(true)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border font-medium text-xs sm:text-sm transition cursor-pointer ${
+                isAndroidNative()
+                  ? 'bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border-indigo-500/35'
+                  : 'bg-slate-800/90 hover:bg-slate-700 text-slate-400 border-slate-700'
+              }`}
+              title="USB MIDI & Bluetooth (BLE) MIDI controllers — Android APK"
+            >
+              <Bluetooth className="w-4 h-4" />
+              MIDI / BT
             </button>
 
             <button
@@ -978,6 +1032,13 @@ export const App: React.FC = () => {
         onClose={() => setMicOpen(false)}
         onLiveNotesUpdate={setLiveMicMidi}
         onRecordedClipReady={(blob, filename) => handleAnalyzeAudioBlob(blob, filename)}
+      />
+
+      {/* Native MIDI / Bluetooth (USB + BLE) input panel — Android APK */}
+      <MidiPanel
+        isOpen={midiOpen}
+        onClose={() => setMidiOpen(false)}
+        onLiveNotes={setLiveMicMidi}
       />
     </div>
   );
