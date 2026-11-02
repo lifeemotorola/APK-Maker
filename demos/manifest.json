@@ -1,0 +1,92 @@
+[
+  {
+    "id": "gospel-sunrise",
+    "title": "Grace & Sunrise (Gospel Piano)",
+    "artist": "KeySense Studio Session",
+    "genre": "Gospel / Worship",
+    "audioUrl": "/demos/gospel-sunrise.wav",
+    "duration": 23.457,
+    "bpm": 83.4,
+    "keyName": "Ab Major",
+    "chordPreview": [
+      "Ab",
+      "Eb/G",
+      "Fm7",
+      "Db",
+      "Ab",
+      "Eb"
+    ]
+  },
+  {
+    "id": "afrobeats-golden",
+    "title": "Monrovia Sunset (Afrobeats Groove)",
+    "artist": "KeySense Studio Session",
+    "genre": "Afrobeats / Afro-Piano",
+    "audioUrl": "/demos/afrobeats-golden.wav",
+    "duration": 19.423,
+    "bpm": 103.4,
+    "keyName": "Ab Major",
+    "chordPreview": [
+      "Fm7",
+      "Db",
+      "Ab",
+      "Eb",
+      "Fm7",
+      "Db"
+    ]
+  },
+  {
+    "id": "midnight-ballad",
+    "title": "City Lights Ballad (Grand Piano)",
+    "artist": "KeySense Studio Session",
+    "genre": "Pop / Piano Ballad",
+    "audioUrl": "/demos/midnight-ballad.wav",
+    "duration": 25.863,
+    "bpm": 152.0,
+    "keyName": "C Major",
+    "chordPreview": [
+      "C",
+      "G/B",
+      "Am",
+      "F",
+      "Dm7",
+      "G"
+    ]
+  },
+  {
+    "id": "velvet-neosoul",
+    "title": "Velvet Keys (Neo-Soul 7ths)",
+    "artist": "KeySense Studio Session",
+    "genre": "R&B / Neo-Soul",
+    "audioUrl": "/demos/velvet-neosoul.wav",
+    "duration": 21.933,
+    "bpm": 89.1,
+    "keyName": "Eb Major",
+    "chordPreview": [
+      "Fm",
+      "Bb7",
+      "Eb",
+      "Cm7",
+      "Fm",
+      "Bb7"
+    ]
+  },
+  {
+    "id": "horizon-anthem",
+    "title": "Northern Horizon (Pop-Rock Progression)",
+    "artist": "KeySense Studio Session",
+    "genre": "Pop / Indie Anthem",
+    "audioUrl": "/demos/horizon-anthem.wav",
+    "duration": 17.152,
+    "bpm": 117.5,
+    "keyName": "G Major",
+    "chordPreview": [
+      "G",
+      "D",
+      "Em",
+      "C",
+      "G",
+      "D"
+    ]
+  }
+]
