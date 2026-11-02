@@ -13,7 +13,9 @@ VENV="${APK_VENV:-$HOME/apk-venv}"
 mkdir -p "$TOOLS"
 
 # --- Python venv with a JRE (jdk4py) to run d8/ecj/apksigner -------------
-if [ ! -x "$VENV/bin/python" ]; then
+# Only needed when no system `java` exists (e.g. bare sandboxes). On GitHub
+# Actions runners a JDK is already on PATH, so this is skipped.
+if ! command -v java >/dev/null 2>&1 && [ ! -x "$VENV/bin/python" ]; then
     python3 -m venv "$VENV"
     "$VENV/bin/pip" install --quiet jdk4py
 fi

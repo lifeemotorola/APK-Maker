@@ -23,16 +23,19 @@ APP="$HERE/app"
 BUILD="$APP/build"
 VENV="${APK_VENV:-$HOME/apk-venv}"
 
-# --- JRE to run the Java tools (d8 / ecj / apksigner) ----------------------
-if [ ! -x "$VENV/bin/python" ]; then
-    python3 -m venv "$VENV"
-    "$VENV/bin/pip" install --quiet jdk4py
-fi
-JAVA="$VENV/lib/python3.11/site-packages/jdk4py/java-runtime/bin/java"
-if [ ! -x "$JAVA" ]; then
-    # fall back to whatever jdk4py reports
+# --- Java runtime for the Java tools (d8 / ecj / apksigner) ----------------
+# Prefer a system JDK (GitHub Actions runners ship one); otherwise fall back
+# to the JRE bundled in the jdk4py Python package.
+if command -v java >/dev/null 2>&1; then
+    JAVA="$(command -v java)"
+else
+    if [ ! -x "$VENV/bin/python" ]; then
+        python3 -m venv "$VENV"
+        "$VENV/bin/pip" install --quiet jdk4py
+    fi
     JAVA="$("$VENV/bin/python" -c 'import jdk4py, os; print(os.path.join(jdk4py.JAVA_HOME, "bin", "java"))')"
 fi
+echo "Using Java: $JAVA ($("$JAVA" -version 2>&1 | head -1))"
 
 "$HERE/fetch-tools.sh"
 

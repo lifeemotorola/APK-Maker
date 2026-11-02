@@ -79,7 +79,17 @@ android/
   `src/lib/nativeBridge.ts` dispatches them to subscribers (`MidiPanel`,
   synth + piano highlight in `App.tsx`).
 
-## Building the APK (offline toolchain)
+## Building the APK
+
+### GitHub Actions (CI)
+
+`.github/workflows/build-apk.yml` builds the APK on every push/PR
+(`ubuntu-latest`, Node 22 + JDK 21 + Python 3.11) and uploads it as the
+**`KeySense-Studio-APK`** workflow artifact. Trigger it manually from the
+**Actions** tab via `workflow_dispatch`. No Android SDK needed — the
+toolchain is fetched from npm/PyPI by `fetch-tools.sh`.
+
+### Locally (offline toolchain)
 
 ```bash
 ./android/build.sh
