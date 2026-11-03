@@ -21,3 +21,8 @@ NewsDesk-Studio.apk
 android-biblequiz/app/build/
 android-biblequiz/app/src/main/assets/www/
 Bible-Quiz.apk
+
+# Community Market APK build outputs
+android-marketplace/app/build/
+android-marketplace/app/src/main/assets/www/
+Marketplace.apk

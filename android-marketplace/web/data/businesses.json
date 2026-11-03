@@ -1,0 +1,1182 @@
+[
+ {
+  "id": "b013",
+  "name": "MusuCosmetics",
+  "cat": "market",
+  "area": "New Kru Town",
+  "phone": "+231 6 555 0113",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "near the bus stop",
+  "desc": "markets & shops serving New Kru Town and nearby areas. Known for kitchenware, fabric..",
+  "services": [
+   "kitchenware",
+   "fabric",
+   "shoes",
+   "groceries"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b066",
+  "name": "HawaElectrical Supply",
+  "cat": "home",
+  "area": "Sinkor",
+  "phone": "+231 6 555 0166",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "near the water pump",
+  "desc": "home & hardware serving Sinkor and nearby areas. Known for tiles, electrical..",
+  "services": [
+   "tiles",
+   "electrical"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b029",
+  "name": "MaHealth Clinic",
+  "cat": "clinic",
+  "area": "Kailondo",
+  "phone": "+231 6 555 0129",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "near the bridge",
+  "desc": "clinics & health serving Kailondo and nearby areas. Known for eye care, general consultation..",
+  "services": [
+   "eye care",
+   "general consultation",
+   "vaccination"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b014",
+  "name": "JenebaFashion Boutique",
+  "cat": "market",
+  "area": "Banjor",
+  "phone": "+231 6 555 0114",
+  "hours": "Mon–Fri 8:30–17:30",
+  "landmark": "opposite the guest house",
+  "desc": "markets & shops serving Banjor and nearby areas. Known for cosmetics, fabric..",
+  "services": [
+   "cosmetics",
+   "fabric",
+   "phone accessories",
+   "provisions"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b072",
+  "name": "ShermanHair Braiding",
+  "cat": "salon",
+  "area": "Congo Town",
+  "phone": "+231 76 555 0172",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "beside the filling station",
+  "desc": "salons & barbers serving Congo Town and nearby areas. Known for pedicure, manicure..",
+  "services": [
+   "pedicure",
+   "manicure",
+   "braiding",
+   "shave"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b022",
+  "name": "TokpahSupermarket",
+  "cat": "market",
+  "area": "Broad Street",
+  "phone": "+231 77 555 0122",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "beside the filling station",
+  "desc": "markets & shops serving Broad Street and nearby areas. Known for provisions, shoes..",
+  "services": [
+   "provisions",
+   "shoes",
+   "phone accessories",
+   "fabric"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b053",
+  "name": "KadiatuLearning Center",
+  "cat": "education",
+  "area": "Brewerville",
+  "phone": "+231 77 555 0153",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "opposite the guest house",
+  "desc": "schools & training serving Brewerville and nearby areas. Known for primary, nursery..",
+  "services": [
+   "primary",
+   "nursery",
+   "tutoring"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b040",
+  "name": "TokpahElectronics Repair",
+  "cat": "repair",
+  "area": "Kailondo",
+  "phone": "+231 88 555 0140",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "near the bridge",
+  "desc": "repair & tech serving Kailondo and nearby areas. Known for laptop repair, charging..",
+  "services": [
+   "laptop repair",
+   "charging",
+   "shoe repair"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b056",
+  "name": "SamuelUniform Specialist",
+  "cat": "tailor",
+  "area": "West Point",
+  "phone": "+231 76 555 0156",
+  "hours": "Mon–Fri 8:00–17:00",
+  "landmark": "near the water pump",
+  "desc": "tailors & fashion serving West Point and nearby areas. Known for bespoke suits, dresses..",
+  "services": [
+   "bespoke suits",
+   "dresses"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b008",
+  "name": "MohammedLunch Spot",
+  "cat": "food",
+  "area": "Bali Island",
+  "phone": "+231 77 555 0108",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "by the big tree",
+  "desc": "food & drink serving Bali Island and nearby areas. Known for breakfast, drinks..",
+  "services": [
+   "breakfast",
+   "drinks"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b048",
+  "name": "SamattaLoan Service",
+  "cat": "money",
+  "area": "Congo Town",
+  "phone": "+231 6 555 0148",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "near the school gate",
+  "desc": "money services serving Congo Town and nearby areas. Known for MoneyGram, Western Union..",
+  "services": [
+   "MoneyGram",
+   "Western Union",
+   "loans"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b045",
+  "name": "HenrySend & Receive",
+  "cat": "money",
+  "area": "Pipeline",
+  "phone": "+231 6 555 0145",
+  "hours": "Mon–Sat 9:00–18:00",
+  "landmark": "near the water pump",
+  "desc": "money services serving Pipeline and nearby areas. Known for loans, currency exchange..",
+  "services": [
+   "loans",
+   "currency exchange"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b003",
+  "name": "WeedorCookshop",
+  "cat": "food",
+  "area": "Bushrod Island",
+  "phone": "+231 77 555 0103",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "near the bus stop",
+  "desc": "food & drink serving Bushrod Island and nearby areas. Known for soup, rice..",
+  "services": [
+   "soup",
+   "rice",
+   "jollof",
+   "fufu"
+  ],
+  "featured": true
+ },
+ {
+  "id": "b005",
+  "name": "Kadiatu's Kitchen",
+  "cat": "food",
+  "area": "Brewerville",
+  "phone": "+231 76 555 0105",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "near the health center",
+  "desc": "food & drink serving Brewerville and nearby areas. Known for breakfast, plantain..",
+  "services": [
+   "breakfast",
+   "plantain"
+  ],
+  "featured": true
+ },
+ {
+  "id": "b015",
+  "name": "HawaFashion Boutique",
+  "cat": "market",
+  "area": "Johnsonville",
+  "phone": "+231 88 555 0115",
+  "hours": "Mon–Fri 8:00–17:00",
+  "landmark": "near the water pump",
+  "desc": "markets & shops serving Johnsonville and nearby areas. Known for kitchenware, clothes..",
+  "services": [
+   "kitchenware",
+   "clothes"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b016",
+  "name": "GbessayKitchenware",
+  "cat": "market",
+  "area": "Pipeline",
+  "phone": "+231 6 555 0116",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "by the big tree",
+  "desc": "markets & shops serving Pipeline and nearby areas. Known for groceries, provisions..",
+  "services": [
+   "groceries",
+   "provisions"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b017",
+  "name": "ZainabFabric House",
+  "cat": "market",
+  "area": "Bali Island",
+  "phone": "+231 6 555 0117",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "by the roundabout",
+  "desc": "markets & shops serving Bali Island and nearby areas. Known for clothes, provisions..",
+  "services": [
+   "clothes",
+   "provisions",
+   "kitchenware",
+   "cosmetics"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b019",
+  "name": "AbuCosmetics",
+  "cat": "market",
+  "area": "Mamba Point",
+  "phone": "+231 88 555 0119",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "opposite the guest house",
+  "desc": "markets & shops serving Mamba Point and nearby areas. Known for clothes, phone accessories..",
+  "services": [
+   "clothes",
+   "phone accessories"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b069",
+  "name": "MaryBeauty Salon",
+  "cat": "salon",
+  "area": "Banjor",
+  "phone": "+231 88 555 0169",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "near the bridge",
+  "desc": "salons & barbers serving Banjor and nearby areas. Known for braiding, shave..",
+  "services": [
+   "braiding",
+   "shave"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b034",
+  "name": "FatmataMedical Center",
+  "cat": "clinic",
+  "area": "Duala",
+  "phone": "+231 88 555 0134",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "by the big tree",
+  "desc": "clinics & health serving Duala and nearby areas. Known for maternity, dental..",
+  "services": [
+   "maternity",
+   "dental"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b025",
+  "name": "MohammedDrug Store",
+  "cat": "pharmacy",
+  "area": "Kailondo",
+  "phone": "+231 88 555 0125",
+  "hours": "Mon–Fri 8:30–17:30",
+  "landmark": "opposite the market",
+  "desc": "pharmacies serving Kailondo and nearby areas. Known for delivery, consultation..",
+  "services": [
+   "delivery",
+   "consultation",
+   "prescriptions"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b074",
+  "name": "HenryHair Braiding",
+  "cat": "salon",
+  "area": "Kailondo",
+  "phone": "+231 88 555 0174",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "by the big tree",
+  "desc": "salons & barbers serving Kailondo and nearby areas. Known for manicure, haircut..",
+  "services": [
+   "manicure",
+   "haircut",
+   "pedicure",
+   "shave"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b002",
+  "name": "MohammedBBQ Corner",
+  "cat": "food",
+  "area": "New Kru Town",
+  "phone": "+231 88 555 0102",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "beside the church",
+  "desc": "food & drink serving New Kru Town and nearby areas. Known for pepper soup, fufu..",
+  "services": [
+   "pepper soup",
+   "fufu",
+   "breakfast"
+  ],
+  "featured": true
+ },
+ {
+  "id": "b018",
+  "name": "AmosFabric House",
+  "cat": "market",
+  "area": "Red Light",
+  "phone": "+231 6 555 0118",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "beside the filling station",
+  "desc": "markets & shops serving Red Light and nearby areas. Known for provisions, groceries..",
+  "services": [
+   "provisions",
+   "groceries",
+   "shoes"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b004",
+  "name": "AmosCold Drink Depot",
+  "cat": "food",
+  "area": "Logan Town",
+  "phone": "+231 77 555 0104",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "near the bridge",
+  "desc": "food & drink serving Logan Town and nearby areas. Known for soup, dinner..",
+  "services": [
+   "soup",
+   "dinner"
+  ],
+  "featured": true
+ },
+ {
+  "id": "b042",
+  "name": "GborlorPhone Clinic",
+  "cat": "repair",
+  "area": "Caldwell",
+  "phone": "+231 88 555 0142",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "by the big tree",
+  "desc": "repair & tech serving Caldwell and nearby areas. Known for TV repair, charging..",
+  "services": [
+   "TV repair",
+   "charging"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b071",
+  "name": "MusuBeauty Salon",
+  "cat": "salon",
+  "area": "Gardnersville",
+  "phone": "+231 6 555 0171",
+  "hours": "Mon–Fri 8:30–17:30",
+  "landmark": "opposite the market",
+  "desc": "salons & barbers serving Gardnersville and nearby areas. Known for pedicure, shave..",
+  "services": [
+   "pedicure",
+   "shave",
+   "braiding",
+   "manicure"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b061",
+  "name": "MaryStitching",
+  "cat": "tailor",
+  "area": "Waterside",
+  "phone": "+231 76 555 0161",
+  "hours": "Mon–Fri 8:30–17:30",
+  "landmark": "beside the filling station",
+  "desc": "tailors & fashion serving Waterside and nearby areas. Known for dresses, school uniforms..",
+  "services": [
+   "dresses",
+   "school uniforms",
+   "wedding outfits",
+   "alterations"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b059",
+  "name": "SamuelTailoring",
+  "cat": "tailor",
+  "area": "Brewerville",
+  "phone": "+231 76 555 0159",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "next to the mosque",
+  "desc": "tailors & fashion serving Brewerville and nearby areas. Known for wedding outfits, school uniforms..",
+  "services": [
+   "wedding outfits",
+   "school uniforms",
+   "Lappa",
+   "dresses"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b035",
+  "name": "ComfortEye Clinic",
+  "cat": "clinic",
+  "area": "ELWA",
+  "phone": "+231 88 555 0135",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "beside the filling station",
+  "desc": "clinics & health serving ELWA and nearby areas. Known for maternity, lab tests..",
+  "services": [
+   "maternity",
+   "lab tests"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b051",
+  "name": "FatmataLearning Center",
+  "cat": "education",
+  "area": "Pipeline",
+  "phone": "+231 6 555 0151",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "opposite the market",
+  "desc": "schools & training serving Pipeline and nearby areas. Known for WAEC prep, tutoring..",
+  "services": [
+   "WAEC prep",
+   "tutoring",
+   "nursery"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b052",
+  "name": "VesseleeSkills Training",
+  "cat": "education",
+  "area": "ELWA",
+  "phone": "+231 76 555 0152",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "beside the filling station",
+  "desc": "schools & training serving ELWA and nearby areas. Known for nursery, computer training..",
+  "services": [
+   "nursery",
+   "computer training",
+   "vocational training"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b057",
+  "name": "ZainabStitching",
+  "cat": "tailor",
+  "area": "Mamba Point",
+  "phone": "+231 6 555 0157",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "near the bridge",
+  "desc": "tailors & fashion serving Mamba Point and nearby areas. Known for wedding outfits, dresses..",
+  "services": [
+   "wedding outfits",
+   "dresses"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b028",
+  "name": "MaryCommunity Pharmacy",
+  "cat": "pharmacy",
+  "area": "Virginia",
+  "phone": "+231 6 555 0128",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "near the health center",
+  "desc": "pharmacies serving Virginia and nearby areas. Known for delivery, first aid..",
+  "services": [
+   "delivery",
+   "first aid"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b050",
+  "name": "ZainabTutorial",
+  "cat": "education",
+  "area": "Red Light",
+  "phone": "+231 77 555 0150",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "next to the mosque",
+  "desc": "schools & training serving Red Light and nearby areas. Known for nursery, WAEC prep..",
+  "services": [
+   "nursery",
+   "WAEC prep",
+   "computer training"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b058",
+  "name": "NyenpanFashion House",
+  "cat": "tailor",
+  "area": "Bushrod Island",
+  "phone": "+231 76 555 0158",
+  "hours": "Mon–Sat 9:00–18:00",
+  "landmark": "beside the filling station",
+  "desc": "tailors & fashion serving Bushrod Island and nearby areas. Known for Lappa, dresses..",
+  "services": [
+   "Lappa",
+   "dresses"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b009",
+  "name": "GbessaySnack Bar",
+  "cat": "food",
+  "area": "Bali Island",
+  "phone": "+231 6 555 0109",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "near the bridge",
+  "desc": "food & drink serving Bali Island and nearby areas. Known for dinner, soup..",
+  "services": [
+   "dinner",
+   "soup"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b065",
+  "name": "PrincessPaint & Plumbing",
+  "cat": "home",
+  "area": "Bali Island",
+  "phone": "+231 88 555 0165",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "near the school gate",
+  "desc": "home & hardware serving Bali Island and nearby areas. Known for tiles, plumbing..",
+  "services": [
+   "tiles",
+   "plumbing"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b026",
+  "name": "GbessayPharmacy",
+  "cat": "pharmacy",
+  "area": "Broad Street",
+  "phone": "+231 6 555 0126",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "near the junction",
+  "desc": "pharmacies serving Broad Street and nearby areas. Known for consultation, prescriptions..",
+  "services": [
+   "consultation",
+   "prescriptions",
+   "first aid"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b001",
+  "name": "JosephFast Food",
+  "cat": "food",
+  "area": "Waterside",
+  "phone": "+231 6 555 0101",
+  "hours": "Mon–Sat 9:00–18:00",
+  "landmark": "near the school gate",
+  "desc": "food & drink serving Waterside and nearby areas. Known for plantain, fufu..",
+  "services": [
+   "plantain",
+   "fufu"
+  ],
+  "featured": true
+ },
+ {
+  "id": "b055",
+  "name": "MohammedSkills Training",
+  "cat": "education",
+  "area": "Bali Island",
+  "phone": "+231 76 555 0155",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "opposite the market",
+  "desc": "schools & training serving Bali Island and nearby areas. Known for computer training, WAEC prep..",
+  "services": [
+   "computer training",
+   "WAEC prep",
+   "primary",
+   "tutoring"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b031",
+  "name": "KruHealth Clinic",
+  "cat": "clinic",
+  "area": "Mamba Point",
+  "phone": "+231 76 555 0131",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "beside the church",
+  "desc": "clinics & health serving Mamba Point and nearby areas. Known for eye care, general consultation..",
+  "services": [
+   "eye care",
+   "general consultation",
+   "lab tests",
+   "vaccination"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b043",
+  "name": "MusuPhone Clinic",
+  "cat": "repair",
+  "area": "Paynesville",
+  "phone": "+231 6 555 0143",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "beside the filling station",
+  "desc": "repair & tech serving Paynesville and nearby areas. Known for laptop repair, screen replacement..",
+  "services": [
+   "laptop repair",
+   "screen replacement",
+   "shoe repair",
+   "TV repair"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b044",
+  "name": "GbessayLoan Service",
+  "cat": "money",
+  "area": "West Point",
+  "phone": "+231 77 555 0144",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "near the school gate",
+  "desc": "money services serving West Point and nearby areas. Known for Western Union, MoneyGram..",
+  "services": [
+   "Western Union",
+   "MoneyGram",
+   "mobile money",
+   "currency exchange"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b070",
+  "name": "KruHair Braiding",
+  "cat": "salon",
+  "area": "Kailondo",
+  "phone": "+231 88 555 0170",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "by the big tree",
+  "desc": "salons & barbers serving Kailondo and nearby areas. Known for weaving, pedicure..",
+  "services": [
+   "weaving",
+   "pedicure",
+   "manicure",
+   "shave"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b041",
+  "name": "GborlorComputer Care",
+  "cat": "repair",
+  "area": "Bushrod Island",
+  "phone": "+231 77 555 0141",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "near the bridge",
+  "desc": "repair & tech serving Bushrod Island and nearby areas. Known for charging, phone repair..",
+  "services": [
+   "charging",
+   "phone repair"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b020",
+  "name": "MohammedShoe Palace",
+  "cat": "market",
+  "area": "Virginia",
+  "phone": "+231 88 555 0120",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "near the health center",
+  "desc": "markets & shops serving Virginia and nearby areas. Known for kitchenware, groceries..",
+  "services": [
+   "kitchenware",
+   "groceries"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b006",
+  "name": "JohnBBQ Corner",
+  "cat": "food",
+  "area": "Waterside",
+  "phone": "+231 76 555 0106",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "near the school gate",
+  "desc": "food & drink serving Waterside and nearby areas. Known for rice, fufu..",
+  "services": [
+   "rice",
+   "fufu",
+   "soup",
+   "breakfast"
+  ],
+  "featured": true
+ },
+ {
+  "id": "b036",
+  "name": "HenryShoe Repair",
+  "cat": "repair",
+  "area": "Pipeline",
+  "phone": "+231 6 555 0136",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "by the roundabout",
+  "desc": "repair & tech serving Pipeline and nearby areas. Known for shoe repair, laptop repair..",
+  "services": [
+   "shoe repair",
+   "laptop repair",
+   "charging",
+   "screen replacement"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b049",
+  "name": "EmmanuelQuick Cash",
+  "cat": "money",
+  "area": "Gardnersville",
+  "phone": "+231 88 555 0149",
+  "hours": "Mon–Fri 8:00–17:00",
+  "landmark": "by the roundabout",
+  "desc": "money services serving Gardnersville and nearby areas. Known for MoneyGram, mobile money..",
+  "services": [
+   "MoneyGram",
+   "mobile money",
+   "loans",
+   "Western Union"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b012",
+  "name": "HawaPepper Soup Spot",
+  "cat": "food",
+  "area": "Banjor",
+  "phone": "+231 76 555 0112",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "behind the clinic",
+  "desc": "food & drink serving Banjor and nearby areas. Known for breakfast, lunch..",
+  "services": [
+   "breakfast",
+   "lunch"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b038",
+  "name": "AbuElectronics Repair",
+  "cat": "repair",
+  "area": "Johnsonville",
+  "phone": "+231 88 555 0138",
+  "hours": "Mon–Fri 8:30–17:30",
+  "landmark": "behind the clinic",
+  "desc": "repair & tech serving Johnsonville and nearby areas. Known for screen replacement, laptop repair..",
+  "services": [
+   "screen replacement",
+   "laptop repair",
+   "charging",
+   "generator repair"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b073",
+  "name": "ZainabHair Braiding",
+  "cat": "salon",
+  "area": "Gardnersville",
+  "phone": "+231 88 555 0173",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "opposite the market",
+  "desc": "salons & barbers serving Gardnersville and nearby areas. Known for pedicure, shave..",
+  "services": [
+   "pedicure",
+   "shave",
+   "haircut"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b024",
+  "name": "BeatriceLife Pharmacy",
+  "cat": "pharmacy",
+  "area": "Sinkor",
+  "phone": "+231 76 555 0124",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "beside the church",
+  "desc": "pharmacies serving Sinkor and nearby areas. Known for first aid, delivery..",
+  "services": [
+   "first aid",
+   "delivery",
+   "prescriptions",
+   "consultation"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b054",
+  "name": "MaNursery School",
+  "cat": "education",
+  "area": "Mamba Point",
+  "phone": "+231 76 555 0154",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "next to the mosque",
+  "desc": "schools & training serving Mamba Point and nearby areas. Known for computer training, WAEC prep..",
+  "services": [
+   "computer training",
+   "WAEC prep",
+   "vocational training",
+   "tutoring"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b047",
+  "name": "BoakaiSend & Receive",
+  "cat": "money",
+  "area": "Congo Town",
+  "phone": "+231 6 555 0147",
+  "hours": "Mon–Sat 9:00–18:00",
+  "landmark": "beside the filling station",
+  "desc": "money services serving Congo Town and nearby areas. Known for mobile money, Western Union..",
+  "services": [
+   "mobile money",
+   "Western Union",
+   "currency exchange",
+   "MoneyGram"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b063",
+  "name": "GbessayRoofing Supply",
+  "cat": "home",
+  "area": "Pipeline",
+  "phone": "+231 6 555 0163",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "behind the clinic",
+  "desc": "home & hardware serving Pipeline and nearby areas. Known for furniture, tiles..",
+  "services": [
+   "furniture",
+   "tiles",
+   "plumbing",
+   "paint"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b032",
+  "name": "GborlorClinic",
+  "cat": "clinic",
+  "area": "Virginia",
+  "phone": "+231 77 555 0132",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "by the big tree",
+  "desc": "clinics & health serving Virginia and nearby areas. Known for eye care, vaccination..",
+  "services": [
+   "eye care",
+   "vaccination"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b062",
+  "name": "AmosStitching",
+  "cat": "tailor",
+  "area": "Brewerville",
+  "phone": "+231 76 555 0162",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "near the bus stop",
+  "desc": "tailors & fashion serving Brewerville and nearby areas. Known for Lappa, wedding outfits..",
+  "services": [
+   "Lappa",
+   "wedding outfits"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b021",
+  "name": "LuciaPhone Accessories",
+  "cat": "market",
+  "area": "Gardnersville",
+  "phone": "+231 77 555 0121",
+  "hours": "Mon–Fri 8:30–17:30",
+  "landmark": "opposite the guest house",
+  "desc": "markets & shops serving Gardnersville and nearby areas. Known for kitchenware, cosmetics..",
+  "services": [
+   "kitchenware",
+   "cosmetics",
+   "phone accessories",
+   "groceries"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b060",
+  "name": "BoakaiStitching",
+  "cat": "tailor",
+  "area": "Pipeline",
+  "phone": "+231 76 555 0160",
+  "hours": "Mon–Sat 9:00–18:00",
+  "landmark": "near the bridge",
+  "desc": "tailors & fashion serving Pipeline and nearby areas. Known for school uniforms, wedding outfits..",
+  "services": [
+   "school uniforms",
+   "wedding outfits",
+   "bespoke suits"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b030",
+  "name": "NyenpanHealth Clinic",
+  "cat": "clinic",
+  "area": "Virginia",
+  "phone": "+231 6 555 0130",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "next to the depot",
+  "desc": "clinics & health serving Virginia and nearby areas. Known for maternity, lab tests..",
+  "services": [
+   "maternity",
+   "lab tests"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b033",
+  "name": "MorrisClinic",
+  "cat": "clinic",
+  "area": "Brewerville",
+  "phone": "+231 76 555 0133",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "by the roundabout",
+  "desc": "clinics & health serving Brewerville and nearby areas. Known for maternity, vaccination..",
+  "services": [
+   "maternity",
+   "vaccination",
+   "eye care",
+   "general consultation"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b010",
+  "name": "Fatu's Kitchen",
+  "cat": "food",
+  "area": "Clara Town",
+  "phone": "+231 88 555 0110",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "near the school gate",
+  "desc": "food & drink serving Clara Town and nearby areas. Known for breakfast, pepper soup..",
+  "services": [
+   "breakfast",
+   "pepper soup",
+   "drinks"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b023",
+  "name": "SamattaPharmacy",
+  "cat": "pharmacy",
+  "area": "Kailondo",
+  "phone": "+231 88 555 0123",
+  "hours": "Mon–Sat 9:00–18:00",
+  "landmark": "near the school gate",
+  "desc": "pharmacies serving Kailondo and nearby areas. Known for delivery, consultation..",
+  "services": [
+   "delivery",
+   "consultation"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b037",
+  "name": "WeedorGenerator Services",
+  "cat": "repair",
+  "area": "Bushrod Island",
+  "phone": "+231 77 555 0137",
+  "hours": "Daily 7:00–20:00",
+  "landmark": "near the junction",
+  "desc": "repair & tech serving Bushrod Island and nearby areas. Known for shoe repair, laptop repair..",
+  "services": [
+   "shoe repair",
+   "laptop repair"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b011",
+  "name": "DavidLunch Spot",
+  "cat": "food",
+  "area": "Gardnersville",
+  "phone": "+231 88 555 0111",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "near the bus stop",
+  "desc": "food & drink serving Gardnersville and nearby areas. Known for rice, breakfast..",
+  "services": [
+   "rice",
+   "breakfast"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b046",
+  "name": "JosephLoan Service",
+  "cat": "money",
+  "area": "New Kru Town",
+  "phone": "+231 88 555 0146",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "by the roundabout",
+  "desc": "money services serving New Kru Town and nearby areas. Known for MoneyGram, Western Union..",
+  "services": [
+   "MoneyGram",
+   "Western Union",
+   "loans",
+   "currency exchange"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b007",
+  "name": "VesseleeSnack Bar",
+  "cat": "food",
+  "area": "Virginia",
+  "phone": "+231 6 555 0107",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "behind the clinic",
+  "desc": "food & drink serving Virginia and nearby areas. Known for fufu, breakfast..",
+  "services": [
+   "fufu",
+   "breakfast"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b039",
+  "name": "ComfortComputer Care",
+  "cat": "repair",
+  "area": "Broad Street",
+  "phone": "+231 76 555 0139",
+  "hours": "Daily 6:30–21:00",
+  "landmark": "by the roundabout",
+  "desc": "repair & tech serving Broad Street and nearby areas. Known for laptop repair, shoe repair..",
+  "services": [
+   "laptop repair",
+   "shoe repair"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b027",
+  "name": "BeatriceCommunity Pharmacy",
+  "cat": "pharmacy",
+  "area": "Pipeline",
+  "phone": "+231 77 555 0127",
+  "hours": "Mon–Sun 8:00–17:00",
+  "landmark": "by the big tree",
+  "desc": "pharmacies serving Pipeline and nearby areas. Known for consultation, delivery..",
+  "services": [
+   "consultation",
+   "delivery",
+   "first aid",
+   "prescriptions"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b068",
+  "name": "GborlorHardware",
+  "cat": "home",
+  "area": "Banjor",
+  "phone": "+231 77 555 0168",
+  "hours": "Mon–Sat 9:00–18:00",
+  "landmark": "opposite the market",
+  "desc": "home & hardware serving Banjor and nearby areas. Known for roofing, plumbing..",
+  "services": [
+   "roofing",
+   "plumbing",
+   "cement",
+   "furniture"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b064",
+  "name": "GborlorPaint & Plumbing",
+  "cat": "home",
+  "area": "Waterside",
+  "phone": "+231 6 555 0164",
+  "hours": "Mon–Sat 8:00–18:00",
+  "landmark": "near the bus stop",
+  "desc": "home & hardware serving Waterside and nearby areas. Known for cement, electrical..",
+  "services": [
+   "cement",
+   "electrical"
+  ],
+  "featured": false
+ },
+ {
+  "id": "b067",
+  "name": "KollieElectrical Supply",
+  "cat": "home",
+  "area": "Gardnersville",
+  "phone": "+231 6 555 0167",
+  "hours": "Mon–Sat 7:30–19:00",
+  "landmark": "opposite the guest house",
+  "desc": "home & hardware serving Gardnersville and nearby areas. Known for plumbing, furniture..",
+  "services": [
+   "plumbing",
+   "furniture"
+  ],
+  "featured": false
+ }
+]

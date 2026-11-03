@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Community Market launcher icon: deep market-green ground with a gold
+     frame and a little storefront with a striped awning. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#14532D"
+        android:pathData="M22,6 L86,6 A16,16 0 0 1 102,22 L102,86 A16,16 0 0 1 86,102 L22,102 A16,16 0 0 1 6,86 L6,22 A16,16 0 0 1 22,6 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D9A441"
+        android:strokeWidth="2.5"
+        android:pathData="M17,13 L91,13 A4,4 0 0 1 95,17 L95,91 A4,4 0 0 1 91,95 L17,95 A4,4 0 0 1 13,91 L13,17 A4,4 0 0 1 17,13 Z" />
+    <!-- storefront body -->
+    <path
+        android:fillColor="#F5F0E1"
+        android:pathData="M28,52 L80,52 L80,86 A4,4 0 0 1 76,90 L32,90 A4,4 0 0 1 28,86 Z" />
+    <!-- striped awning -->
+    <path
+        android:fillColor="#D9A441"
+        android:pathData="M24,34 L84,34 L80,48 L28,48 Z" />
+    <path
+        android:strokeColor="#14532D"
+        android:strokeWidth="3"
+        android:pathData="M36,34 L38,48 M48,34 L48,48 M60,34 L58,48 M72,34 L70,48" />
+    <!-- awning scallops -->
+    <path
+        android:fillColor="#D9A441"
+        android:pathData="M28,48 a5,5 0 0 0 10,0 a5,5 0 0 0 10,0 a5,5 0 0 0 10,0 a5,5 0 0 0 10,0 a5,5 0 0 0 10,0 l0,0 -40,0 z" />
+    <!-- door -->
+    <path
+        android:fillColor="#14532D"
+        android:pathData="M47,66 L61,66 L61,90 L47,90 Z" />
+    <!-- window -->
+    <path
+        android:fillColor="#14532D"
+        android:pathData="M33,58 L43,58 L43,66 L33,66 Z M65,58 L75,58 L75,66 L65,66 Z" />
+    <!-- location pin finial -->
+    <path
+        android:fillColor="#D9A441"
+        android:pathData="M54,14 C58,14 61,17 61,21 C61,26 54,31 54,31 C54,31 47,26 47,21 C47,17 50,14 54,14 Z" />
+    <path
+        android:fillColor="#14532D"
+        android:pathData="M54,18.5 m-2.6,0 a2.6,2.6 0 1 0 5.2,0 a2.6,2.6 0 1 0 -5.2,0" />
+</vector>
