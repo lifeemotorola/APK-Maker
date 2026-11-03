@@ -1,7 +1,12 @@
 # Bible Quiz — Android APK
 
 A fully offline **Bible quizzing app** packaged as a signed Android APK:
-`com.biblequiz.app`, minSdk 23 / targetSdk 34.
+`com.biblequiz.app`, minSdk 23 / targetSdk 34, **by Emmanuel Suah**.
+
+Classical interface by default: parchment manuscript theme (ivory paper, ink
+text, gold rules, Playfair Display serif, double-bordered cards) with a
+midnight theme toggle; launcher icon is an oxblood-and-gold open book. All
+icons are inline SVG (`web/icons.js`) — no emoji anywhere (build-enforced).
 
 ## The question bank — 2,500+ questions
 
@@ -79,6 +84,7 @@ android-biblequiz/
   build.sh                     build pipeline (see header comment)
   web/
     index.html                 app shell
+    icons.js                   inline SVG icon library (I('bolt') etc.)
     styles.css                 theme (dark/light, orbs, glass cards)
     app.js                     SPA + pure quiz engine on window.BQ
     curated.json               hand-written questions

@@ -253,11 +253,13 @@ public class LocalServer {
 
         if (path.equals("/favicon.ico")) {
             byte[] svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'>"
-                    + "<rect width='40' height='40' rx='9' fill='#312E81'/>"
-                    + "<path d='M11 15c3-1.7 6-1.7 9 0v13c-3-1.7-6-1.7-9 0z' fill='#F8FAFF'/>"
-                    + "<path d='M29 15c-3-1.7-6-1.7-9 0v13c3-1.7 6-1.7 9 0z' fill='#E0E7FF'/>"
-                    + "<rect x='19' y='15' width='2' height='13' fill='#E8C468'/>"
-                    + "<path d='M18 8h4v2h-1.4v4h-1.2v-4H18z' fill='#E8C468'/></svg>")
+                    + "<rect width='40' height='40' rx='9' fill='#4A1626'/>"
+                    + "<rect x='4' y='4' width='32' height='32' rx='6' fill='none' stroke='#D4AF37' stroke-width='1.4'/>"
+                    + "<path d='M20 8v5M17.5 10.5h5' stroke='#E8C468' stroke-width='1.8' stroke-linecap='round'/>"
+                    + "<path d='M10 19c3.2-1.8 6.8-1.8 10 0v11c-3.2-1.8-6.8-1.8-10 0z' fill='#E8C468'/>"
+                    + "<path d='M30 19c-3.2-1.8-6.8-1.8-10 0v11c3.2-1.8 6.8-1.8 10 0z' fill='#D4AF37'/>"
+                    + "<path d='M20 19v11' stroke='#4A1626' stroke-width='1.6'/>"
+                    + "</svg>")
                     .getBytes("UTF-8");
             writeBytes(out, 200, "OK", "image/svg+xml", svg, "max-age=86400", null, head);
             return;

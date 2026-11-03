@@ -1,29 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Classical launcher icon: oxblood ground, gold double frame, open book
+     with a small cross finial. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- indigo rounded square -->
+    <!-- oxblood rounded square -->
     <path
-        android:fillColor="#312E81"
+        android:fillColor="#4A1626"
         android:pathData="M22,6 L86,6 A16,16 0 0 1 102,22 L102,86 A16,16 0 0 1 86,102 L22,102 A16,16 0 0 1 6,86 L6,22 A16,16 0 0 1 22,6 Z" />
-    <!-- open book, left page -->
+    <!-- inner gold frame -->
     <path
-        android:fillColor="#F8FAFF"
-        android:pathData="M28,40 C36,35.5 46,35.5 54,39.5 L54,76 C46,72 36,72 28,76.5 Z" />
-    <!-- open book, right page -->
-    <path
-        android:fillColor="#E0E7FF"
-        android:pathData="M80,40 C72,35.5 62,35.5 54,39.5 L54,76 C62,72 72,72 80,76.5 Z" />
-    <!-- gold spine -->
+        android:fillColor="#00000000"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="2.5"
+        android:pathData="M17,13 L91,13 A4,4 0 0 1 95,17 L95,91 A4,4 0 0 1 91,95 L17,95 A4,4 0 0 1 13,91 L13,17 A4,4 0 0 1 17,13 Z" />
+    <!-- small cross finial -->
     <path
         android:strokeColor="#E8C468"
-        android:strokeWidth="3"
+        android:strokeWidth="4"
         android:strokeLineCap="round"
-        android:pathData="M54,39.5 L54,76" />
-    <!-- gold bookmark cross -->
+        android:pathData="M54,20 L54,32 M48,26 L60,26" />
+    <!-- open book, left page -->
     <path
         android:fillColor="#E8C468"
-        android:pathData="M50,20 L58,20 L58,24 L55,24 L55,32 L53,32 L53,24 L50,24 Z" />
+        android:pathData="M27,44 C35,40 45,40 54,44 L54,80 C45,76 35,76 27,80 Z" />
+    <!-- open book, right page -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M81,44 C73,40 63,40 54,44 L54,80 C63,76 73,76 81,80 Z" />
+    <!-- spine -->
+    <path
+        android:strokeColor="#4A1626"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M54,44 L54,80" />
+    <!-- text lines on the pages -->
+    <path
+        android:strokeColor="#4A1626"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M33,52 C38,50 44,50 49,52 M33,60 C38,58 44,58 49,60 M33,68 C38,66 44,66 49,68" />
+    <path
+        android:strokeColor="#4A1626"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M59,52 C64,50 70,50 75,52 M59,60 C64,58 70,58 75,60 M59,68 C64,66 70,66 75,68" />
 </vector>
