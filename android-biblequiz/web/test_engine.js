@@ -27,6 +27,11 @@ const sandbox = {
 };
 sandbox.window = sandbox;
 vm.createContext(sandbox);
+// icons.js must load before app.js (index.html order) and define window.I
+vm.runInContext(fs.readFileSync(path.join(HERE, 'icons.js'), 'utf8'), sandbox, { filename: 'icons.js' });
+ok(typeof sandbox.I === 'function', 'icons.js defines window.I');
+ok(/<svg/.test(sandbox.I('bolt')) && /bolt|M13 2L4 14/.test(sandbox.I('bolt')), "I('bolt') returns an <svg> string");
+ok(sandbox.I('no-such-icon').includes('<svg'), 'unknown icon falls back to help icon');
 vm.runInContext(fs.readFileSync(path.join(HERE, 'app.js'), 'utf8'), sandbox, { filename: 'app.js' });
 const BQ = sandbox.BQ;
 ok(!!BQ, 'BQ exposed on window');

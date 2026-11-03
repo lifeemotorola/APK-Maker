@@ -121,19 +121,25 @@ if (typeof module !== 'undefined') module.exports = BQ;
 /* ============================ UI (browser only) ========================= */
 if (typeof document === 'undefined') return;
 
+const APP_VERSION = '1.1';
+const APP_AUTHOR = 'Emmanuel Suah';
 const LS_KEY = 'bq_state_v1';
 function defaultState() {
   return {
     xp: 0, answered: 0, correct: 0, streak: 0, bestStreak: 0,
     perCat: {}, saved: {}, wrongIds: {}, achievements: [], daysPlayed: 0,
-    versesRead: {}, settings: { sound: true, timer: true, theme: 'dark', translation: 'kjv' },
+    versesRead: {}, settings: { sound: true, timer: true, theme: 'parchment', translation: 'kjv' },
     lastDaily: null, // {date, score, count}
   };
 }
 function loadState() {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (raw) return Object.assign(defaultState(), JSON.parse(raw));
+    if (raw) {
+      const st = Object.assign(defaultState(), JSON.parse(raw));
+      if (st.settings.theme === 'dark') st.settings.theme = 'midnight'; // v1.0 theme migration
+      return st;
+    }
   } catch (e) { /* corrupted storage -> fresh */ }
   return defaultState();
 }
@@ -266,8 +272,9 @@ async function renderHome() {
   h(`
   <section class="screen home">
     <header class="hero">
-      <div class="hero-badge">${BANK.length.toLocaleString()} QUESTIONS · OFFLINE</div>
-      <h1 class="hero-title">Bible <span>Quiz</span></h1>
+      <div class="hero-eyebrow">The Holy Bible &middot; Quiz</div>
+      <svg class="hero-orn" viewBox="0 0 140 12" aria-hidden="true"><path d="M2 6h52M86 6h52" stroke="currentColor" stroke-width="1"/><path d="M70 1l5 5-5 5-5-5z" fill="currentColor"/></svg>
+      <h1 class="hero-title">Bible Quiz</h1>
       <p class="hero-sub">Test your knowledge of Scripture — people, places, verses and promises.</p>
       <div class="hero-stats">
         <div class="chip">Level ${lvl}</div><div class="chip">${S.xp.toLocaleString()} XP</div>
@@ -285,6 +292,7 @@ async function renderHome() {
         </button>`).join('')}
     </div>
     <p class="hint">Pick a mode, then choose a category and difficulty.</p>
+    <footer class="credit">by ${APP_AUTHOR} &middot; v${APP_VERSION} &middot; fully offline</footer>
   </section>${navBar('home')}`);
   bindNav();
   app.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
@@ -727,9 +735,10 @@ function renderSettings() {
     <div class="card set-list">
       <label class="set-row">${I('volume')} Sound effects <input type="checkbox" id="sSound" ${st.sound ? 'checked' : ''}></label>
       <label class="set-row">${I('clock')} Question timer <input type="checkbox" id="sTimer" ${st.timer ? 'checked' : ''}></label>
-      <label class="set-row">${I('moon')} Light theme <input type="checkbox" id="sTheme" ${st.theme === 'light' ? 'checked' : ''}></label>
+      <label class="set-row">${I('moon')} Midnight theme <input type="checkbox" id="sTheme" ${st.theme === 'midnight' ? 'checked' : ''}></label>
       <div class="set-row">${I('book')} Default translation
         <select id="sTrans" class="trans-sel"></select></div>
+      <div class="set-row about"><span>${I('book')} Bible Quiz v${APP_VERSION}</span><b>by ${APP_AUTHOR}</b></div>
       <button class="btn danger" id="reset">${I('trash')} Reset all progress</button>
     </div>
   </section>${navBar('settings')}`);
@@ -737,7 +746,7 @@ function renderSettings() {
   document.getElementById('sSound').addEventListener('change', e => { S.settings.sound = e.target.checked; save(); });
   document.getElementById('sTimer').addEventListener('change', e => { S.settings.timer = e.target.checked; save(); });
   document.getElementById('sTheme').addEventListener('change', e => {
-    S.settings.theme = e.target.checked ? 'light' : 'dark'; save();
+    S.settings.theme = e.target.checked ? 'midnight' : 'parchment'; save();
     document.documentElement.dataset.theme = S.settings.theme;
   });
   const sel = document.getElementById('sTrans');
@@ -753,6 +762,14 @@ function renderSettings() {
 }
 
 /* ------------------------------ router ---------------------------------- */
+window.addEventListener('error', function (e) {
+  try {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:999;background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:8px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;';
+    d.textContent = 'Error: ' + (e.message || e.type) + ' @ ' + (e.filename || '').split('/').pop() + ':' + e.lineno;
+    document.body.appendChild(d);
+  } catch (ignore) {}
+});
 function render() {
   document.documentElement.dataset.theme = S.settings.theme;
   switch (screen.name) {
@@ -768,6 +785,11 @@ function render() {
     default: renderHome();
   }
 }
-render();
+try {
+  render();
+} catch (e) {
+  app.innerHTML = '<div class="card" style="margin:40px 16px"><h2 class="screen-title">Could not start</h2>' +
+    '<pre style="white-space:pre-wrap;font-size:12px;color:var(--muted)">' + esc(String((e && e.stack) || e)) + '</pre></div>';
+}
 
 })();
