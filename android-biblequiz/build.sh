@@ -17,7 +17,7 @@
 # The WebView shell serves the app from a real loopback HTTP server
 # (LocalServer on http://127.0.0.1:<port>/) — see MainActivity.java.
 #
-# Output: android-biblequiz/app/build/Bible-Quiz-1.1.apk
+# Output: android-biblequiz/app/build/Bible-Quiz-1.2.apk
 #         (also copied to the repo root as Bible-Quiz.apk)
 #
 # The Java toolchain (d8.jar, ecj.jar, apksigner.jar, android.jar, aapt2,
@@ -57,6 +57,8 @@ echo "==> [1/6] Staging quiz web app + generated question bank + bibles into APK
 rm -rf "$WWW"
 mkdir -p "$WWW/fonts"
 cp "$WEB/index.html" "$WEB/styles.css" "$WEB/app.js" "$WEB/icons.js" "$WWW/"
+mkdir -p "$WWW/img"
+cp "$WEB/img/"*.jpg "$WWW/img/"
 
 # fonts for the typography (extracted from the repo's obs-news-desk.zip)
 python3 - "$ZIP" "$WWW/fonts" <<'PY'
@@ -146,7 +148,7 @@ rm -f "$BUILD/res.zip" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" "$BUILD"/Bible
     -I "$TOOLS/android.jar" \
     --manifest "$APP/src/main/AndroidManifest.xml" \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 2 --version-name 1.1 \
+    --version-code 3 --version-name 1.2 \
     "$BUILD/res.zip" \
     -A "$APP/src/main/assets"
 
@@ -159,17 +161,17 @@ echo "==> [6/6] Signing (apksigner, v1+v2, debug key)"
     --ks-key-alias androiddebugkey \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD/Bible-Quiz-1.1.apk" \
+    --out "$BUILD/Bible-Quiz-1.2.apk" \
     "$BUILD/aligned.apk"
 
 echo "==> Verifying signature"
-"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/Bible-Quiz-1.1.apk"
+"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/Bible-Quiz-1.2.apk"
 
 echo "==> APK badging"
-"$TOOLS/aapt2" dump badging "$BUILD/Bible-Quiz-1.1.apk" > "$BUILD/badging.txt" || true
+"$TOOLS/aapt2" dump badging "$BUILD/Bible-Quiz-1.2.apk" > "$BUILD/badging.txt" || true
 head -25 "$BUILD/badging.txt"
 
-cp "$BUILD/Bible-Quiz-1.1.apk" "$ROOT/Bible-Quiz.apk"
+cp "$BUILD/Bible-Quiz-1.2.apk" "$ROOT/Bible-Quiz.apk"
 echo
-echo "DONE: $BUILD/Bible-Quiz-1.1.apk"
+echo "DONE: $BUILD/Bible-Quiz-1.2.apk"
 echo "      (also copied to $ROOT/Bible-Quiz.apk)"

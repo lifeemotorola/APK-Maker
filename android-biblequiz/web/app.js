@@ -121,7 +121,7 @@ if (typeof module !== 'undefined') module.exports = BQ;
 /* ============================ UI (browser only) ========================= */
 if (typeof document === 'undefined') return;
 
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 const APP_AUTHOR = 'Emmanuel Suah';
 const LS_KEY = 'bq_state_v1';
 function defaultState() {
@@ -155,6 +155,7 @@ function toast(msg, icon) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
 }
+toastEl.addEventListener('click', () => { clearTimeout(toastTimer); toastEl.classList.remove('show'); });
 
 /* ------------------------------ audio ---------------------------------- */
 let AC = null;
@@ -191,7 +192,7 @@ const cv = document.getElementById('confetti');
 function confetti() {
   const ctx = cv.getContext('2d');
   cv.width = innerWidth; cv.height = innerHeight;
-  const colors = ['#e8c468', '#7c5cff', '#4f8cff', '#34d399', '#f472b6', '#fff'];
+  const colors = ['#e8c468', '#c9a227', '#6d1f2c', '#f4eedd', '#8a6a1f', '#ffffff'];
   const parts = Array.from({ length: 140 }, () => ({
     x: innerWidth / 2 + (Math.random() - 0.5) * innerWidth * 0.6,
     y: innerHeight * 0.35,
@@ -240,7 +241,7 @@ let session = null;
 
 function go(name, params) { screen = Object.assign({ name }, params || {}); render(); window.scrollTo(0, 0); }
 
-function h(html) { app.innerHTML = html; }
+function h(html) { dismissSplash(); app.innerHTML = html; }
 
 function navBar(active) {
   const items = [
@@ -272,6 +273,10 @@ async function renderHome() {
   h(`
   <section class="screen home">
     <header class="hero">
+      <figure class="hero-fig">
+        <div class="hf-frame"><img src="/img/hero.jpg" alt="An open Bible in golden candlelight"></div>
+        <figcaption><svg viewBox="0 0 8 8" class="dia"><path d="M4 0l4 4-4 4-4-4z"/></svg> Holy Bible <svg viewBox="0 0 8 8" class="dia"><path d="M4 0l4 4-4 4-4-4z"/></svg></figcaption>
+      </figure>
       <div class="hero-eyebrow">The Holy Bible &middot; Quiz</div>
       <svg class="hero-orn" viewBox="0 0 140 12" aria-hidden="true"><path d="M2 6h52M86 6h52" stroke="currentColor" stroke-width="1"/><path d="M70 1l5 5-5 5-5-5z" fill="currentColor"/></svg>
       <h1 class="hero-title">Bible Quiz</h1>
@@ -684,6 +689,7 @@ async function renderReader() {
       const book = BOOKS.find(b => b.i === bi);
       body.innerHTML = `
         <div class="verse-hero">
+          <div class="ms-banner"><img src="/img/manuscript.jpg" alt=""></div>
           <div class="verse-ref">${esc(pp.book)} ${pp.ch}:${pp.v}</div>
           <p class="verse-text">${v ? '“' + esc(v.verse) + '”' : '<i>verse not found in this translation</i>'}</p>
           <div class="verse-meta">${esc(book ? book.name : pp.book)} · chapter ${pp.ch} · ${chVerses.length} verses · ${esc((man.translations.find(t => t.id === S.settings.translation) || {}).label || S.settings.translation)}</div>
@@ -762,12 +768,23 @@ function renderSettings() {
 }
 
 /* ------------------------------ router ---------------------------------- */
+function dismissSplash() {
+  const sp = document.getElementById('splash');
+  if (!sp || sp.classList.contains('done')) return;
+  sp.classList.add('done');
+  setTimeout(() => sp.remove(), 700);
+}
 window.addEventListener('error', function (e) {
   try {
+    document.querySelectorAll('.errbox').forEach(x => x.remove());
     var d = document.createElement('div');
-    d.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:999;background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:8px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;';
-    d.textContent = 'Error: ' + (e.message || e.type) + ' @ ' + (e.filename || '').split('/').pop() + ':' + e.lineno;
+    d.className = 'errbox';
+    d.innerHTML = '<b>Error</b> <span class="err-msg"></span><button class="err-x" aria-label="Dismiss">&times;</button>';
+    d.querySelector('.err-msg').textContent = (e.message || e.type) + ' @ ' + (e.filename || '').split('/').pop() + ':' + e.lineno;
+    d.querySelector('.err-x').addEventListener('click', function () { d.remove(); });
+    d.addEventListener('click', function (ev) { if (ev.target === d) d.remove(); });
     document.body.appendChild(d);
+    setTimeout(function () { d.remove(); }, 12000);
   } catch (ignore) {}
 });
 function render() {
@@ -788,6 +805,7 @@ function render() {
 try {
   render();
 } catch (e) {
+  dismissSplash();
   app.innerHTML = '<div class="card" style="margin:40px 16px"><h2 class="screen-title">Could not start</h2>' +
     '<pre style="white-space:pre-wrap;font-size:12px;color:var(--muted)">' + esc(String((e && e.stack) || e)) + '</pre></div>';
 }

@@ -93,14 +93,17 @@ body {
 
 #confetti { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
 #toast {
-  position: fixed; top: 14px; left: 50%; transform: translate(-50%, -90px);
+  position: fixed; top: 14px; left: 50%;
+  transform: translate(-50%, calc(-100% - 24px));
+  visibility: hidden; opacity: 0;
   background: var(--oxblood); color: #f8f1de;
   padding: 12px 20px; border-radius: 999px; font-weight: 600;
   border: 1px solid var(--gold-bright);
-  box-shadow: var(--shadow); z-index: 70; transition: transform 0.35s cubic-bezier(.2,1.4,.4,1);
+  box-shadow: var(--shadow); z-index: 70; cursor: pointer;
+  transition: transform 0.35s cubic-bezier(.2,1.4,.4,1), opacity 0.3s, visibility 0.35s;
   display: flex; gap: 8px; align-items: center; max-width: 92vw;
 }
-#toast.show { transform: translate(-50%, 0); }
+#toast.show { transform: translate(-50%, 0); visibility: visible; opacity: 1; }
 .t-ico { font-size: 20px; display: inline-flex; }
 
 #app { max-width: 620px; margin: 0 auto; padding: 22px 16px 100px; }
@@ -369,4 +372,98 @@ body {
 @media (max-width: 420px) {
   .stat-grid { grid-template-columns: repeat(3, 1fr); }
   .cat-name { width: 96px; }
+}
+
+/* ============================================================================
+ * v1.2 — artwork, splash and motion
+ * ==========================================================================*/
+
+/* ------------------------------ boot splash ---------------------------- */
+#splash {
+  position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+  background: var(--bg); background-image: var(--paper-lines);
+  transition: opacity 0.6s ease; opacity: 1;
+}
+#splash.done { opacity: 0; pointer-events: none; }
+.splash-book { width: 92px; height: 92px; animation: splashPulse 1.6s ease-in-out infinite; filter: drop-shadow(0 10px 24px rgba(74, 54, 20, 0.35)); }
+@keyframes splashPulse { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.06) translateY(-6px); } }
+.splash-title { font-family: 'Playfair Display', Georgia, serif; font-size: 34px; font-weight: 700; letter-spacing: 1px; animation: splashIn 0.9s ease both; }
+.splash-rule { display: flex; align-items: center; gap: 8px; color: var(--gold); animation: splashIn 0.9s 0.15s ease both; }
+.splash-rule i { display: block; width: 54px; height: 1px; background: currentColor; }
+.splash-rule b { display: block; width: 7px; height: 7px; background: currentColor; transform: rotate(45deg); }
+.splash-sub { color: var(--muted); font-size: 13px; font-variant: small-caps; letter-spacing: 2px; animation: splashIn 0.9s 0.3s ease both; }
+@keyframes splashIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* --------------------------- hero artwork ------------------------------ */
+.hero-fig { margin: 2px auto 20px; max-width: 330px; animation: fadeUp 0.6s ease both; }
+.hf-frame {
+  overflow: hidden; border-radius: 6px;
+  border: 1px solid var(--gold);
+  outline: 1px solid var(--card-border); outline-offset: 4px;
+  box-shadow: var(--shadow); background: var(--card);
+}
+.hf-frame img {
+  display: block; width: 100%; height: 190px; object-fit: cover;
+  animation: kenburns 22s ease-in-out infinite alternate;
+  transform-origin: 50% 40%;
+}
+@keyframes kenburns { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.14) translate(-2%, -3%); } }
+.hero-fig figcaption {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 12px; color: var(--gold); font-weight: 700; font-size: 12px;
+  letter-spacing: 4px; text-transform: uppercase; font-variant: small-caps;
+}
+.hero-fig .dia { width: 7px; height: 7px; fill: currentColor; }
+
+/* ornament draws itself in */
+.hero-orn path { stroke-dasharray: 60; stroke-dashoffset: 60; animation: draw 1.1s 0.35s ease forwards; }
+.hero-orn path[fill] { stroke-dasharray: none; stroke-dashoffset: 0; opacity: 0; animation: fadeUp 0.5s 0.9s ease forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* --------------------- manuscript banner (reader) ---------------------- */
+.ms-banner {
+  overflow: hidden; border-radius: 5px; margin-bottom: 16px;
+  border: 1px solid var(--gold); outline: 1px solid var(--card-border); outline-offset: 3px;
+  box-shadow: var(--shadow);
+}
+.ms-banner img { display: block; width: 100%; height: 84px; object-fit: cover; object-position: 50% 42%; animation: kenburns 26s ease-in-out infinite alternate-reverse; }
+
+/* ------------------- staggered entrance for screens -------------------- */
+.screen > * { animation: fadeUp 0.45s ease both; }
+.screen > *:nth-child(2) { animation-delay: 0.05s; }
+.screen > *:nth-child(3) { animation-delay: 0.1s; }
+.screen > *:nth-child(4) { animation-delay: 0.15s; }
+.screen > *:nth-child(5) { animation-delay: 0.2s; }
+.screen > *:nth-child(6) { animation-delay: 0.25s; }
+.screen > *:nth-child(7) { animation-delay: 0.3s; }
+.screen > *:nth-child(8) { animation-delay: 0.35s; }
+.modes .mode-card { animation: fadeUp 0.5s ease both; }
+.modes .mode-card:nth-child(2) { animation-delay: 0.08s; }
+.modes .mode-card:nth-child(3) { animation-delay: 0.16s; }
+.modes .mode-card:nth-child(4) { animation-delay: 0.24s; }
+.mode-card .ico { transition: transform 0.25s ease; }
+.mode-card:hover .ico { transform: rotate(-8deg) scale(1.18); }
+.votd { animation: fadeUp 0.5s 0.12s ease both; }
+
+/* --------------------- closable error message box ---------------------- */
+.errbox {
+  position: fixed; left: 8px; right: 8px; top: 8px; z-index: 999;
+  background: #7f1d1d; color: #fff; padding: 10px 34px 10px 12px; border-radius: 8px;
+  border: 1px solid #f8b4b4; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; word-break: break-word;
+  animation: fadeUp 0.25s ease both;
+}
+.errbox b { margin-right: 6px; }
+.err-x {
+  position: absolute; top: 4px; right: 6px; width: 24px; height: 24px;
+  background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 6px;
+  font-size: 16px; line-height: 1; cursor: pointer;
+}
+.err-x:hover { background: rgba(255,255,255,0.3); }
+
+/* ------------------------- reduced motion ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .hf-frame img, .ms-banner img { animation: none; }
 }

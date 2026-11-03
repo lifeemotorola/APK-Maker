@@ -7,12 +7,29 @@
 <title>Bible Quiz</title>
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="/favicon.ico">
+<link rel="preload" as="image" href="/img/hero.jpg">
 </head>
 <body>
 <div class="bg-orbs" aria-hidden="true"><i></i><i></i><i></i></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
-<div id="toast" role="status"></div>
+<div id="toast" role="status" title="Tap to dismiss"></div>
 <main id="app"><!-- screens rendered by app.js --></main>
+
+<!-- boot splash: animated classical ornament, dismissed by app.js after first render -->
+<div id="splash" aria-hidden="true">
+  <svg class="splash-book" viewBox="0 0 108 108">
+    <rect x="6" y="6" width="96" height="96" rx="18" fill="#4A1626"/>
+    <rect x="13" y="13" width="82" height="82" rx="13" fill="none" stroke="#D4AF37" stroke-width="2.5"/>
+    <path d="M54 20v12M48 26h12" stroke="#E8C468" stroke-width="4" stroke-linecap="round"/>
+    <path d="M27 44c8-4 18-4 27 0v36c-9-4-19-4-27 0z" fill="#E8C468"/>
+    <path d="M81 44c-8-4-18-4-27 0v36c9-4 19-4 27 0z" fill="#D4AF37"/>
+    <path d="M54 44v36" stroke="#4A1626" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <div class="splash-title">Bible Quiz</div>
+  <div class="splash-rule"><i></i><b></b><i></i></div>
+  <div class="splash-sub">by Emmanuel Suah</div>
+</div>
+
 <script src="/icons.js"></script>
 <script src="/books.js"></script>
 <script src="/questions.js"></script>
