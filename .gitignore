@@ -16,3 +16,8 @@ obs-news-desk/
 android-newsdesk/app/build/
 android-newsdesk/app/src/main/assets/www/
 NewsDesk-Studio.apk
+
+# Bible Quiz APK build outputs
+android-biblequiz/app/build/
+android-biblequiz/app/src/main/assets/www/
+Bible-Quiz.apk

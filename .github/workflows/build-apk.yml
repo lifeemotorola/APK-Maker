@@ -1,10 +1,12 @@
 name: Build Android APK
 
 # Builds the Android APKs fully in CI, offline after the toolchain fetch:
-#   - job build-keysense-apk   -> KeySense Studio (com.keysense.studio)
-#                                 via android/build.sh
-#   - job build-newsdesk-apk   -> NewsDesk Studio (com.newsdesk.studio)
-#                                 via android-newsdesk/build.sh
+#   - job build-keysense-apk    -> KeySense Studio (com.keysense.studio)
+#                                  via android/build.sh
+#   - job build-newsdesk-apk    -> NewsDesk Studio (com.newsdesk.studio)
+#                                  via android-newsdesk/build.sh
+#   - job build-biblequiz-apk   -> Bible Quiz (com.biblequiz.app, 2,500+
+#                                  questions) via android-biblequiz/build.sh
 # Each APK is uploaded as a workflow artifact on every run.
 
 on:
@@ -107,5 +109,56 @@ jobs:
             NewsDesk-Studio.apk
             android-newsdesk/app/build/NewsDesk-Studio-1.5.apk
             android-newsdesk/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-biblequiz-apk:
+    name: Build Bible-Quiz APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (question bank generator + tests)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Generate + validate the question bank, test the engine
+        run: |
+          node android-biblequiz/web/gen_questions.js /tmp/bq-www
+          node android-biblequiz/web/test_bank.js /tmp/bq-www
+          node android-biblequiz/web/test_engine.js /tmp/bq-www
+
+      - name: Build the APK (android-biblequiz/build.sh)
+        run: ./android-biblequiz/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-biblequiz/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v Bible-Quiz.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Bible-Quiz-APK
+          path: |
+            Bible-Quiz.apk
+            android-biblequiz/app/build/Bible-Quiz-1.0.apk
+            android-biblequiz/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
