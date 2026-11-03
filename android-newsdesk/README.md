@@ -6,9 +6,14 @@ APK: `com.newsdesk.studio`, minSdk 23 / targetSdk 34.
 
 ## What the APK does
 
-The APK is a WebView shell around the *unmodified* web app, served from the
-APK assets under the fake origin `https://newsdesk.local/` (every request is
-intercepted by `MainActivity.AssetWebViewClient`):
+The APK is a WebView shell around the *unmodified* web app, served by a **real
+loopback HTTP server** (`LocalServer` on `http://127.0.0.1:<port>/`, started in
+`MainActivity`). A real socket is used instead of
+`WebViewClient.shouldInterceptRequest` because intercepted *frame navigation*
+responses are not reliably honoured with their Content-Type on every WebView
+version — the page then renders as raw text. Cleartext is allowed for
+`127.0.0.1`/`localhost` only (`res/xml/network_security_config.xml`) and
+external navigations are blocked, so the app stays fully offline.
 
 | URL | Served from |
 | --- | --- |
@@ -75,8 +80,11 @@ android-newsdesk/
   app/src/main/
     AndroidManifest.xml        com.newsdesk.studio
     java/com/newsdesk/studio/
-      MainActivity.java        WebView + asset interceptor (routes, shim
-                               injection, /uploads with Range, deleted-set)
+      LocalServer.java         loopback HTTP/1.1 server (routes, shim injection,
+                               /uploads with Range, deleted-set; testable on a
+                               desktop JVM via its AssetStore/DeletedStore ifaces)
+      MainActivity.java        starts LocalServer, loads the WebView at
+                               http://127.0.0.1:<port>/shell, blocks external URLs
       NewsDeskBridge.java      JS bridge: media library (list/save/delete)
-    res/                       launcher icon + app name
+    res/                       launcher icon + app name + network security config
 ```
