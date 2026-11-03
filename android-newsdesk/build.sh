@@ -5,8 +5,9 @@
 # Pipeline:
 #   0. Unzip obs-news-desk.zip if the sources are not extracted yet
 #   1. Stage the web app (control / overlay / demo / camera / assets /
-#      scripture / bible / uploads / presets.json / state.json) plus the
-#      in-page backend shim into app/src/main/assets/www
+#      scripture / bible / uploads / presets.json / state.json), the repo's
+#      bibles/ translations (bibles/<id>/<id>.js + generated manifest.json)
+#      and the in-page backend shim into app/src/main/assets/www
 #   2. ecj (Eclipse compiler) Java -> .class   (compiled against android.jar)
 #   3. d8 (R8) .class -> classes.dex
 #   4. aapt2 compile/link resources + manifest -> unsigned APK (+ assets)
@@ -65,12 +66,18 @@ if [ ! -d "$SRC" ]; then
     unzip -q "$ZIP" -d "$ROOT"
 fi
 
-echo "==> [1/6] Staging NewsDesk web app + shim into APK assets"
+echo "==> [1/6] Staging NewsDesk web app + shim + bibles into APK assets"
 rm -rf "$WWW"
 mkdir -p "$WWW"
 cp -r "$SRC/control" "$SRC/overlay" "$SRC/demo" "$SRC/camera" \
       "$SRC/assets" "$SRC/scripture" "$SRC/bible" "$SRC/uploads" "$WWW/"
 cp "$SRC/presets.json" "$SRC/state.json" "$WWW/"
+# the repo-level bibles/ folder (bibles/<id>/<id>.js, one JS file per translation)
+if [ -d "$ROOT/bibles" ]; then
+    cp -r "$ROOT/bibles" "$WWW/bibles"
+else
+    echo "WARNING: $ROOT/bibles not found — the APK will only have the bundled KJV"
+fi
 # python-only files have no place in the APK
 rm -f "$WWW/camera/camera.py" "$WWW/bible/bible.py" "$WWW/"*/.DS_Store 2>/dev/null || true
 find "$WWW" -name '.DS_Store' -delete 2>/dev/null || true
@@ -107,6 +114,38 @@ files.sort(key=lambda f: f['mtime'], reverse=True)
 with open(out, 'w') as fh:
     json.dump(files, fh, indent=1)
 PY
+# manifest of the bundled bible translations (drives /api/bible/translations +
+# the in-panel translation picker in shim.js)
+if [ -d "$ROOT/bibles" ]; then
+python3 - "$ROOT/bibles" "$WWW/bibles/manifest.json" <<'PY'
+import json, os, sys
+src, out = sys.argv[1], sys.argv[2]
+LABELS = {
+    'kjv': 'KING JAMES VERSION',
+    'nkjv': 'NEW KING JAMES VERSION',
+    'esv': 'ENGLISH STANDARD VERSION',
+    'niv': 'NEW INTERNATIONAL VERSION',
+    'amplified': 'AMPLIFIED BIBLE',
+    'es_rvr': 'REINA-VALERA 1909 (ESPA\u00d1OL)',
+}
+translations = []
+for name in sorted(os.listdir(src)):
+    d = os.path.join(src, name)
+    js = os.path.join(d, name + '.js')
+    if not os.path.isdir(d) or not os.path.isfile(js):
+        continue
+    translations.append({
+        'id': name,
+        'file': name + '.js',
+        'label': LABELS.get(name, name.upper()),
+        'short': name.upper(),
+        'bytes': os.path.getsize(js),
+    })
+with open(out, 'w') as fh:
+    json.dump({'translations': translations}, fh, indent=1, ensure_ascii=False)
+print('  bible translations:', ', '.join(t['id'] for t in translations))
+PY
+fi
 
 echo "==> [2/6] Compiling Java sources (ecj, against android.jar API 34)"
 rm -rf "$BUILD/classes"
