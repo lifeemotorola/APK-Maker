@@ -32,8 +32,17 @@ inside the page**, so the app is fully functional offline:
   implementing the `/ws` protocol (`hello` / `patch` / `get` / `sting` /
   `reload` + the same broadcast-role semantics), so the panel and the overlay
   frames sync live exactly like over the real socket.
-- The KJV bible (`bible/kjv.dat`, zlib-packed big-endian) is inflated with
-  `DecompressionStream` and parsed exactly like `bible.py`.
+- Bibles: the repo's `bibles/` folder (one `var bible_data = [...]` JS file per
+  translation — kjv, nkjv, esv, niv, amplified, es_rvr) is bundled as
+  `assets/www/bibles/` with a generated `manifest.json`. `shim.js` loads a
+  translation lazily, indexes it by `ari` book index + `name` chapter:verse,
+  and parses references with `bible/kjv.json` aliases **plus the active
+  translation's own book names** (so `Juan 3:16` works in Spanish). Every
+  `/api/bible/*` endpoint takes `?t=<id>` (default: `state.verseTranslationId`,
+  initially `kjv`), there is a new `GET /api/bible/translations`, and a small
+  📖 picker is injected into the control panel page to switch translation —
+  it just patches `verseTranslationId`/`verseTranslation` in the state, which
+  the overlay shows as the on-air translation label.
 
 Camera-over-wifi / WHEP need the desktop server (HTTPS listener + WebRTC
 signalling) and return plain-language errors in the APK; the `obs/` C++ OBS
