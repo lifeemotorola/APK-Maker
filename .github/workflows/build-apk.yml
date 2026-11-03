@@ -158,7 +158,7 @@ jobs:
           name: Bible-Quiz-APK
           path: |
             Bible-Quiz.apk
-            android-biblequiz/app/build/Bible-Quiz-1.1.apk
+            android-biblequiz/app/build/Bible-Quiz-1.2.apk
             android-biblequiz/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30

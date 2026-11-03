@@ -8,6 +8,14 @@ text, gold rules, Playfair Display serif, double-bordered cards) with a
 midnight theme toggle; launcher icon is an oxblood-and-gold open book. All
 icons are inline SVG (`web/icons.js`) — no emoji anywhere (build-enforced).
 
+v1.2 adds artwork and motion: a painted hero image (`web/img/hero.jpg`, slow
+Ken Burns pan/zoom inside a double gold frame) on the home screen, an
+illuminated-manuscript banner (`web/img/manuscript.jpg`) in the Bible reader,
+an animated boot splash, staggered screen entrances, self-drawing gold
+ornaments, classical-palette confetti, and `prefers-reduced-motion` support.
+Message boxes now always close: the toast fully hides (and is tap-to-dismiss)
+and the error box has a close button, tap-outside dismiss and auto-dismiss.
+
 ## The question bank — 2,500+ questions
 
 `web/gen_questions.js` (node, deterministic seed) builds the bank from two
@@ -85,6 +93,8 @@ android-biblequiz/
   web/
     index.html                 app shell
     icons.js                   inline SVG icon library (I('bolt') etc.)
+    img/hero.jpg               painted home artwork (bundled, offline)
+    img/manuscript.jpg         illuminated-manuscript banner (Bible reader)
     styles.css                 theme (dark/light, orbs, glass cards)
     app.js                     SPA + pure quiz engine on window.BQ
     curated.json               hand-written questions
