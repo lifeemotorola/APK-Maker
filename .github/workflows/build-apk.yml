@@ -1,8 +1,11 @@
 name: Build Android APK
 
-# Builds the KeySense Studio Android APK (com.keysense.studio) fully in CI:
-# vite build -> ecj -> d8 -> aapt2 -> zipalign-style pack -> apksigner.
-# The APK is uploaded as a workflow artifact on every run.
+# Builds the Android APKs fully in CI, offline after the toolchain fetch:
+#   - job build-keysense-apk   -> KeySense Studio (com.keysense.studio)
+#                                 via android/build.sh
+#   - job build-newsdesk-apk   -> NewsDesk Studio (com.newsdesk.studio)
+#                                 via android-newsdesk/build.sh
+# Each APK is uploaded as a workflow artifact on every run.
 
 on:
   push:
@@ -59,5 +62,50 @@ jobs:
             KeySense-Studio.apk
             android/app/build/KeySense-Studio-1.0.0.apk
             android/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-newsdesk-apk:
+    name: Build NewsDesk-Studio APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (npm pack for the toolchain fetch)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build the APK (android-newsdesk/build.sh)
+        run: ./android-newsdesk/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-newsdesk/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v NewsDesk-Studio.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: NewsDesk-Studio-APK
+          path: |
+            NewsDesk-Studio.apk
+            android-newsdesk/app/build/NewsDesk-Studio-1.5.apk
+            android-newsdesk/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30

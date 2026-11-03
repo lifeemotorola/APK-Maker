@@ -10,3 +10,9 @@ android/app/src/main/assets/www/
 android/app/src/main/assets/demos/
 *.apk
 KeySense-Studio.apk
+
+# NewsDesk web-app extraction + APK build outputs
+obs-news-desk/
+android-newsdesk/app/build/
+android-newsdesk/app/src/main/assets/www/
+NewsDesk-Studio.apk
