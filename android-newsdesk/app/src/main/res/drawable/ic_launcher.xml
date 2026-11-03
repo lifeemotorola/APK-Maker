@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="40"
+    android:viewportHeight="40">
+    <!-- red rounded background (matches the app favicon) -->
+    <path
+        android:fillColor="#E01B22"
+        android:pathData="M8,4 L32,4 A4,4 0 0 1 36,8 L36,32 A4,4 0 0 1 32,36 L8,36 A4,4 0 0 1 4,32 L4,8 A4,4 0 0 1 8,4 Z" />
+    <!-- white N -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M9,29 L9,11 L13.6,11 L21.8,22.2 L21.8,11 L26,11 L26,29 L21.6,29 L13.4,17.8 L13.4,29 Z" />
+</vector>
