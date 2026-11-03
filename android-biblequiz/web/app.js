@@ -34,10 +34,10 @@ const BANK = (typeof window !== 'undefined' && window.QUIZ_BANK) || (typeof QUIZ
 const BOOKS = (typeof window !== 'undefined' && window.QUIZ_BOOKS) || (typeof QUIZ_BOOKS !== 'undefined' ? QUIZ_BOOKS : []);
 const CATEGORIES = ['All', ...new Set(BANK.map(q => q.c))];
 const MODES = {
-  sprint:  { name: 'Sprint',        icon: '⚡', count: 15, seconds: 15, strikes: 0, desc: '15 questions · 15s each' },
-  marathon:{ name: 'Marathon',      icon: '🏃', count: 50, seconds: 20, strikes: 0, desc: '50 questions · 20s each' },
-  daily:   { name: 'Daily Challenge', icon: '☀️', count: 10, seconds: 20, strikes: 0, desc: '10 questions · new every day' },
-  death:   { name: 'Sudden Death',  icon: '💀', count: 999, seconds: 15, strikes: 3, desc: '3 wrong answers and it is over' },
+  sprint:  { name: 'Sprint',        icon: 'bolt', count: 15, seconds: 15, strikes: 0, desc: '15 questions · 15s each' },
+  marathon:{ name: 'Marathon',      icon: 'flag', count: 50, seconds: 20, strikes: 0, desc: '50 questions · 20s each' },
+  daily:   { name: 'Daily Challenge', icon: 'sun', count: 10, seconds: 20, strikes: 0, desc: '10 questions · new every day' },
+  death:   { name: 'Sudden Death',  icon: 'skull', count: 999, seconds: 15, strikes: 3, desc: '3 wrong answers and it is over' },
 };
 
 /* --------------------------- quiz engine (pure) ------------------------- */
@@ -70,18 +70,18 @@ function levelForXp(xp) { let l = 1; while (xpForLevel(l + 1) <= xp) l++; return
 function xpGain(correct, streak) { return correct ? 10 + Math.min(streak, 10) : 0; }
 
 const ACHIEVEMENTS = [
-  { id: 'first',    name: 'First Steps',   icon: '🌱', desc: 'Answer your first question',        test: S => S.answered >= 1 },
-  { id: 'c10',      name: 'Getting Warm',  icon: '🔟', desc: 'Answer 10 questions',               test: S => S.answered >= 10 },
-  { id: 'c100',     name: 'Century',       icon: '💯', desc: 'Answer 100 questions',              test: S => S.answered >= 100 },
-  { id: 'c500',     name: 'Scholar',       icon: '🎓', desc: 'Answer 500 questions',              test: S => S.answered >= 500 },
-  { id: 'c1000',    name: ' Bible Master', icon: '👑', desc: 'Answer 1,000 questions',            test: S => S.answered >= 1000 },
-  { id: 'streak10', name: 'On Fire',       icon: '🔥', desc: 'Reach a 10-question streak',        test: S => S.bestStreak >= 10 },
-  { id: 'streak25', name: 'Unstoppable',   icon: '⚡', desc: 'Reach a 25-question streak',        test: S => S.bestStreak >= 25 },
-  { id: 'perfect',  name: 'Flawless',      icon: '✨', desc: 'Perfect score on a 10+ question quiz', test: (S, r) => r && r.count >= 10 && r.correct === r.count },
-  { id: 'acc90',    name: 'Sharp Mind',    icon: '🧠', desc: '90%+ accuracy over 50+ answers',    test: S => S.answered >= 50 && (S.correct / S.answered) >= 0.9 },
-  { id: 'daily7',   name: 'Daily Devotion', icon: '📅', desc: 'Play the daily challenge 7 days',  test: S => (S.daysPlayed || 0) >= 7 },
-  { id: 'explorer', name: 'Explorer',      icon: '🧭', desc: 'Read 25 different verses',          test: S => Object.keys(S.versesRead || {}).length >= 25 },
-  { id: 'allcat',   name: 'Well-Rounded',  icon: '🌍', desc: 'Answer in every category',          test: S => CATEGORIES.slice(1).every(c => (S.perCat[c] || {}).a > 0) },
+  { id: 'first',    name: 'First Steps',   icon: 'leaf', desc: 'Answer your first question',        test: S => S.answered >= 1 },
+  { id: 'c10',      name: 'Getting Warm',  icon: 'hash', desc: 'Answer 10 questions',               test: S => S.answered >= 10 },
+  { id: 'c100',     name: 'Century',       icon: 'target', desc: 'Answer 100 questions',              test: S => S.answered >= 100 },
+  { id: 'c500',     name: 'Scholar',       icon: 'cap', desc: 'Answer 500 questions',              test: S => S.answered >= 500 },
+  { id: 'c1000',    name: 'Bible Master',  icon: 'crown', desc: 'Answer 1,000 questions',            test: S => S.answered >= 1000 },
+  { id: 'streak10', name: 'On Fire',       icon: 'flame', desc: 'Reach a 10-question streak',        test: S => S.bestStreak >= 10 },
+  { id: 'streak25', name: 'Unstoppable',   icon: 'zap', desc: 'Reach a 25-question streak',        test: S => S.bestStreak >= 25 },
+  { id: 'perfect',  name: 'Flawless',      icon: 'sparkles', desc: 'Perfect score on a 10+ question quiz', test: (S, r) => r && r.count >= 10 && r.correct === r.count },
+  { id: 'acc90',    name: 'Sharp Mind',    icon: 'bulb', desc: '90%+ accuracy over 50+ answers',    test: S => S.answered >= 50 && (S.correct / S.answered) >= 0.9 },
+  { id: 'daily7',   name: 'Daily Devotion', icon: 'calendar', desc: 'Play the daily challenge 7 days',  test: S => (S.daysPlayed || 0) >= 7 },
+  { id: 'explorer', name: 'Explorer',      icon: 'compass', desc: 'Read 25 different verses',          test: S => Object.keys(S.versesRead || {}).length >= 25 },
+  { id: 'allcat',   name: 'Well-Rounded',  icon: 'globe', desc: 'Answer in every category',          test: S => CATEGORIES.slice(1).every(c => (S.perCat[c] || {}).a > 0) },
 ];
 function newAchievements(S, result) {
   return ACHIEVEMENTS.filter(a => !S.achievements.includes(a.id) && a.test(S, result))
@@ -144,7 +144,7 @@ const app = document.getElementById('app');
 const toastEl = document.getElementById('toast');
 let toastTimer = null;
 function toast(msg, icon) {
-  toastEl.innerHTML = (icon ? '<span class="t-ico">' + icon + '</span>' : '') + esc(msg);
+  toastEl.innerHTML = (icon ? '<span class="t-ico">' + I(icon) + '</span>' : '') + esc(msg);
   toastEl.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
@@ -238,11 +238,11 @@ function h(html) { app.innerHTML = html; }
 
 function navBar(active) {
   const items = [
-    ['home', '🏠', 'Home'], ['stats', '📊', 'Stats'], ['saved', '⭐', 'Saved'],
-    ['search', '🔍', 'Search'], ['settings', '⚙️', 'Settings'],
+    ['home', 'home', 'Home'], ['stats', 'chart', 'Stats'], ['saved', 'star', 'Saved'],
+    ['search', 'search', 'Search'], ['settings', 'gear', 'Settings'],
   ];
   return '<nav class="navbar">' + items.map(([n, ic, lb]) =>
-    `<button class="nav-btn ${n === active ? 'active' : ''}" data-nav="${n}">${ic}<span>${lb}</span></button>`).join('') + '</nav>';
+    `<button class="nav-btn ${n === active ? 'active' : ''}" data-nav="${n}">${I(ic, 'nav-ico')}<span>${lb}</span></button>`).join('') + '</nav>';
 }
 function bindNav() {
   app.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { sfx.click(); go(b.dataset.nav); }));
@@ -258,7 +258,7 @@ async function renderHome() {
     const kjv = await loadTranslation('kjv');
     const v = votd && votd.v ? verseByName(kjv, votd.v) : null;
     if (v) votdHtml = `<div class="votd"><div class="votd-label">VERSE OF THE DAY</div>
-      <p class="votd-text">“${esc(v.verse)}”</p><button class="votd-ref" data-open-ref="${esc(v.name)}">${esc(v.name)} ▸</button></div>`;
+      <p class="votd-text">“${esc(v.verse)}”</p><button class="votd-ref" data-open-ref="${esc(v.name)}">${esc(v.name)} ${I('chevronRight')}</button></div>`;
   } catch (e) { /* votd optional */ }
   const dailyDone = S.lastDaily && S.lastDaily.date === today;
   const acc = S.answered ? Math.round(100 * S.correct / S.answered) : 0;
@@ -271,17 +271,17 @@ async function renderHome() {
       <p class="hero-sub">Test your knowledge of Scripture — people, places, verses and promises.</p>
       <div class="hero-stats">
         <div class="chip">Level ${lvl}</div><div class="chip">${S.xp.toLocaleString()} XP</div>
-        <div class="chip">${acc}% accuracy</div><div class="chip">🔥 best ${S.bestStreak}</div>
+        <div class="chip">${acc}% accuracy</div><div class="chip">${I('flame')} best ${S.bestStreak}</div>
       </div>
     </header>
     ${votdHtml}
     <div class="modes">
       ${Object.entries(MODES).map(([k, m]) => `
         <button class="mode-card" data-mode="${k}">
-          <span class="mode-icon">${m.icon}</span>
+          ${I(m.icon, 'mode-ico')}
           <span class="mode-name">${m.name}</span>
           <span class="mode-desc">${m.desc}</span>
-          ${k === 'daily' && dailyDone ? `<span class="mode-done">✓ done today · ${S.lastDaily.score}/${S.lastDaily.count}</span>` : ''}
+          ${k === 'daily' && dailyDone ? `<span class="mode-done">${I('check')} done today · ${S.lastDaily.score}/${S.lastDaily.count}</span>` : ''}
         </button>`).join('')}
     </div>
     <p class="hint">Pick a mode, then choose a category and difficulty.</p>
@@ -302,16 +302,16 @@ function renderSetup() {
   const diff = screen.difficulty || 'any';
   h(`
   <section class="screen">
-    <button class="back" data-nav="home">‹ Back</button>
-    <h2 class="screen-title">${m.icon} ${m.name}</h2>
+    <button class="back" data-nav="home">${I('chevronLeft')} Back</button>
+    <h2 class="screen-title">${I(m.icon)} ${m.name}</h2>
     <p class="screen-sub">${m.desc}</p>
     <h3 class="group-label">Category</h3>
     <div class="chip-row">${CATEGORIES.map(c =>
       `<button class="chip-btn ${c === cat ? 'sel' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <h3 class="group-label">Difficulty</h3>
-    <div class="chip-row">${[['any', 'Any'], ['easy', '😌 Easy'], ['medium', '🙂 Medium'], ['hard', '😤 Hard']].map(([v, lb]) =>
+    <div class="chip-row">${[['any', 'Any'], ['easy', I('smile') + ' Easy'], ['medium', I('meh') + ' Medium'], ['hard', I('frown') + ' Hard']].map(([v, lb]) =>
       `<button class="chip-btn ${v === diff ? 'sel' : ''}" data-diff="${v}">${lb}</button>`).join('')}</div>
-    <button class="btn primary big" id="start">Start quiz ▸</button>
+    <button class="btn primary big" id="start">Start quiz ${I('chevronRight')}</button>
   </section>${navBar('home')}`);
   bindNav();
   app.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => { sfx.click(); screen.category = b.dataset.cat; renderSetup(); }));
@@ -330,7 +330,7 @@ function startQuiz(onlyIds) {
     seed,
     onlyIds,
   });
-  if (!qs.length) { toast('No questions match those filters', '❓'); return; }
+  if (!qs.length) { toast('No questions match those filters', 'help'); return; }
   session = {
     mode: screen.mode || 'sprint', questions: qs, idx: 0, answers: [],
     correct: 0, streak: 0, bestStreakInQuiz: 0, xpGained: 0,
@@ -350,7 +350,7 @@ function renderQuiz() {
     <div class="quiz-top">
       <span class="q-count">${session.idx + 1} / ${total === 999 ? '∞' : total}</span>
       <span class="q-cat">${esc(q.c)}</span>
-      <span class="q-streak ${session.streak >= 3 ? 'hot' : ''}">${session.streak >= 2 ? '🔥 ' + session.streak : ''}</span>
+      <span class="q-streak ${session.streak >= 3 ? 'hot' : ''}">${session.streak >= 2 ? I('flame') + ' ' + session.streak : ''}</span>
     </div>
     <div class="bar"><div class="bar-fill" style="width:${prog}%"></div></div>
     ${S.settings.timer ? `<div class="timer"><div class="timer-fill" id="timerFill"></div></div>` : ''}
@@ -420,12 +420,12 @@ function answer(i) {
   const fb = document.getElementById('fb');
   fb.className = 'feedback show ' + (correct ? 'ok' : 'bad');
   fb.innerHTML = `
-    <div class="fb-head">${correct ? '✓ Correct! <b>+' + gain + ' XP</b>' : (i < 0 ? '⏰ Time is up!' : '✗ Not quite — the answer is “' + esc(q.o[q.a]) + '”')}</div>
+    <div class="fb-head">${correct ? I('check') + ' Correct! <b>+' + gain + ' XP</b>' : (i < 0 ? I('clock') + ' Time is up!' : I('x') + ' Not quite — the answer is “' + esc(q.o[q.a]) + '”')}</div>
     ${q.x ? `<p class="fb-x">${esc(q.x)}</p>` : ''}
     <div class="fb-actions">
-      ${q.v ? `<button class="btn ghost sm" id="fbVerse">📖 Read ${esc(q.v)}</button>` : ''}
-      <button class="btn ghost sm" id="fbSave">${S.saved[q.id] ? '★ Saved' : '☆ Save for review'}</button>
-      <button class="btn primary sm" id="fbNext">${session.idx + 1 >= session.questions.length ? 'See results ▸' : 'Next ▸'}</button>
+      ${q.v ? `<button class="btn ghost sm" id="fbVerse">${I('book')} Read ${esc(q.v)}</button>` : ''}
+      <button class="btn ghost sm" id="fbSave">${S.saved[q.id] ? I('starFill') + ' Saved' : I('star') + ' Save for review'}</button>
+      <button class="btn primary sm" id="fbNext">${session.idx + 1 >= session.questions.length ? 'See results ' + I('chevronRight') : 'Next ' + I('chevronRight')}</button>
     </div>`;
   const bv = document.getElementById('fbVerse');
   if (bv) bv.addEventListener('click', () => { sfx.click(); go('reader', { ref: q.v }); });
@@ -438,7 +438,7 @@ function answer(i) {
 }
 function renderQuizFeedbackOnly(q) {
   const b = document.getElementById('fbSave');
-  if (b) b.textContent = S.saved[q.id] ? '★ Saved' : '☆ Save for review';
+  if (b) b.innerHTML = S.saved[q.id] ? I('starFill') + ' Saved' : I('star') + ' Save for review';
 }
 function nextQuestion() {
   if (!session) return;
@@ -470,7 +470,7 @@ function finishQuiz() {
   S.achievements.push(...unlocked.map(a => a.id));
   save();
   go('results', { mode, total, correct, xpGained: session.xpGained, leveledUp: after > before, newLevel: after, unlocked, questions: session.questions, answers: session.answers });
-  if (unlocked.length) setTimeout(() => unlocked.forEach((a, i) => setTimeout(() => toast(a.icon + ' Achievement: ' + a.name, a.icon), 400 + i * 1400)), 600);
+  if (unlocked.length) setTimeout(() => unlocked.forEach((a, i) => setTimeout(() => toast(I(a.icon) + ' Achievement: ' + esc(a.name), a.icon), 400 + i * 1400)), 600);
   if (after > before) sfx.fanfare();
   if (total >= 5 && correct / total >= 0.7) confetti();
   session = null;
@@ -481,22 +481,22 @@ function renderResults() {
   const r = screen;
   const pct = r.total ? Math.round(100 * r.correct / r.total) : 0;
   const acc = S.answered ? Math.round(100 * S.correct / S.answered) : 0;
-  const grade = pct >= 90 ? '🏆' : pct >= 70 ? '🎉' : pct >= 50 ? '🙂' : '💪';
+  const grade = pct >= 90 ? 'trophy' : pct >= 70 ? 'sparkles' : pct >= 50 ? 'smile' : 'trending';
   h(`
   <section class="screen">
     <div class="card results">
-      <div class="r-icon">${grade}</div>
+      <div class="r-icon">${I(grade, 'grade-ico')}</div>
       <h2 class="r-title">${r.correct} / ${r.total}</h2>
       <div class="r-pct">${pct}% correct</div>
-      ${r.leveledUp ? `<div class="levelup">🎊 Level up! You are now level ${r.newLevel}</div>` : ''}
+      ${r.leveledUp ? `<div class="levelup">${I('sparkles')} Level up! You are now level ${r.newLevel}</div>` : ''}
       <div class="r-grid">
         <div><b>+${r.xpGained}</b><span>XP earned</span></div>
         <div><b>${acc}%</b><span>all-time accuracy</span></div>
-        <div><b>🔥 ${S.bestStreak}</b><span>best streak</span></div>
+        <div><b>${I('flame')} ${S.bestStreak}</b><span>best streak</span></div>
       </div>
-      ${r.unlocked && r.unlocked.length ? `<div class="r-ach">${r.unlocked.map(a => `<span class="ach-badge" title="${esc(a.desc)}">${a.icon} ${esc(a.name)}</span>`).join('')}</div>` : ''}
+      ${r.unlocked && r.unlocked.length ? `<div class="r-ach">${r.unlocked.map(a => `<span class="ach-badge" title="${esc(a.desc)}">${I(a.icon)} ${esc(a.name)}</span>`).join('')}</div>` : ''}
       <div class="r-actions">
-        <button class="btn primary" id="again">↻ Play again</button>
+        <button class="btn primary" id="again">${I('refresh')} Play again</button>
         <button class="btn ghost" data-nav="home">Home</button>
       </div>
     </div>
@@ -523,7 +523,7 @@ function renderStats() {
   const span = nextLvlXp - xpForLevel(lvl);
   h(`
   <section class="screen">
-    <h2 class="screen-title">📊 Your progress</h2>
+    <h2 class="screen-title">${I('chart')} Your progress</h2>
     <div class="card level-card">
       <div class="lv-num">${lvl}</div>
       <div class="lv-body">
@@ -535,7 +535,7 @@ function renderStats() {
       <div class="stat"><b>${S.answered.toLocaleString()}</b><span>answered</span></div>
       <div class="stat"><b>${S.correct.toLocaleString()}</b><span>correct</span></div>
       <div class="stat"><b>${acc}%</b><span>accuracy</span></div>
-      <div class="stat"><b>🔥 ${S.bestStreak}</b><span>best streak</span></div>
+      <div class="stat"><b>${I('flame')} ${S.bestStreak}</b><span>best streak</span></div>
       <div class="stat"><b>${Object.keys(S.saved).length}</b><span>saved</span></div>
       <div class="stat"><b>${Object.keys(S.versesRead).length}</b><span>verses read</span></div>
     </div>
@@ -552,7 +552,7 @@ function renderStats() {
     <div class="ach-grid">
       ${ACHIEVEMENTS.map(a => {
         const got = S.achievements.includes(a.id);
-        return `<div class="ach ${got ? 'got' : ''}"><span>${a.icon}</span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></div>`;
+        return `<div class="ach ${got ? 'got' : ''}"><span>${I(a.icon, 'ach-ico')}</span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></div>`;
       }).join('')}
     </div>
   </section>${navBar('stats')}`);
@@ -567,7 +567,7 @@ function renderSaved() {
   const wrongQs = BANK.filter(q => S.wrongIds[q.id] && !S.saved[q.id]);
   h(`
   <section class="screen">
-    <h2 class="screen-title">⭐ Saved & missed</h2>
+    <h2 class="screen-title">${I('star')} Saved &amp; missed</h2>
     <div class="r-actions" style="margin:10px 0 18px">
       <button class="btn primary" id="revSaved" ${savedIds.length ? '' : 'disabled'}>Review saved (${savedIds.length})</button>
       <button class="btn ghost" id="revWrong" ${wrongIds.length ? '' : 'disabled'}>Review missed (${wrongIds.length})</button>
@@ -578,9 +578,9 @@ function renderSaved() {
           <div class="rv-q">${esc(q.q.length > 110 ? q.q.slice(0, 110) + '…' : q.q)}</div>
           <div class="rv-a"><span class="chip mini">${esc(q.c)}</span> answer: <b>${esc(q.o[q.a])}</b>
             ${q.v ? ` · <button class="link" data-ref="${esc(q.v)}">${esc(q.v)}</button>` : ''}
-            <button class="link star" data-unsave="${q.id}">${S.saved[q.id] ? '★' : '✗ remove'}</button>
+            <button class="link star" data-unsave="${q.id}">${S.saved[q.id] ? I('starFill') : I('x') + ' remove'}</button>
           </div>
-        </div>`).join('') || '<p class="hint">Star questions during a quiz (☆ Save for review) to build your list.</p>'}
+        </div>`).join('') || '<p class="hint">Star questions during a quiz (' + I('star') + ' Save for review) to build your list.</p>'}
     </div>
   </section>${navBar('saved')}`);
   bindNav();
@@ -597,7 +597,7 @@ let searchTab = 'questions';
 async function renderSearch() {
   h(`
   <section class="screen">
-    <h2 class="screen-title">🔍 Search</h2>
+    <h2 class="screen-title">${I('search')} Search</h2>
     <div class="seg">
       <button class="seg-btn ${searchTab === 'questions' ? 'sel' : ''}" data-tab="questions">Questions</button>
       <button class="seg-btn ${searchTab === 'bible' ? 'sel' : ''}" data-tab="bible">Bible (KJV)</button>
@@ -618,7 +618,7 @@ async function renderSearch() {
     if (searchTab === 'questions') {
       const res = searchBank(q).slice(0, 60);
       box.innerHTML = `<p class="hint">${res.length} question${res.length === 1 ? '' : 's'} found` +
-        (res.length ? ` · <button class="btn primary sm" id="practice">▶ Practice these</button>` : '') + `</p>` +
+        (res.length ? ` · <button class="btn primary sm" id="practice">${I('play')} Practice these</button>` : '') + `</p>` +
         res.map(x => `<div class="review-item"><div class="rv-q">${esc(x.q.length > 110 ? x.q.slice(0, 110) + '…' : x.q)}</div>
           <div class="rv-a"><span class="chip mini">${esc(x.c)}</span> <b>${esc(x.o[x.a])}</b>${x.v ? ` · <button class="link" data-ref="${esc(x.v)}">${esc(x.v)}</button>` : ''}</div></div>`).join('');
       const p = document.getElementById('practice');
@@ -630,7 +630,7 @@ async function renderSearch() {
       const res = bibleData.filter(v => v.verse.toLowerCase().includes(ql)).slice(0, 50);
       box.innerHTML = `<p class="hint">${bibleData.length.toLocaleString()} verses loaded · ${res.length} match${res.length === 1 ? '' : 'es'}</p>` +
         res.map(v => `<div class="review-item" data-ref="${esc(v.name)}"><div class="rv-q">“${esc(v.verse.length > 140 ? v.verse.slice(0, 140) + '…' : v.verse)}”</div>
-          <div class="rv-a"><button class="link">${esc(v.name)} ▸</button></div></div>`).join('');
+          <div class="rv-a"><button class="link">${esc(v.name)} ${I('chevronRight')}</button></div></div>`).join('');
       box.querySelectorAll('[data-ref]').forEach(b => b.addEventListener('click', () => go('reader', { ref: b.dataset.ref })));
     }
   });
@@ -644,7 +644,7 @@ async function renderReader() {
   const man = await loadManifest();
   h(`
   <section class="screen">
-    <button class="back" data-nav="home">‹ Back</button>
+    <button class="back" data-nav="home">${I('chevronLeft')} Back</button>
     <div class="card reader">
       <div class="reader-head">
         <input id="refInput" class="ref-input" value="${esc(ref)}" placeholder="e.g. John 3:16">
@@ -723,14 +723,14 @@ function renderSettings() {
   const st = S.settings;
   h(`
   <section class="screen">
-    <h2 class="screen-title">⚙️ Settings</h2>
+    <h2 class="screen-title">${I('gear')} Settings</h2>
     <div class="card set-list">
-      <label class="set-row">🔊 Sound effects <input type="checkbox" id="sSound" ${st.sound ? 'checked' : ''}></label>
-      <label class="set-row">⏱️ Question timer <input type="checkbox" id="sTimer" ${st.timer ? 'checked' : ''}></label>
-      <label class="set-row">🌗 Light theme <input type="checkbox" id="sTheme" ${st.theme === 'light' ? 'checked' : ''}></label>
-      <div class="set-row">📖 Default translation
+      <label class="set-row">${I('volume')} Sound effects <input type="checkbox" id="sSound" ${st.sound ? 'checked' : ''}></label>
+      <label class="set-row">${I('clock')} Question timer <input type="checkbox" id="sTimer" ${st.timer ? 'checked' : ''}></label>
+      <label class="set-row">${I('moon')} Light theme <input type="checkbox" id="sTheme" ${st.theme === 'light' ? 'checked' : ''}></label>
+      <div class="set-row">${I('book')} Default translation
         <select id="sTrans" class="trans-sel"></select></div>
-      <button class="btn danger" id="reset">🗑 Reset all progress</button>
+      <button class="btn danger" id="reset">${I('trash')} Reset all progress</button>
     </div>
   </section>${navBar('settings')}`);
   bindNav();
@@ -744,10 +744,10 @@ function renderSettings() {
   loadManifest().then(man => {
     sel.innerHTML = man.translations.map(t => `<option value="${esc(t.id)}" ${t.id === st.translation ? 'selected' : ''}>${esc(t.label)}</option>`).join('');
   });
-  sel.addEventListener('change', e => { S.settings.translation = e.target.value; save(); toast('Translation set to ' + e.target.selectedOptions[0].text, '📖'); });
+  sel.addEventListener('change', e => { S.settings.translation = e.target.value; save(); toast('Translation set to ' + e.target.selectedOptions[0].text, 'book'); });
   document.getElementById('reset').addEventListener('click', () => {
     if (confirm('Reset all XP, stats, saved questions and achievements?')) {
-      S = defaultState(); save(); toast('Progress reset', '🗑'); renderSettings();
+      S = defaultState(); save(); toast('Progress reset', 'trash'); renderSettings();
     }
   });
 }

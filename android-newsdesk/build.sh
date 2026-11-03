@@ -147,6 +147,11 @@ print('  bible translations:', ', '.join(t['id'] for t in translations))
 PY
 fi
 
+# The UI uses SVG icons, not emoji: patch the staged web app and fail the
+# build if any emoji/symbol glyphs remain anywhere in the APK assets.
+python3 "$HERE/tools/deemoji.py" "$WWW"
+python3 "$ROOT/scripts/check_no_emoji.py" "$WWW" "$HERE/shim" "$APP/src/main"
+
 echo "==> [2/6] Compiling Java sources (ecj, against android.jar API 34)"
 rm -rf "$BUILD/classes"
 mkdir -p "$BUILD/classes"

@@ -116,6 +116,9 @@ with open(out, 'w') as fh:
 print('  bible translations:', ', '.join(t['id'] for t in translations))
 PY
 
+# UI must use SVG icons, not emoji: fail the build if any glyphs remain
+python3 "$ROOT/scripts/check_no_emoji.py" "$WEB" "$WWW"
+
 echo "==> [2/6] Compiling Java sources (ecj, against android.jar API 34)"
 rm -rf "$BUILD/classes"
 mkdir -p "$BUILD/classes"

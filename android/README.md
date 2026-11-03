@@ -105,9 +105,9 @@ sandbox-allowed hosts (npmjs/pypi/github). `fetch-tools.sh` pulls:
   npm bundle,
 - `aapt2` (linux x64) from the `aaptjs3` npm bundle.
 
-Pipeline: `vite build` → `ecj` (Java → .class against android.jar) → `d8`
-(.class → classes.dex, min-api 23) → `aapt2 compile/link` (resources +
-binary manifest + assets) → `pack_apk.py` (align, add classes.dex) →
+Pipeline: `vite build` -> `ecj` (Java -> .class against android.jar) -> `d8`
+(.class -> classes.dex, min-api 23) -> `aapt2 compile/link` (resources +
+binary manifest + assets) -> `pack_apk.py` (align, add classes.dex) ->
 `apksigner sign` (v1+v2+v3, debug key).
 
 ## Installing
