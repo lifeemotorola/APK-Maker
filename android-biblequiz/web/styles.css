@@ -328,7 +328,6 @@ body {
   background: none; border: none; color: var(--muted); font: inherit; font-size: 11px; font-weight: 700;
   padding: 7px 4px; border-radius: 12px; cursor: pointer;
 }
-.nav-btn span:first-child, .nav-btn { font-size: 20px; }
 .nav-btn span { font-size: 11px; }
 .nav-btn.active { color: var(--gold); background: var(--card); }
 
@@ -337,3 +336,16 @@ body {
   .stat-grid { grid-template-columns: repeat(3, 1fr); }
   .cat-name { width: 96px; }
 }
+
+/* ------------------------------ svg icons ------------------------------ */
+.ico {
+  width: 1em; height: 1em; flex: none;
+  vertical-align: -0.12em;
+}
+.mode-ico { width: 30px; height: 30px; }
+.nav-ico { width: 21px; height: 21px; }
+.ach-ico { width: 26px; height: 26px; }
+.grade-ico { width: 54px; height: 54px; }
+.t-ico .ico { width: 20px; height: 20px; vertical-align: -0.3em; }
+.mode-card .ico { margin-bottom: 2px; }
+.btn .ico { margin-right: 2px; }

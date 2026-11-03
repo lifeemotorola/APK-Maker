@@ -11,3 +11,9 @@ no Gradle/Android SDK). CI builds every APK — see `.github/workflows/build-apk
 
 Each `*/build.sh` produces a signed APK at the repo root (gitignored) plus
 `*/app/build/`. See each project's README for details.
+
+**No emoji anywhere in the APK UIs** — all icons are inline SVG
+(`android-biblequiz/web/icons.js`, inline SVGs in the NewsDesk shell/shim, and
+`android-newsdesk/tools/deemoji.py` patches the upstream web app at build time).
+Every build fails if any emoji/symbol glyph survives in the staged assets —
+see `scripts/check_no_emoji.py`.

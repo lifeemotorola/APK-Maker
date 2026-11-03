@@ -153,8 +153,8 @@ export const MidiPanel: React.FC<MidiPanelProps> = ({ isOpen, onClose, onLiveNot
         const path = downloadBytes(fname, bytes, 'audio/midi');
         setStatusMsg(
           path
-            ? `Exported ${events.length} MIDI events → ${path}`
-            : `Exported ${events.length} MIDI events → ${fname}`
+            ? `Exported ${events.length} MIDI events -> ${path}`
+            : `Exported ${events.length} MIDI events -> ${fname}`
         );
       }
       recordedRef.current = [];

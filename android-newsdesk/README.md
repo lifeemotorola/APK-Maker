@@ -45,7 +45,7 @@ inside the page**, so the app is fully functional offline:
   translation's own book names** (so `Juan 3:16` works in Spanish). Every
   `/api/bible/*` endpoint takes `?t=<id>` (default: `state.verseTranslationId`,
   initially `kjv`), there is a new `GET /api/bible/translations`, and a small
-  📖 picker is injected into the control panel page to switch translation —
+  translation picker (SVG book icon) is injected into the control panel page to switch translation —
   it just patches `verseTranslationId`/`verseTranslation` in the state, which
   the overlay shows as the on-air translation label.
 
@@ -66,6 +66,10 @@ if needed, stages the web app into `app/src/main/assets/www`, compiles the
 Java shell, dexes, packages with aapt2, aligns with `pack_apk.py` and signs
 with apksigner. Output: `NewsDesk-Studio.apk` in the repo root (also kept in
 `android-newsdesk/app/build/`).
+
+The staged web app is de-emoji'd at build time (`tools/deemoji.py`
+replaces the upstream emoji buttons with inline SVG icons) and the build fails
+if any glyph remains (`../scripts/check_no_emoji.py`).
 
 CI builds it too — see `.github/workflows/build-apk.yml` (job
 `build-newsdesk-apk`, artifact `NewsDesk-Studio-APK`).

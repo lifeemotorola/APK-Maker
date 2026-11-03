@@ -12,7 +12,7 @@ time:
 | Source | Count | What |
 | --- | --- | --- |
 | `web/curated.json` | ~470 | Hand-written Q&A: OT/NT events, people, places, quotes, numbers, parables, book facts |
-| generated from `bibles/kjv/kjv.js` (31,102 verses) | ~2,100 | **Verse Hunt** (quote → reference), **Fill in the Blank** (masked word), book order, chapter/verse counts, "which book contains this verse" |
+| generated from `bibles/kjv/kjv.js` (31,102 verses) | ~2,100 | **Verse Hunt** (quote to reference), **Fill in the Blank** (masked word), book order, chapter/verse counts, "which book contains this verse" |
 
 Every question has 4 shuffled options, exactly one correct answer, a category,
 a difficulty, an optional verse reference and an explanation. The generator
@@ -24,12 +24,12 @@ unit-tests the quiz engine (see below).
 
 ## Features
 
-- **4 game modes** — ⚡ Sprint (15 Q / 15 s), 🏃 Marathon (50 Q / 20 s),
-  ☀️ Daily Challenge (10 Q, seeded by date), 💀 Sudden Death (3 strikes)
+- **4 game modes** — Sprint (15 Q / 15 s), Marathon (50 Q / 20 s),
+  Daily Challenge (10 Q, seeded by date), Sudden Death (3 strikes)
 - **11 categories** (Old/New Testament, People, Places, Events, Books of the
   Bible, Quotes & Sayings, Numbers & Facts, Parables & Miracles, Verse Hunt,
   Fill in the Blank) × 3 difficulties
-- **XP & levels**, streaks with 🔥, 12 achievements with toasts
+- **XP & levels**, streaks, 12 achievements with toasts
 - **Verse reader** — every question's reference opens the verse *and the whole
   chapter* in any of the **6 bundled translations** (KJV, NKJV, ESV, NIV,
   Amplified, Reina-Valera 1909 — the repo's `bibles/`)
@@ -39,6 +39,8 @@ unit-tests the quiz engine (see below).
 - Verse of the day, stats dashboard with per-category accuracy bars
 - WebAudio sound effects, vibration, confetti, dark/light themes,
   Playfair Display + Barlow typography — all assets bundled, zero network
+- **Inline SVG icon set** (`web/icons.js`, `I('bolt')` etc.) instead of emoji;
+  `build.sh` fails if any emoji glyph survives in the staged assets
 
 ## How the APK serves the app
 

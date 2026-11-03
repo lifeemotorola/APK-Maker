@@ -46,6 +46,9 @@ if [ ! -d node_modules ]; then
 fi
 npx vite build --outDir "$APP/src/main/assets/www" --emptyOutDir
 
+# UI must use SVG icons, not emoji: fail the build if any glyphs remain
+python3 "$ROOT/scripts/check_no_emoji.py" "$ROOT/src" "$ROOT/static_ui" "$ROOT/index.html" "$APP/src/main/assets/www" "$APP/src/main"
+
 echo "==> [2/5] Bundling demo audio + analyses into APK assets"
 mkdir -p "$APP/src/main/assets/demos"
 cp "$ROOT"/demos/* "$APP/src/main/assets/demos/"
