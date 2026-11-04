@@ -28,15 +28,19 @@ const build = readRoot('android-musicdl/build.sh');
 check(html.includes('app.js') && html.includes('styles.css'), 'index.html loads styles.css + app.js');
 check(html.includes('id="searchForm"') && html.includes('id="searchInput"'), 'search UI present');
 check(html.includes('id="downloads"') && html.includes('id="playerBar"'), 'downloads list + player bar present');
+check(html.includes('id="mainNav"') && /HOME/.test(html) && /GOSPEL/.test(html) && /MY DOWNLOADS/.test(html), 'ceenaija-style nav bar (HOME/TRENDING/GOSPEL/NAIJA/HYMNS/ARTISTS/MY DOWNLOADS)');
+check(html.includes('id="homeView"') && /NaijaGospel MP3/.test(html) && /ceenaija/.test(html), 'ceenaija-style homepage branding (NaijaGospel MP3)');
 
-check(/archive\.org\/advancedsearch\.php/.test(app), 'source 1: archive.org advancedsearch API');
-check(/commons\.wikimedia\.org\/w\/api\.php/.test(app) && /filetype:audio/.test(app), 'source 2: Wikimedia Commons audio search API');
+check(!/archive\.org/.test(app) && !/advancedsearch/.test(app) && !/collection:etree|georgeblood/.test(app), 'Internet Archive fully removed from the web app');
+check(!/commons\.wikimedia\.org/.test(app), 'Wikimedia Commons fully removed from the web app');
+check(/N\.googleSearch/.test(app) && /source: 'google'/.test(app), 'source 2: Google direct audio-link search via the native bridge');
 check(/api\.openverse\.org\/v1\/audio/.test(app), 'source 3: Openverse CC audio API (keyless)');
 check(/SOURCES/.test(app) && /sourceChips/.test(app) && html.includes('id="sourceChips"'), 'source selector chips (All websites / per-site) in UI');
 check(/directUrl/.test(app) && /directGo/.test(app) && /directPanel/.test(html), 'paste-a-direct-link mode downloads from ANY website');
-check(/Promise\.all/.test(app), 'All-sources search merges results from every website');
-check(/mediatype:audio/.test(app), 'search restricted to audio items (any type of music)');
-check(/archive\.org\/metadata\//.test(app), 'per-item metadata API used to list downloadable files');
+check(/Promise\.all/.test(app), 'All-sources search merges results from every remaining website');
+check(/SOURCES/.test(app) && !/Internet Archive/.test(app), 'source chips no longer offer Internet Archive');
+check(/filetype/.test(bridge) && /google\.com\/search/.test(bridge) && /q=/.test(bridge), 'NativeBridge scrapes google.com/search for direct audio file links');
+check(/files: \[/.test(app), 'each result carries its downloadable file list inline');
 check(/AUDIO_EXT/.test(app) && /\.mp3/.test(app) && /\.flac/.test(app) && /\.ogg/.test(app), 'many audio file types supported (mp3/ogg/flac/wav/m4a...)');
 check(/MusicDLNative\.startDownload/.test(app), 'downloads go through the native bridge');
 check(/window\.MusicDL\.onEvent|window\.MusicDL =/.test(app), 'progress events bridge (window.MusicDL.onEvent) installed');
@@ -54,7 +58,7 @@ check(/PREFS_NAME/.test(bridge) && /SharedPreferences/.test(bridge), 'download r
 check(/pushJs/.test(bridge) && /window\.MusicDL/.test(bridge), 'progress pushed to the page via pushJs -> window.MusicDL.onEvent');
 
 check(/pushJs/.test(main) && /requestWriteStorageAndRun/.test(main) && /REQUEST_WRITE_STORAGE/.test(main), 'MainActivity: pushJs + legacy storage permission flow');
-check(/archive\.org/.test(main), 'WebView navigation allow-listed to archive.org + loopback');
+check(!/archive\.org/.test(main), 'WebView allowlist no longer includes archive.org (loopback only)');
 check(/rc-source/.test(css), 'results show a per-source badge');
 
 check(/\/dl\//.test(server) && /openInputStream/.test(server), 'LocalServer streams downloaded songs at /dl/<id>');
@@ -68,17 +72,22 @@ check(/cp "\$WEB\/img\/"\*\.png/.test(build), 'build.sh stages the icon PNG into
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!/\u{1F300}-\u{1FAFF}/u.test(css + html + app), 'no emoji-range glyphs in web sources');
 
-check(/services\/img\//.test(app), 'cover-art thumbnails from archive.org services/img');
+check(!/services\/img/.test(app), 'no more archive.org cover thumbnails');
+check(/s2\/favicons/.test(bridge), 'Google favicon service used for result covers');
 check(/quickChips/.test(app) && /surpriseMe/.test(app), 'quick-search chips + Surprise me random discovery');
 check(/localStorage/.test(app) && /HIST_KEY/.test(app), 'search history persisted in localStorage');
 check(/downloadAll/.test(app), 'download-all-files-of-an-item feature');
 check(/classList\.add\('playing'\)/.test(app) || /eq\.classList/.test(app), 'animated equalizer in the player bar');
 check(/addEventListener\('offline'/.test(app) && /addEventListener\('online'/.test(app), 'online/offline indicator');
 check(/grid/.test(html) && /result-card/.test(css), 'results rendered as cover-art card grid');
+check(/SECTIONS/.test(app) && /Trending Now/.test(app) && /Latest Gospel Songs/.test(app) && /loadHome/.test(app), 'homepage sections (Trending / Gospel / Naija / Hymns / Global) with loadHome');
+check(/DOWNLOAD MP3/.test(app) && /quickMp3/.test(app), 'per-song DOWNLOAD MP3 quick button (ceenaija-style)');
+check(/h-row/.test(css) && /main-nav/.test(css), 'horizontal section rows + sticky-style nav in CSS');
+check(/data-nav/.test(html) && /switchView/.test(app), 'nav switches views (home/search/downloads)');
 check(/cover/.test(bridge) && /startDownload\(final String id, final String url, final String filename,\s*final String title, final String creator, final String mime,\s*final String cover\)/s.test(bridge), 'startDownload carries a cover URL (any source)');
 check(/pendingDlCover/.test(main), 'MainActivity threads cover through the storage-permission retry');
 
-check(html.includes('id="sortSel"') && /popular/.test(app) && /ARCHIVE_SORT/.test(app), 'sort control (relevance/popular/newest/A-Z) wired to the search APIs');
+check(html.includes('id="sortSel"') && /sortItems/.test(app) && /value="az"/.test(html), 'sort control (relevance/popular/newest/A-Z) wired');
 check(html.includes('id="fmtChips"') && /itemHasFormat/.test(app), 'format filter chips (MP3/OGG/FLAC/WAV/M4A)');
 check(/renderSkeletons/.test(app) && /shimmer/.test(css), 'loading skeleton cards while searching');
 check(/_speed/.test(app) && /ETA/.test(app), 'download speed + ETA shown in progress rows');

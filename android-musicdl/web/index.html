@@ -3,30 +3,42 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Music Downloader</title>
+<title>Gospel MP3 Downloader</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <div id="netBanner" class="net-banner hidden">You are offline — search and downloads need the internet</div>
-<main class="app">
-  <header class="hero">
+
+<header class="site-head">
+  <div class="hero">
     <div class="hero-inner">
       <div class="brand">
-        <img class="brand-icon" src="img/icon.png" alt="Music Downloader icon" />
+        <img class="brand-icon" src="img/icon.png" alt="Gospel MP3 Downloader icon" />
         <div>
-          <h1>Music Downloader</h1>
-          <p class="tagline">Search the internet's free music archive and download any song to your device</p>
+          <h1>NaijaGospel MP3</h1>
+          <p class="tagline">Your No.1 Gospel &amp; Naija music MP3 download app — like ceenaija.com, right on your phone</p>
         </div>
       </div>
       <div class="net-pill" id="netPill">online</div>
     </div>
-  </header>
+  </div>
+  <nav class="main-nav" id="mainNav">
+    <button class="nav-btn active" data-nav="home">HOME</button>
+    <button class="nav-btn" data-nav="q" data-q="gospel trending">TRENDING</button>
+    <button class="nav-btn" data-nav="q" data-q="nigerian gospel song">GOSPEL</button>
+    <button class="nav-btn" data-nav="q" data-q="afrobeat naija">NAIJA</button>
+    <button class="nav-btn" data-nav="q" data-q="hymn worship praise">HYMNS</button>
+    <button class="nav-btn" data-nav="q" data-q="gospel artist sinach mercy chinwo hillsong elevation">ARTISTS</button>
+    <button class="nav-btn" data-nav="downloads">MY DOWNLOADS <span id="dlCount" class="badge">0</span></button>
+  </nav>
+</header>
 
+<main class="app">
   <section class="card search-card">
     <form id="searchForm" class="search-row">
-      <input id="searchInput" type="search" placeholder="Search any type of music (artist, song, genre, live concert...)" autocomplete="off" />
+      <input id="searchInput" type="search" placeholder="Search any song or artist (e.g. Sinach Faithful God) ..." autocomplete="off" />
       <button type="submit" class="go-btn">Search</button>
-      <button type="button" id="surpriseBtn" class="go-btn surprise" title="Play a random free track from the archive">Surprise me</button>
+      <button type="button" id="surpriseBtn" class="go-btn surprise" title="Play a random free track">Surprise me</button>
     </form>
     <div class="chips" id="sourceChips"></div>
     <div class="chips row2">
@@ -50,18 +62,26 @@
       <input id="directName" type="text" placeholder="File name (optional, e.g. song.mp3)" autocomplete="off" />
       <button type="button" id="directGo" class="go-btn">Download link</button>
     </div>
-    <div class="hint">Sources: Internet Archive, Wikimedia Commons and Openverse CC audio — plus any direct file link from any website. Audio types: mp3, ogg, flac, wav, m4a and more. Files are saved to <b>Music/MusicDownloader</b> on your device.</div>
-    <div id="searchStatus" class="status">ready</div>
+    <div class="hint">Free sources: Google direct audio-link search and Openverse CC audio — plus any direct file link. Audio types: mp3, ogg, flac, wav, m4a and more. Files are saved to <b>Music/MusicDownloader</b> on your device.</div>
+    <div id="searchStatus" class="status">ready — browse the sections below or search any song</div>
   </section>
 
-  <section class="card">
+  <div id="homeView"></div>
+
+  <section class="card hidden" id="searchView">
     <div class="tabs">
       <button id="tabSearch" class="tab active">Search results</button>
-      <button id="tabDownloads" class="tab">My downloads <span id="dlCount" class="badge">0</span></button>
       <button id="clearFinished" class="tab ghost-tab" title="Remove all finished/cancelled/errored downloads from the list">Clear finished</button>
     </div>
     <div id="results" class="grid"></div>
-    <ul id="downloads" class="list hidden"></ul>
+  </section>
+
+  <section class="card hidden" id="downloadsView">
+    <div class="panel-head">
+      <h3>My downloads</h3>
+      <span class="status">saved to Music/MusicDownloader on this device</span>
+    </div>
+    <ul id="downloads" class="list"></ul>
   </section>
 
   <footer class="foot">Downloads are stored locally on your device and show up in your music apps · requires internet for search &amp; download</footer>

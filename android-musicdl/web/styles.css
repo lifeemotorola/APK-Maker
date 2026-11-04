@@ -186,4 +186,28 @@ h1 { font-size: 20px; margin: 0; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 .toast.err { border-color: rgba(248, 113, 113, 0.55); }
+.site-head { margin-bottom: 4px; }
+.main-nav {
+  display: flex; gap: 4px; overflow-x: auto; padding: 8px 2px 10px;
+  scrollbar-width: none;
+}
+.main-nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  flex: 0 0 auto; background: #0A1826; color: var(--muted); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; cursor: pointer;
+}
+.nav-btn.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(34,211,238,0.55); }
+
+.section { margin-bottom: 14px; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; padding: 2px 2px 8px; }
+.section-head h2 { margin: 0; font-size: 15.5px; }
+.section-head h2 .dot { color: var(--gold); }
+.section-head .more { font-size: 11px; color: var(--accent); background: none; border: none; cursor: pointer; font-weight: 700; }
+.h-row { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: thin; }
+.h-row .result-card { flex: 0 0 158px; width: 158px; }
+.btn.mp3 { background: rgba(240, 179, 92, 0.16); color: var(--gold); border-color: rgba(240,179,92,0.55); }
+.sec-status { font-size: 11px; color: var(--muted); padding: 4px 2px 8px; font-family: ui-monospace, monospace; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.panel-head h3 { margin: 0; font-size: 14.5px; }
+
 .foot { text-align: center; font-size: 10.5px; color: var(--muted); padding: 8px 0 4px; }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The bundled web app is served from the app's own loopback server
      (LocalServer on 127.0.0.1), so cleartext is permitted for localhost
-     only. All music traffic goes to archive.org over HTTPS from the page /
-     Java, which needs no cleartext exception. -->
+     only. All music traffic goes to the source sites (Wikimedia Commons,
+     Openverse) over HTTPS from the page / Java, needing no cleartext exception. -->
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">127.0.0.1</domain>
