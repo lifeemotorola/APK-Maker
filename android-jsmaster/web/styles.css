@@ -260,3 +260,18 @@ body {
 .guide-text p:empty { display: none; }
 .guide-secs { columns: 2; column-gap: 18px; font-size: 14px; }
 @media (max-width: 560px) { .guide-secs { columns: 1; } }
+
+/* --------------------- syntax highlight tokens ---------------------------- */
+.code-block code { color: #e8e6ff; }
+.tk-k { color: #7dd3fc; font-weight: 700; }   /* keywords */
+.tk-s { color: #e8c468; }                      /* strings */
+.tk-n { color: #c4b5fd; }                      /* numbers */
+.tk-c { color: #8b90a5; font-style: italic; }  /* comments */
+.tk-f { color: #5eead4; }                      /* function calls */
+.tk-o { color: #a5b4fc; }                      /* operators/punctuation */
+:root[data-theme='night'] .tk-k { color: #818cf8; }
+:root[data-theme='night'] .tk-s { color: #fbbf24; }
+:root[data-theme='night'] .tk-n { color: #d8b4fe; }
+:root[data-theme='night'] .tk-f { color: #2dd4bf; }
+:root[data-theme='night'] .tk-o { color: #a5b4fc; }
+.guide-code { margin: 0 0 12px; font-size: 13px; line-height: 1.6; }

@@ -137,6 +137,41 @@
     return n;
   }
 
+  /* ------------------ syntax highlighting (offline, no libs) -------------- */
+  var HL_KW = {var:1,let:1,const:1,function:1,return:1,if:1,else:1,for:1,while:1,do:1,switch:1,case:1,default:1,break:1,continue:1,new:1,class:1,extends:1,super:1,this:1,typeof:1,instanceof:1,in:1,of:1,try:1,catch:1,finally:1,throw:1,async:1,await:1,import:1,export:1,from:1,null:1,undefined:1,true:1,false:1,void:1,delete:1,yield:1,static:1,get:1,set:1};
+  function hl(code) {
+    var re = /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|(0[xX][0-9a-fA-F]+|\d+(?:\.\d+)?)\b|([A-Za-z_$][\w$]*)(?=\s*\()|([A-Za-z_$][\w$]*)|(\s+)|([\s\S])/g;
+    return String(code).replace(re, function (m, lc, bc, str, num, fn, id, ws, ch) {
+      if (lc) return '<span class="tk-c">' + esc(lc) + '</span>';
+      if (bc) return '<span class="tk-c">' + esc(bc) + '</span>';
+      if (str) return '<span class="tk-s">' + esc(str) + '</span>';
+      if (num) return '<span class="tk-n">' + esc(num) + '</span>';
+      if (fn) return '<span class="tk-f">' + esc(fn) + '</span>';
+      if (id) return HL_KW[id] ? '<span class="tk-k">' + esc(id) + '</span>' : esc(id);
+      if (ws) return esc(ws);
+      return '<span class="tk-o">' + esc(ch) + '</span>';
+    });
+  }
+  /* heuristic: is this guide paragraph actually a code listing? */
+  function looksLikeCode(t) {
+    if (!t || t.length > 5000) return false;
+    var lines = t.split('\n').filter(function (l) { return l.trim(); });
+    if (!lines.length || lines.length > 80) return false;
+    var avgWords = t.split(/\s+/).filter(Boolean).length / lines.length;
+    if (avgWords > 6 && lines.length > 2) return false; // prose paragraph, not a listing
+    var hits = 0;
+    lines.forEach(function (l) {
+      if (/^\s*(\/\/|\/\*)/.test(l) ||
+          /^\s*(function|let|const|var|if|else|for|while|do|switch|case|return|class|import|export|new|try|catch|throw|async)\b/.test(l) ||
+          /[;{}]\s*$/.test(l) ||
+          /=>/.test(l) ||
+          /\bconsole\.(log|warn|error|info)\s*\(/.test(l) ||
+          /^\s*(document|window)\.[A-Za-z]/.test(l) ||
+          (/^\s*[A-Za-z_$][\w$.]*\s*=[^=]/.test(l) && /\(/.test(l))) hits++;
+    });
+    return hits / lines.length >= 0.65;
+  }
+
   /* ------------------------------ router --------------------------------- */
   var screen = { name: 'home' };
   var navStack = [screen];
@@ -346,6 +381,7 @@
     <div id="practiceList" class="card-list"></div>
   </section>${navBar('topics')}`);
     bindNav();
+    $all('.lesson .code-block code').forEach(function (el) { el.innerHTML = hl(el.textContent); });
     var pracFilter = 'all';
     function renderPracList() {
       loadPractices(t.id).then(function (list) {
@@ -509,6 +545,7 @@
       return pg.t.split(/\n{2,}/).map(function (para) {
         var txt = para.trim();
         if (!txt) return '';
+        if (looksLikeCode(txt)) return '<pre class="code-block guide-code"><code>' + hl(txt) + '</code></pre>';
         return '<p>' + esc(txt).replace(/\n/g, '<br>') + '</p>';
       }).join('');
     }).join('');
