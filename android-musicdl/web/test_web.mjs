@@ -62,6 +62,16 @@ check(/cp "\$WEB\/img\/"\*\.png/.test(build), 'build.sh stages the icon PNG into
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!/\u{1F300}-\u{1FAFF}/u.test(css + html + app), 'no emoji-range glyphs in web sources');
 
+check(/services\/img\//.test(app), 'cover-art thumbnails from archive.org services/img');
+check(/quickChips/.test(app) && /surpriseMe/.test(app), 'quick-search chips + Surprise me random discovery');
+check(/localStorage/.test(app) && /HIST_KEY/.test(app), 'search history persisted in localStorage');
+check(/downloadAll/.test(app), 'download-all-files-of-an-item feature');
+check(/classList\.add\('playing'\)/.test(app) || /eq\.classList/.test(app), 'animated equalizer in the player bar');
+check(/addEventListener\('offline'/.test(app) && /addEventListener\('online'/.test(app), 'online/offline indicator');
+check(/grid/.test(html) && /result-card/.test(css), 'results rendered as cover-art card grid');
+check(/identifier/.test(bridge) && /startDownload\(final String id, final String url, final String filename,\s*final String title, final String creator, final String mime,\s*final String identifier\)/s.test(bridge), 'startDownload carries the archive identifier (for covers)');
+check(/pendingDlIdent/.test(main), 'MainActivity threads identifier through the storage-permission retry');
+
 if (failures) {
   console.error('\nMUSICDL WEB TEST: ' + failures + ' FAILURE(S)');
   process.exit(1);

@@ -99,17 +99,18 @@ public class NativeBridge {
 
     @JavascriptInterface
     public String startDownload(final String id, final String url, final String filename,
-                                final String title, final String creator, final String mime) {
+                                final String title, final String creator, final String mime,
+                                final String identifier) {
         if (Build.VERSION.SDK_INT < 29
                 && activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
-            activity.requestWriteStorageAndRun(id, url, filename, title, creator, mime);
+            activity.requestWriteStorageAndRun(id, url, filename, title, creator, mime, identifier);
             return "pending-permission";
         }
         pool.execute(new Runnable() {
             @Override
             public void run() {
-                runDownload(id, url, filename, title, creator, mime);
+                runDownload(id, url, filename, title, creator, mime, identifier);
             }
         });
         return "started";
@@ -152,7 +153,7 @@ public class NativeBridge {
         }
     }
 
-    private void runDownload(String id, String url, String filename, String title, String creator, String mime) {
+    private void runDownload(String id, String url, String filename, String title, String creator, String mime, String identifier) {
         ContentResolver resolver = activity.getContentResolver();
         Uri outUri = null;
         File legacyFile = null;
@@ -166,6 +167,7 @@ public class NativeBridge {
             rec.put("title", title == null ? "" : title);
             rec.put("creator", creator == null ? "" : creator);
             rec.put("mime", mime == null ? "audio/mpeg" : mime);
+            rec.put("identifier", identifier == null ? "" : identifier);
             rec.put("status", "downloading");
             rec.put("pct", 0);
             putRecord(reg, id, rec);

@@ -6,6 +6,18 @@ CC-licensed tracks — mp3, ogg, flac, wav, m4a, wma, aac...) and saves the file
 straight into the device's public **Music/MusicDownloader** folder, where every
 system music app can see them.
 
+## Features
+
+- Cover-art result cards (archive.org item thumbnails), quick-search chips
+  (live concerts, jazz, gospel, classical, afrobeat, public-domain 78s),
+  recent-search history, and a **Surprise me** button that finds and
+  auto-plays a random free track.
+- **Download all** files of an item at once; per-file Preview + Download;
+  live progress bars, cancel, and a persisted My-downloads list with
+  cover art, local Play and Delete.
+- Animated equalizer player bar, online/offline indicator, saved to the
+  public **Music/MusicDownloader** folder.
+
 ## How it works
 
 - **Search (JS, in the WebView)**: `https://archive.org/advancedsearch.php`
