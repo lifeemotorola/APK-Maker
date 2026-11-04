@@ -6,7 +6,7 @@
  *
  * Writes:
  *   data/topics.json     index: 50 topics with lesson HTML + 8 quiz questions
- *   data/p/<id>.json     105 practice problems per topic (5,250 total)
+ *   data/p/<id>.json     7 practice problems per topic (350 total)
  *
  * Practice shape: { id, prompt, starter, test, hint, solution }
  *   - `starter` is pre-filled editor code; the learner edits it.
@@ -43,7 +43,7 @@ function RNG(seed) {
     },
   };
 }
-const N_PRACTICE = 105; // per topic -> 50 * 105 = 5,250 practices
+const N_PRACTICE = 7; // per topic -> 50 * 7 = 350 practices (user-requested size)
 
 // ------------------------------------------------------- practice builders
 // Convention: every practice is { prompt, starter, test, hint, solution }.
@@ -1256,6 +1256,6 @@ function main() {
   fs.writeFileSync(path.join(OUT, 'topics.json'), JSON.stringify({ count: TOPICS.length, totalPractices: total, topics: index }));
   console.log(`TOPICS: ${TOPICS.length}, PRACTICES: ${total}`);
   if (TOPICS.length !== 50) { console.error('FATAL: must be exactly 50 topics'); process.exit(1); }
-  if (total < 5000) { console.error('FATAL: need >= 5000 practices, have ' + total); process.exit(1); }
+  if (total !== TOPICS.length * N_PRACTICE) { console.error('FATAL: need exactly ' + (TOPICS.length * N_PRACTICE) + ' practices (7 per topic), have ' + total); process.exit(1); }
 }
 main();

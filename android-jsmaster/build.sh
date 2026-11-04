@@ -2,7 +2,7 @@
 # ============================================================================
 # JS Mastery — Android APK build (fully offline toolchain).
 #
-# Interactive JavaScript course (beginner -> advanced): 50 topics, 5,250
+# Interactive JavaScript course (beginner -> advanced): 50 topics, 350
 # runnable practice problems, per-topic quizzes, a 50-question final exam and
 # a printable certificate. All course data is generated at build time into
 # assets/www/data by web/gen_course.js and validated by web/test_course.js
@@ -61,8 +61,11 @@ mkdir -p "$WWW/img" "$WWW/fonts"
 cp "$WEB/index.html" "$WEB/styles.css" "$WEB/app.js" "$WEB/icons.js" "$WWW/"
 cp "$WEB/img/"*.jpg "$WWW/img/"
 
-# generated course data (50 topics / 5,250 practices + quizzes)
+# generated course data (50 topics / 7 practices each = 350 + quizzes)
 node "$WEB/gen_course.js" "$WWW/data"
+# full in-app reference guide (every chapter/step of the bundled JS book,
+# author/publisher details scrubbed) — source: web/guide-src.json
+cp "$WEB/guide-src.json" "$WWW/data/guide.json"
 # executes every practice solution + test in a VM — fails the build if any break
 node "$WEB/test_course.js" "$WWW/data"
 # proves the shipped in-app sandboxed-iframe runner (srcdoc + postMessage) works
