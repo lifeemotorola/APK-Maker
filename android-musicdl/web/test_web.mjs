@@ -28,6 +28,8 @@ const build = readRoot('android-musicdl/build.sh');
 check(html.includes('app.js') && html.includes('styles.css'), 'index.html loads styles.css + app.js');
 check(html.includes('id="searchForm"') && html.includes('id="searchInput"'), 'search UI present');
 check(html.includes('id="downloads"') && html.includes('id="playerBar"'), 'downloads list + player bar present');
+check(html.includes('id="mainNav"') && /HOME/.test(html) && /GOSPEL/.test(html) && /MY DOWNLOADS/.test(html), 'ceenaija-style nav bar (HOME/TRENDING/GOSPEL/NAIJA/HYMNS/ARTISTS/MY DOWNLOADS)');
+check(html.includes('id="homeView"') && /NaijaGospel MP3/.test(html) && /ceenaija/.test(html), 'ceenaija-style homepage branding (NaijaGospel MP3)');
 
 check(/archive\.org\/advancedsearch\.php/.test(app), 'source 1: archive.org advancedsearch API');
 check(/commons\.wikimedia\.org\/w\/api\.php/.test(app) && /filetype:audio/.test(app), 'source 2: Wikimedia Commons audio search API');
@@ -75,6 +77,10 @@ check(/downloadAll/.test(app), 'download-all-files-of-an-item feature');
 check(/classList\.add\('playing'\)/.test(app) || /eq\.classList/.test(app), 'animated equalizer in the player bar');
 check(/addEventListener\('offline'/.test(app) && /addEventListener\('online'/.test(app), 'online/offline indicator');
 check(/grid/.test(html) && /result-card/.test(css), 'results rendered as cover-art card grid');
+check(/SECTIONS/.test(app) && /Trending Now/.test(app) && /Latest Gospel Songs/.test(app) && /loadHome/.test(app), 'homepage sections (Trending / Gospel / Naija / Hymns / Global) with loadHome');
+check(/DOWNLOAD MP3/.test(app) && /quickMp3/.test(app), 'per-song DOWNLOAD MP3 quick button (ceenaija-style)');
+check(/h-row/.test(css) && /main-nav/.test(css), 'horizontal section rows + sticky-style nav in CSS');
+check(/data-nav/.test(html) && /switchView/.test(app), 'nav switches views (home/search/downloads)');
 check(/cover/.test(bridge) && /startDownload\(final String id, final String url, final String filename,\s*final String title, final String creator, final String mime,\s*final String cover\)/s.test(bridge), 'startDownload carries a cover URL (any source)');
 check(/pendingDlCover/.test(main), 'MainActivity threads cover through the storage-permission retry');
 

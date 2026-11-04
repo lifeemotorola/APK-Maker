@@ -6,6 +6,15 @@ CC-licensed tracks — mp3, ogg, flac, wav, m4a, wma, aac...) and saves the file
 straight into the device's public **Music/MusicDownloader** folder, where every
 system music app can see them.
 
+## ceenaija.com-style experience
+
+The app now looks and browses like a Naija gospel-music download blog:
+nav bar (HOME / TRENDING / GOSPEL / NAIJA / HYMNS / ARTISTS / MY DOWNLOADS),
+curated homepage sections (Trending Now, Latest Gospel Songs, Nigerian
+Gospel & Afrobeats, Hymns & Praise, Global Tunes) as horizontal cover-art
+rows, and per-song **DOWNLOAD MP3** buttons next to Preview — all fed by the
+multi-website free sources below (plus direct links).
+
 ## Features
 
 - Multi-website music search (Internet Archive + Wikimedia Commons +
