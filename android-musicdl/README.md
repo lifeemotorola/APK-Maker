@@ -35,7 +35,9 @@ free sources below (plus direct links).
 ## How it works
 
 - **Search (JS, in the WebView) — multiple websites**:
-  - Wikimedia Commons: `https://commons.wikimedia.org/w/api.php` (`filetype:audio` search, direct `upload.wikimedia.org` file URLs + thumbnails),
+  - **Google**: `https://www.google.com/search?q=<q> filetype:mp3` — searched from
+    **native Java** (`NativeBridge.googleSearch`, because google.com has no
+    CORS-enabled API) and parsed for direct audio links, with favicon covers,
   - Openverse CC audio: `https://api.openverse.org/v1/audio/?q=...` (keyless, CORS-enabled),
   - **or paste a direct file link from ANY website** ("Paste a direct link" mode).
   The Source chips switch between All websites / a single site; results are

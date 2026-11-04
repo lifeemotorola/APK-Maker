@@ -13,8 +13,10 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.webkit.JavascriptInterface;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -22,6 +24,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -119,6 +127,87 @@ public class NativeBridge {
     @JavascriptInterface
     public void cancelDownload(String id) {
         cancelFlags.put(id, Boolean.TRUE);
+    }
+
+    /**
+     * Google source: search google.com for direct audio-file links
+     * (q + optional "filetype:mp3") and return them as a JSON array.
+     * Done natively because google.com has no CORS-enabled API — the page
+     * cannot fetch it directly from the WebView.
+     */
+    @JavascriptInterface
+    public String googleSearch(String q, String filetype) {
+        JSONArray out = new JSONArray();
+        try {
+            String query = q + (filetype == null || filetype.isEmpty() ? "" : " filetype:" + filetype);
+            String url = "https://www.google.com/search?q=" + URLEncoder.encode(query, "UTF-8")
+                    + "&num=30&hl=en&gbv=1&filter=0&ie=UTF-8";
+            HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setConnectTimeout(12000);
+            conn.setReadTimeout(15000);
+            conn.setInstanceFollowRedirects(true);
+            conn.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36");
+            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.9");
+            conn.connect();
+            if (conn.getResponseCode() != 200) return "[]";
+            InputStream in = conn.getInputStream();
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] buf = new byte[16384];
+            int n, total = 0;
+            while ((n = in.read(buf)) != -1 && total < 800000) { bos.write(buf, 0, n); total += n; }
+            in.close();
+            conn.disconnect();
+            String html = new String(bos.toByteArray(), "UTF-8");
+
+            Set<String> seen = new LinkedHashSet<String>();
+            // basic-html result links: /url?q=https://...&amp;...
+            Matcher m1 = Pattern.compile("/url\\?q=(https?://[^&\"]+)").matcher(html);
+            while (m1.find()) seen.add(URLDecoder.decode(m1.group(1), "UTF-8"));
+            // some layouts use direct hrefs to the target
+            Matcher m2 = Pattern.compile("href=\"(https?://[^\"]+\\.(?:mp3|ogg|opus|flac|m4a|wav|wma|aac|aiff)(?:\\?[^\"]*)?)\"",
+                    Pattern.CASE_INSENSITIVE).matcher(html);
+            while (m2.find()) seen.add(m2.group(1));
+
+            String[] exts = {".mp3", ".ogg", ".opus", ".flac", ".m4a", ".wav", ".wma", ".aac", ".aiff"};
+            String[] mimes = {"audio/mpeg", "audio/ogg", "audio/ogg", "audio/flac", "audio/mp4",
+                    "audio/wav", "audio/x-ms-wma", "audio/aac", "audio/aiff"};
+            for (String u : seen) {
+                String low = u.toLowerCase().split("[?#]")[0];
+                String ext = null;
+                for (int i = 0; i < exts.length; i++) if (low.endsWith(exts[i])) { ext = exts[i]; break; }
+                if (ext == null) continue;
+                String mime = "audio/mpeg";
+                for (int i = 0; i < exts.length; i++) if (ext.equals(exts[i])) { mime = mimes[i]; break; }
+                String host;
+                String name;
+                try {
+                    URL uu = new URL(u);
+                    host = uu.getHost();
+                    String path = uu.getPath();
+                    name = path == null || path.equals("/") ? host : path.substring(path.lastIndexOf('/') + 1);
+                    if (name.isEmpty()) name = host;
+                    try { name = URLDecoder.decode(name, "UTF-8"); } catch (Exception ignored) {}
+                } catch (Exception e) {
+                    host = "web";
+                    name = u;
+                }
+                JSONObject o = new JSONObject();
+                o.put("title", name);
+                o.put("creator", host);
+                o.put("name", name);
+                o.put("url", u);
+                o.put("size", 0);
+                o.put("mime", mime);
+                o.put("cover", "https://www.google.com/s2/favicons?domain=" + host + "&sz=128");
+                out.put(o);
+                if (out.length() >= 30) break;
+            }
+        } catch (Exception e) {
+            android.util.Log.e(MainActivity.TAG, "googleSearch failed", e);
+            return "[]";
+        }
+        return out.toString();
     }
 
     @JavascriptInterface

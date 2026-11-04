@@ -32,13 +32,14 @@ check(html.includes('id="mainNav"') && /HOME/.test(html) && /GOSPEL/.test(html) 
 check(html.includes('id="homeView"') && /NaijaGospel MP3/.test(html) && /ceenaija/.test(html), 'ceenaija-style homepage branding (NaijaGospel MP3)');
 
 check(!/archive\.org/.test(app) && !/advancedsearch/.test(app) && !/collection:etree|georgeblood/.test(app), 'Internet Archive fully removed from the web app');
-check(/commons\.wikimedia\.org\/w\/api\.php/.test(app) && /filetype:audio/.test(app), 'source 2: Wikimedia Commons audio search API');
+check(!/commons\.wikimedia\.org/.test(app), 'Wikimedia Commons fully removed from the web app');
+check(/N\.googleSearch/.test(app) && /source: 'google'/.test(app), 'source 2: Google direct audio-link search via the native bridge');
 check(/api\.openverse\.org\/v1\/audio/.test(app), 'source 3: Openverse CC audio API (keyless)');
 check(/SOURCES/.test(app) && /sourceChips/.test(app) && html.includes('id="sourceChips"'), 'source selector chips (All websites / per-site) in UI');
 check(/directUrl/.test(app) && /directGo/.test(app) && /directPanel/.test(html), 'paste-a-direct-link mode downloads from ANY website');
 check(/Promise\.all/.test(app), 'All-sources search merges results from every remaining website');
 check(/SOURCES/.test(app) && !/Internet Archive/.test(app), 'source chips no longer offer Internet Archive');
-check(/filetype:audio/.test(app), 'search restricted to audio items (any type of music)');
+check(/filetype/.test(bridge) && /google\.com\/search/.test(bridge) && /q=/.test(bridge), 'NativeBridge scrapes google.com/search for direct audio file links');
 check(/files: \[/.test(app), 'each result carries its downloadable file list inline');
 check(/AUDIO_EXT/.test(app) && /\.mp3/.test(app) && /\.flac/.test(app) && /\.ogg/.test(app), 'many audio file types supported (mp3/ogg/flac/wav/m4a...)');
 check(/MusicDLNative\.startDownload/.test(app), 'downloads go through the native bridge');
@@ -71,7 +72,8 @@ check(/cp "\$WEB\/img\/"\*\.png/.test(build), 'build.sh stages the icon PNG into
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!/\u{1F300}-\u{1FAFF}/u.test(css + html + app), 'no emoji-range glyphs in web sources');
 
-check(!/services\/img/.test(app), 'no more archive.org cover thumbnails (covers come from each source)');
+check(!/services\/img/.test(app), 'no more archive.org cover thumbnails');
+check(/s2\/favicons/.test(bridge), 'Google favicon service used for result covers');
 check(/quickChips/.test(app) && /surpriseMe/.test(app), 'quick-search chips + Surprise me random discovery');
 check(/localStorage/.test(app) && /HIST_KEY/.test(app), 'search history persisted in localStorage');
 check(/downloadAll/.test(app), 'download-all-files-of-an-item feature');

@@ -45,10 +45,10 @@
   var AUDIO_EXT = ['.mp3', '.ogg', '.opus', '.flac', '.m4a', '.wav', '.wma', '.aac', '.aiff'];
   var SOURCES = [
     { key: 'all', label: 'All websites' },
-    { key: 'commons', label: 'Wikimedia Commons' },
+    { key: 'google', label: 'Google (direct mp3 links)' },
     { key: 'openverse', label: 'Openverse CC audio' },
   ];
-  var SOURCE_LABEL = { commons: 'Wikimedia', openverse: 'Openverse', link: 'Direct link' };
+  var SOURCE_LABEL = { google: 'Google', openverse: 'Openverse', link: 'Direct link' };
   /* ceenaija-style homepage sections (queries run against the free sources) */
   var SECTIONS = [
     { id: 'trending', title: 'Trending Now', q: 'gospel OR afrobeats OR naija', source: 'all', limit: 12 },
@@ -221,27 +221,38 @@
   }
 
   /* --------------------------- sources --------------------------- */
-  function searchCommons(q) {
-    var url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*'
-      + '&generator=search&gsrsearch=' + encodeURIComponent('filetype:audio ' + q)
-      + '&gsrnamespace=6&gsrlimit=30&prop=imageinfo&iiprop=url%7Csize%7Cmime&iiurlwidth=300';
-    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
-      var pages = (j.query && j.query.pages) || {};
-      return Object.keys(pages).map(function (k) { return pages[k]; }).map(function (p) {
-        var ii = (p.imageinfo && p.imageinfo[0]) || {};
-        var em = ii.extmetadata || {};
-        var name = (p.title || 'audio').replace(/^File:/, '');
-        return {
-          source: 'commons', id: 'commons-' + p.pageid, title: name,
-          creator: stripTags(em.Artist && em.Artist.value) || stripTags(em.Credit && em.Credit.value) || '',
-          duration: 0, size: ii.size || 0,
-          formats: (ii.mime || '').replace('audio/', ''),
-          cover: ii.thumburl || ii.url || '',
-          files: [{ name: name, url: ii.url, size: ii.size || 0, mime: ii.mime || mimeOf(name) }],
-        };
-      }).filter(function (it) { return it.files[0].url; });
-    });
+  /* Google source: native bridge searches google.com for direct audio links
+   * (google.com has no CORS-enabled API, so the WebView cannot fetch it) and
+   * returns them as JSON. */
+  function searchGoogle(q) {
+    var ft = (state.format === 'all' || state.format === '.mp3') ? 'mp3' : state.format.slice(1);
+    var raw;
+    try {
+      raw = N.googleSearch(q, ft);
+    } catch (e) {
+      return Promise.reject(new Error('google source unavailable (' + (e && e.message ? e.message : e) + ')'));
+    }
+    function parse(r) {
+      var arr;
+      try { arr = JSON.parse(r || '[]'); } catch (e) { throw new Error('google source returned bad data'); }
+      return arr.map(function (a) {
+      var name = a.name || baseName(a.url);
+      if (!extOf(name)) name = name + '.mp3';
+      return {
+        source: 'google', id: 'g-' + a.url,
+        title: a.title || name, creator: a.creator || '',
+        duration: 0, size: a.size || 0,
+        formats: (a.mime || 'audio/mpeg').replace('audio/', '').toUpperCase(),
+        cover: a.cover || '',
+        files: [{ name: name, url: a.url, size: a.size || 0, mime: a.mime || mimeOf(name) }],
+      };
+      });
+    }
+    // native bridge returns a string; the browser-preview shim returns a Promise
+    if (raw && typeof raw.then === 'function') return raw.then(parse);
+    try { return Promise.resolve(parse(raw)); } catch (e) { return Promise.reject(e); }
   }
+
   function searchOpenverse(q) {
     var url = 'https://api.openverse.org/v1/audio/?q=' + encodeURIComponent(q) + '&page_size=20';
     return fetch(url).then(function (r) {
@@ -262,7 +273,7 @@
       }).filter(function (it) { return it.files[0].url; });
     });
   }
-  var SEARCHERS = { commons: searchCommons, openverse: searchOpenverse };
+  var SEARCHERS = { google: searchGoogle, openverse: searchOpenverse };
 
   function setStatus(msg, cls) {
     els.status.textContent = msg;
@@ -273,7 +284,7 @@
     if (navigator.onLine === false) { setStatus('you are offline — connect to the internet to search', 'err'); return; }
     pushHistory(query);
     switchView('search');
-    var keys = state.source === 'all' ? ['commons', 'openverse'] : [state.source];
+    var keys = state.source === 'all' ? ['google', 'openverse'] : [state.source];
     setStatus('searching ' + (state.source === 'all' ? 'all websites' : SOURCE_LABEL[state.source]) + ' for "' + query + '"...', 'busy');
     renderSkeletons();
     var tasks = keys.map(function (k) {
@@ -318,7 +329,7 @@
       els.homeView.appendChild(wrap);
       var row = wrap.querySelector('.h-row');
       var st = wrap.querySelector('.sec-status');
-      var keys = sec.source === 'all' ? ['commons', 'openverse'] : [sec.source];
+      var keys = sec.source === 'all' ? ['google', 'openverse'] : [sec.source];
       Promise.all(keys.map(function (k) {
         return SEARCHERS[k](sec.q, sec.sort).then(function (items) { return items; }).catch(function () { return []; });
       })).then(function (parts) {
