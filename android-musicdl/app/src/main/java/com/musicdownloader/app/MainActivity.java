@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
 
     // pending legacy-storage download (API 23-28 only), retried after the
     // WRITE_EXTERNAL_STORAGE runtime grant
-    private String pendingDlId, pendingDlUrl, pendingDlFile, pendingDlTitle, pendingDlCreator, pendingDlMime;
+    private String pendingDlId, pendingDlUrl, pendingDlFile, pendingDlTitle, pendingDlCreator, pendingDlMime, pendingDlIdent;
 
     public void pushJs(final String js) {
         runOnUiThread(new Runnable() {
@@ -52,9 +52,9 @@ public class MainActivity extends Activity {
         });
     }
 
-    public void requestWriteStorageAndRun(String id, String url, String file, String title, String creator, String mime) {
+    public void requestWriteStorageAndRun(String id, String url, String file, String title, String creator, String mime, String identifier) {
         pendingDlId = id; pendingDlUrl = url; pendingDlFile = file;
-        pendingDlTitle = title; pendingDlCreator = creator; pendingDlMime = mime;
+        pendingDlTitle = title; pendingDlCreator = creator; pendingDlMime = mime; pendingDlIdent = identifier;
         try {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_STORAGE);
         } catch (Exception e) {
@@ -173,9 +173,9 @@ public class MainActivity extends Activity {
             boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
             if (granted && pendingDlId != null) {
                 String id = pendingDlId, url = pendingDlUrl, file = pendingDlFile;
-                String title = pendingDlTitle, creator = pendingDlCreator, mime = pendingDlMime;
+                String title = pendingDlTitle, creator = pendingDlCreator, mime = pendingDlMime, ident = pendingDlIdent;
                 pendingDlId = null;
-                new NativeBridge(this).startDownload(id, url, file, title, creator, mime);
+                new NativeBridge(this).startDownload(id, url, file, title, creator, mime, ident);
             } else {
                 pushJs("if(window.MusicDL){window.MusicDL.onEvent({type:'error',id:"
                         + org.json.JSONObject.quote(pendingDlId == null ? "" : pendingDlId)
