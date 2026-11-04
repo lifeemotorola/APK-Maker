@@ -70,7 +70,7 @@ jobs:
           name: KeySense-Studio-APK
           path: |
             KeySense-Studio.apk
-            android/app/build/KeySense-Studio-1.0.0.apk
+            android/app/build/KeySense-Studio-1.0.1.apk
             android/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30

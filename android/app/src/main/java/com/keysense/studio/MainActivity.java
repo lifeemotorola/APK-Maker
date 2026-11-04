@@ -2,7 +2,9 @@ package com.keysense.studio;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,6 +18,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.ValueCallback;
 import android.webkit.WebViewClient;
 
 import java.io.ByteArrayInputStream;
@@ -48,6 +51,9 @@ public class MainActivity extends Activity {
     /** Fake origin used as the WebView base URL; every request is intercepted. */
     public static final String BASE_URL = "https://keysense.local/";
 
+    private static final int REQUEST_FILE_CHOOSER = 2001;
+    private ValueCallback<Uri[]> fileChooserCallback;
+
     private WebView webView;
     private MidiController midiController;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -77,7 +83,7 @@ public class MainActivity extends Activity {
         s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setAllowFileAccess(false);
-        s.setAllowContentAccess(false);
+        s.setAllowContentAccess(true); // needed so JS can read the user-picked song file (content://)
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         s.setCacheMode(WebSettings.LOAD_NO_CACHE);
         s.setUseWideViewPort(true);
@@ -350,6 +356,26 @@ public class MainActivity extends Activity {
             }
         }
 
+        // File picker for <input type="file"> (song upload) — without this the
+        // system never calls back and the upload button appears dead.
+        @Override
+        public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
+                                         WebChromeClient.FileChooserParams fileChooserParams) {
+            if (fileChooserCallback != null) {
+                fileChooserCallback.onReceiveValue(null);
+            }
+            fileChooserCallback = filePathCallback;
+            try {
+                Intent intent = fileChooserParams.createIntent();
+                startActivityForResult(intent, REQUEST_FILE_CHOOSER);
+            } catch (Exception e) {
+                Log.e(TAG, "file chooser failed", e);
+                fileChooserCallback.onReceiveValue(null);
+                fileChooserCallback = null;
+            }
+            return true;
+        }
+
         @Override
         public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
             Log.d(TAG, "JS[" + consoleMessage.sourceId() + ":" + consoleMessage.lineNumber() + "] "
@@ -372,6 +398,31 @@ public class MainActivity extends Activity {
     protected void onPause() {
         if (webView != null) webView.onPause();
         super.onPause();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_FILE_CHOOSER) {
+            ValueCallback<Uri[]> cb = fileChooserCallback;
+            fileChooserCallback = null;
+            if (cb == null) return;
+            if (resultCode != RESULT_OK || data == null) {
+                cb.onReceiveValue(null);
+                return;
+            }
+            if (data.getClipData() != null && data.getClipData().getItemCount() > 0) {
+                int n = data.getClipData().getItemCount();
+                Uri[] uris = new Uri[n];
+                for (int i = 0; i < n; i++) uris[i] = data.getClipData().getItemAt(i).getUri();
+                cb.onReceiveValue(uris);
+            } else if (data.getData() != null) {
+                cb.onReceiveValue(new Uri[]{data.getData()});
+            } else {
+                cb.onReceiveValue(null);
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
