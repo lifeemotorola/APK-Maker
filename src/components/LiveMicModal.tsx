@@ -1,7 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, Radio, Square, Wand2, X } from 'lucide-react';
 import { classifyLiveChroma, midiToNoteName } from '../lib/musicTheory';
-import { isAndroidNative, requestMicPermissionNative } from '../lib/nativeBridge';
+import {
+  isAndroidNative,
+  requestMicPermissionNative,
+  startNativeMic,
+  stopNativeMic,
+  subscribeNativeMic,
+} from '../lib/nativeBridge';
 
 interface LiveMicModalProps {
   isOpen: boolean;
@@ -29,6 +35,8 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
   const [inputLevel, setInputLevel] = useState(0);
 
   const streamRef = useRef<MediaStream | null>(null);
+  const nativeMicRef = useRef(false);
+  const micUnsubRef = useRef<(() => void) | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -40,6 +48,14 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
     rafRef.current = null;
     if (timerRef.current) window.clearInterval(timerRef.current);
     timerRef.current = null;
+    if (nativeMicRef.current) {
+      stopNativeMic();
+      nativeMicRef.current = false;
+    }
+    if (micUnsubRef.current) {
+      micUnsubRef.current();
+      micUnsubRef.current = null;
+    }
 
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
       recorderRef.current.stop();
@@ -73,7 +89,7 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
         throw new Error('Microphone access is not available in this browser context.');
       }
       // Some Android WebViews reject the full constraint set; fall back to plain audio.
-      let stream: MediaStream;
+      let stream: MediaStream | null = null;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           audio: {
@@ -83,7 +99,18 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
           },
         });
       } catch {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e2) {
+          // Last resort inside the APK: native AudioRecord capture pushed over
+          // the bridge (fixes "Could not start audio source" / NotReadableError).
+          if (isAndroidNative() && startNativeMic()) {
+            nativeMicRef.current = true;
+            stream = null;
+          } else {
+            throw e2;
+          }
+        }
       }
       streamRef.current = stream;
 
@@ -95,11 +122,25 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
         try { await ctx.resume(); } catch { /* best effort */ }
       }
 
-      const src = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 8192;
       analyser.smoothingTimeConstant = 0.72;
-      src.connect(analyser);
+      if (stream) {
+        const src = ctx.createMediaStreamSource(stream);
+        src.connect(analyser);
+      } else {
+        // native mic: turn each pushed PCM chunk into a buffer source into the analyser
+        micUnsubRef.current = subscribeNativeMic((pcm, sampleRate) => {
+          const c = audioCtxRef.current;
+          if (!c || c.state !== 'running') return;
+          const buf = c.createBuffer(1, pcm.length, sampleRate);
+          buf.copyToChannel(pcm as Float32Array<ArrayBuffer>, 0);
+          const src = c.createBufferSource();
+          src.buffer = buf;
+          src.connect(analyser);
+          src.start();
+        });
+      }
       // route through a muted gain to destination so the graph is always pulled
       const mute = ctx.createGain();
       mute.gain.value = 0;
@@ -237,7 +278,7 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
                   onClick={() => {
                     requestMicPermissionNative();
                     setErrorMsg(null);
-                    setTimeout(() => startMic(), 400);
+                    startMic();
                   }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/30 hover:bg-rose-500/50 text-rose-100 font-semibold cursor-pointer"
                 >
@@ -327,7 +368,9 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
 
                 <button
                   onClick={toggleRecording}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  disabled={!streamRef.current}
+                  title={streamRef.current ? 'Record a clip and transcribe the full timeline' : 'Recording needs the WebView mic stream; live detection still works via native capture'}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer disabled:opacity-40 ${
                     recording
                       ? 'bg-rose-500 hover:bg-rose-400 text-white animate-pulse'
                       : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
