@@ -1,7 +1,9 @@
 /* ============================================================================
  * JS Mastery — offline interactive JavaScript course (beginner -> advanced).
- * 50 topics, 5,250 runnable practice problems, per-topic quizzes, a final
- * exam and a printable certificate. User code runs in a sandboxed iframe
+ * 50 topics, 7 runnable practice problems per topic (350 total), per-topic
+ * quizzes, a final exam, a printable certificate, and a full in-app reference
+ * guide (data/guide.json — every chapter/step of the bundled JS book, author
+ * details omitted). User code runs in a sandboxed iframe
  * (sandbox="allow-scripts") with a 3s time limit. Progress is cached in the
  * WebView's local SQLite database (WebSQL, localStorage fallback).
  * Icons are inline SVG only (icons.js) — no emoji.
@@ -108,6 +110,10 @@
       practiceCache[topicId] = j; return j;
     });
   }
+  var GUIDE = null; // guide.json (full reference book, scrubbed)
+  function loadGuide() {
+    return fetch('/data/guide.json').then(function (r) { return r.json(); }).then(function (j) { GUIDE = j; });
+  }
   function topicById(id) { return COURSE.topics.find(function (t) { return t.id === id; }); }
   function solvedCount(topicId) {
     var n = 0;
@@ -159,6 +165,8 @@
     switch (screen.name) {
       case 'home': renderHome(); break;
       case 'topics': renderTopics(); break;
+      case 'guide': renderGuide(); break;
+      case 'guideChapter': renderGuideChapter(); break;
       case 'topic': renderTopic(); break;
       case 'practice': renderPractice(); break;
       case 'playground': renderPlayground(); break;
@@ -175,7 +183,7 @@
       '<button class="icon-btn" id="themeBtn" title="Switch theme">' + I(S.theme === 'day' ? 'moon' : 'sun') + '</button></header>';
   }
   function navBar(active) {
-    var items = [['home', 'home', 'Home'], ['topics', 'list', 'Topics'], ['playground', 'play', 'Playground'], ['certificate', 'award', 'Certificate']];
+    var items = [['home', 'home', 'Home'], ['topics', 'list', 'Topics'], ['guide', 'book', 'Guide'], ['playground', 'play', 'Playground'], ['certificate', 'award', 'Certificate']];
     return '<nav class="navbar">' + items.map(function (it) {
       return '<button class="nav-btn' + (active === it[0] ? ' active' : '') + '" data-nav="' + it[0] + '">' + I(it[1]) + '<span>' + it[2] + '</span></button>';
     }).join('') + '</nav>';
@@ -261,7 +269,7 @@
     <div class="card">
       <h3 class="group-label" style="margin-top:0">How it works</h3>
       <ol class="how-list">
-        <li>${I('list')} Study each topic's lesson and example.</li>
+        <li>${I('list')} Study each topic's lesson, or read the full Guide book (every chapter, offline).</li>
         <li>${I('code')} Solve its practice problems in the built-in editor — your code runs for real.</li>
         <li>${I('check')} Pass the topic quiz (5/8) to unlock the next topic.</li>
         <li>${I('award')} Finish all ${COURSE.count} topics, pass the final exam (70%+), print your certificate.</li>
@@ -456,6 +464,69 @@
       });
       document.getElementById('prevP').addEventListener('click', function () { if (idx > 0) go('practice', { id: screen.id, idx: idx - 1 }); });
       document.getElementById('nextP').addEventListener('click', function () { if (idx < list.length - 1) go('practice', { id: screen.id, idx: idx + 1 }); });
+    });
+  }
+
+  /* ------------------------- reference guide (book) ----------------------- */
+  function guidePageCount(c) { return c.end - c.start + 1; }
+  function renderGuide() {
+    if (!GUIDE) { goTab('home'); return; }
+    var chapters = GUIDE.chapters;
+    h(topBar() + `
+  <section class="screen">
+    <h1 class="screen-title">${I('book')} Reference guide</h1>
+    <p class="screen-sub">${esc(GUIDE.note)}</p>
+    <input id="guideSearch" class="search-input" type="search" placeholder="Search chapters and sections…" autocomplete="off">
+    <div class="card-list" id="guideList">` + chapters.map(function (c) {
+      var label = (c.n ? 'Chapter ' + c.n : 'Appendix');
+      return `<button class="card topic-row" data-chap="${c.n}">
+        <span class="topic-num">${c.n || 'A'}</span>
+        <span class="biz-main"><b class="biz-name">${esc(label)}: ${esc(c.title)}</b>
+        <span class="biz-meta">${guidePageCount(c)} pages · ${c.sections.length} sections · ${c.topics.length} related topics</span></span>
+        <span class="topic-state">${I('chevR')}</span>
+      </button>`;
+    }).join('') + `</div>
+  </section>${navBar('guide')}`);
+    bindNav();
+    $all('[data-chap]').forEach(function (b) {
+      b.addEventListener('click', function () { go('guideChapter', { n: +b.dataset.chap }); });
+    });
+    var gs = document.getElementById('guideSearch');
+    if (gs) gs.addEventListener('input', function () {
+      var q = gs.value.trim().toLowerCase();
+      $all('#guideList .topic-row').forEach(function (row) {
+        var c = chapters.find(function (x) { return x.n === +row.dataset.chap; });
+        var hay = (c.title + ' ' + c.sections.join(' ')).toLowerCase();
+        row.classList.toggle('hidden', !!q && hay.indexOf(q) === -1);
+      });
+    });
+  }
+  function renderGuideChapter() {
+    var c = GUIDE.chapters.find(function (x) { return x.n === screen.n; });
+    if (!c) { goTab('guide'); return; }
+    var pages = GUIDE.pages.slice(c.start, c.end + 1);
+    var body = pages.map(function (pg) {
+      return pg.t.split(/\n{2,}/).map(function (para) {
+        var txt = para.trim();
+        if (!txt) return '';
+        return '<p>' + esc(txt).replace(/\n/g, '<br>') + '</p>';
+      }).join('');
+    }).join('');
+    h(topBar() + `
+  <section class="screen">
+    <button class="back" data-back>${I('chevL')} Guide</button>
+    <h1 class="screen-title">${c.n ? 'Chapter ' + c.n : 'Appendix'}: ${esc(c.title)}</h1>
+    <p class="screen-sub">${guidePageCount(c)} pages · every step below, readable offline.</p>
+    ${c.topics.length ? `<div class="chip-row">${I('list')} Related topics:
+      ${c.topics.map(function (tid) { var t = topicById(tid); return t ? `<button class="chip-btn" data-goto-topic="${t.id}">${t.n}. ${esc(t.title)}</button>` : ''; }).join('')}
+    </div>` : ''}
+    ${c.sections.length ? `<div class="card"><h3 class="group-label" style="margin-top:0">Contents</h3>
+      <ul class="lesson-points guide-secs">${c.sections.map(function (s2) { return '<li>' + esc(s2) + '</li>'; }).join('')}</ul></div>` : ''}
+    <div class="card guide-text">${body}</div>
+  </section>${navBar('guide')}`);
+    bindNav();
+    $all('[data-goto-topic]').forEach(function (b) {
+      b.addEventListener('click', function () { go('topic', { id: b.dataset.gotoTopic }); });
     });
   }
 
@@ -657,7 +728,7 @@ for (let i = 1; i <= 5; i++) {
   }
 
   /* ------------------------------- boot ---------------------------------- */
-  Promise.all([loadCourse(), kvGet('state')]).then(function (r) {
+  Promise.all([loadCourse(), loadGuide(), kvGet('state')]).then(function (r) {
     if (r[1]) S = Object.assign(defaultState(), r[1]);
     if (!S.stars) S.stars = {};
     if (!S.days) S.days = {};

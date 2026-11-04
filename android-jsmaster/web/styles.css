@@ -254,3 +254,9 @@ body {
   padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 14.5px; margin: 4px 0 0;
 }
 :root[data-theme='night'] .lesson-real { background: rgba(129, 140, 248, 0.12); }
+
+/* --------------------- reference guide (book tab) ------------------------- */
+.guide-text p { margin: 0 0 10px; font-size: 15px; line-height: 1.65; }
+.guide-text p:empty { display: none; }
+.guide-secs { columns: 2; column-gap: 18px; font-size: 14px; }
+@media (max-width: 560px) { .guide-secs { columns: 1; } }

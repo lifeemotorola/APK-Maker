@@ -11,7 +11,7 @@ JavaScript from absolute beginner to advanced, with real-time practice.
   timers, DOM, regex, closures, `this`, prototypes, classes, inheritance,
   recursion, higher-order functions, generators, iterators, Proxy, event
   loop, modules, memory/perf, testing, and a final to-do mini-project.
-- **5,250 practice problems** (105 per topic), each with a starter snippet, a
+- **7 practice problems per topic** (350 total — sized per user request), each with a starter snippet, a
   hint, a solution, and a **real test** that runs your code. Every practice's
   solution is executed and verified in a VM at build time
   (`web/test_course.js`), so the course can never ship broken.
@@ -22,6 +22,12 @@ JavaScript from absolute beginner to advanced, with real-time practice.
   topic (sequential unlock).
 - **Final exam**: 50 questions (one per topic); 70%+ unlocks the
   **certificate**.
+- **Full in-app reference guide (new "Guide" tab)**: the complete bundled
+  JavaScript book (`android-jsmaster/javascript.pdf`, 15 chapters + appendix,
+  530+ pages) extracted at build time into `data/guide.json` — every chapter,
+  section, practice exercise and project step readable offline in the app,
+  with a chapter/section search and one-tap links to the related course
+  topics. Author and publisher details are stripped from the shipped text.
 - **Printable certificate**: classical gold-bordered design with your name,
   course title, date, exam score and author signature; the **Print** button
   calls the Android system print dialog (`MainActivity` -> `PrintManager` via
@@ -43,7 +49,7 @@ JavaScript from absolute beginner to advanced, with real-time practice.
 ## How the data is built
 `web/gen_course.js` (seeded, deterministic) generates `data/topics.json`
 (lessons + quizzes) and `data/p/<topic>.json` (105 practices each) at build
-time; `web/test_course.js` runs all 5,250 solutions + tests in a VM and fails
+time; `web/test_course.js` runs all 350 solutions + tests in a VM and fails
 the build on any failure. Both run in `build.sh` and CI.
 
 ## Layout
@@ -55,7 +61,10 @@ android-jsmaster/
     styles.css             day/night themes + print stylesheet
     icons.js               inline SVG icon library (no emoji — build-enforced)
     app.js                 router, sandboxed code runner, progress (SQLite), screens
-    gen_course.js          course generator (50 topics / 5,250 practices)
+    gen_course.js          course generator (50 topics / 7 practices each)
+    guide-src.json         full in-app reference guide extracted from javascript.pdf
+                           (every chapter/section/step; author & publisher details scrubbed)
+    extract_guide.py       tool that builds guide-src.json from ../javascript.pdf (pypdf)
     test_course.js         VM validator — executes every solution+test
     test_runner.js         VM test of the shipped in-app code runner
     img/hero.jpg           bundled artwork

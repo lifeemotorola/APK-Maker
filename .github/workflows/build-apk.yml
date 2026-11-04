@@ -11,8 +11,9 @@ name: Build Android APK
 #                                  offline marketplace & services directory)
 #                                  via android-marketplace/build.sh
 #   - job build-jsmaster-apk    -> JS Mastery (com.jsmaster.app, interactive
-#                                  JavaScript course: 50 topics, 5,250+
-#                                  practices, quizzes, certificate)
+#                                  JavaScript course: 50 topics, 350
+#                                  practices, in-app book guide, quizzes,
+#                                  certificate)
 #                                  via android-jsmaster/build.sh
 # Each APK is uploaded as a workflow artifact on every run.
 
@@ -242,7 +243,7 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Generate + VM-test the course (50 topics, 5,250 practices)
+      - name: Generate + VM-test the course (50 topics, 350 practices)
         run: |
           node android-jsmaster/web/gen_course.js /tmp/jsm-www
           node android-jsmaster/web/test_course.js /tmp/jsm-www

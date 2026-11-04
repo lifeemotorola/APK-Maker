@@ -6,7 +6,7 @@
  *
  *   node web/test_course.js [dataDir]     (default: app/src/main/assets/www/data)
  *
- * Checks: exactly 50 topics; >= 5000 practices; unique ids; every topic has
+ * Checks: exactly 50 topics; 7 practices per topic (350 total); unique ids; every topic has
  * a lesson and >= 8 quiz questions; every practice has prompt/starter/test/
  * hint/solution; every solution passes its own test (async-aware).
  */
@@ -27,7 +27,7 @@ function ok(cond, msg) {
 
 const index = JSON.parse(fs.readFileSync(path.join(DIR, 'topics.json'), 'utf8'));
 ok(index.count === 50, `exactly 50 topics (got ${index.count})`);
-ok(index.totalPractices >= 5000, `>= 5000 practices (got ${index.totalPractices})`);
+ok(index.totalPractices === 50 * 7, `350 practices (7 per topic), got ${index.totalPractices}`);
 
 const seen = new Set();
 let ran = 0, passed = 0;
@@ -64,7 +64,7 @@ for (const t of index.topics) {
   const file = path.join(DIR, 'p', t.id + '.json');
   ok(fs.existsSync(file), `${t.id}: practice file exists`);
   const practices = JSON.parse(fs.readFileSync(file, 'utf8'));
-  ok(practices.length >= 100, `${t.id}: ${practices.length} practices`);
+  ok(practices.length === 7, `${t.id}: exactly 7 practices (got ${practices.length})`);
   for (const p of practices) await checkPractice(t.id, p);
 }
 
