@@ -37,7 +37,16 @@ android-musicdl/app/build/
 android-musicdl/app/src/main/assets/www/
 MusicDownloader.apk
 
+# WiFi Cam APK build outputs
+android-wificam/app/build/
+android-wificam/app/src/main/assets/www/
+Wificam.apk
+
 # JS Mastery APK build outputs
 android-jsmaster/app/build/
 android-jsmaster/app/src/main/assets/www/
 JS-Master.apk
+
+# Python bytecode caches
+__pycache__/
+*.pyc

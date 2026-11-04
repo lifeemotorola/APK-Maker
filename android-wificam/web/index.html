@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>WiFi Cam</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app">
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <img class="brand-icon" src="img/icon.png" alt="WiFi Cam icon" />
+        <div>
+          <h1>WiFi Cam</h1>
+          <p class="tagline">Use this phone's camera as a webcam on your computer over WiFi</p>
+        </div>
+      </div>
+      <div class="net-pill" id="statePill">off</div>
+    </div>
+  </header>
+
+  <section class="card url-card">
+    <span class="label">Stream URL (open on your computer)</span>
+    <div class="url-row">
+      <code id="streamUrl">http://…:8080/stream</code>
+      <button id="copyBtn" class="btn">Copy</button>
+    </div>
+    <div class="hint">On the computer, run the driver: <code id="driverCmd">python wificam_driver.py --host &lt;phone-ip&gt; --view</code></div>
+  </section>
+
+  <section class="card video-card">
+    <div class="video-wrap">
+      <img id="preview" alt="camera preview" />
+      <div id="previewOff" class="preview-off">camera off — press Start streaming</div>
+    </div>
+    <div class="controls">
+      <button id="startBtn" class="btn primary">Start streaming</button>
+      <button id="stopBtn" class="btn">Stop</button>
+      <label>Camera
+        <select id="camSel">
+          <option value="back">Back</option>
+          <option value="front">Front</option>
+        </select>
+      </label>
+      <label>Resolution
+        <select id="resSel">
+          <option value="640x480">640x480</option>
+          <option value="1280x720" selected>1280x720</option>
+          <option value="1920x1080">1920x1080</option>
+        </select>
+      </label>
+      <label>FPS
+        <select id="fpsSel">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="15" selected>15</option>
+          <option value="24">24</option>
+          <option value="30">30</option>
+        </select>
+      </label>
+      <button id="torchBtn" class="btn">Torch: off</button>
+    </div>
+    <div id="status" class="status">idle</div>
+  </section>
+
+  <footer class="foot">Phone and computer must be on the same WiFi · stream: MJPEG over HTTP · computer driver: wificam-driver/ (viewer or virtual camera via v4l2loopback)</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
