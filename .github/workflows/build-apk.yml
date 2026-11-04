@@ -13,6 +13,10 @@ name: Build Android APK
 #   - job build-keyfinder-apk   -> KeyFinder Player (com.keyfinder.player,
 #                                  offline song player with on-device key
 #                                  detection) via android-keyfinder/build.sh
+#   - job build-musicdl-apk     -> Music Downloader (com.musicdownloader.app,
+#                                  download any type of music over the internet
+#                                  from the Internet Archive free audio catalog)
+#                                  via android-musicdl/build.sh
 #   - job build-jsmaster-apk    -> JS Mastery (com.jsmaster.app, interactive
 #                                  JavaScript course: 50 topics, 350
 #                                  practices, in-app book guide, quizzes,
@@ -268,6 +272,54 @@ jobs:
             KeyFinder-Player.apk
             android-keyfinder/app/build/KeyFinder-Player-1.0.apk
             android-keyfinder/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-musicdl-apk:
+    name: Build MusicDownloader APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (web shell test)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate the downloader web shell
+        run: node android-musicdl/web/test_web.mjs
+
+      - name: Build the APK (android-musicdl/build.sh)
+        run: ./android-musicdl/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-musicdl/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v MusicDownloader.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: MusicDownloader-APK
+          path: |
+            MusicDownloader.apk
+            android-musicdl/app/build/MusicDownloader-1.0.apk
+            android-musicdl/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
 
