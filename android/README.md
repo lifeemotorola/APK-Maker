@@ -28,9 +28,15 @@ server in the repo root) into a **self-contained Android APK** that adds
   `backend/dsp_engine.py::build_midi_from_analysis` and runs in JS.
 - **Live Mic** chord detection still works (microphone permission is passed
   through to the WebView).
-- Song-file upload analysis (`/api/analyze`) intentionally requires the
-  desktop Python server; inside the APK it shows a friendly notice. Demos,
-  live mic and live MIDI all work offline.
+- **Song upload works fully offline in the APK**: the file picker is wired
+  through `WebChromeClient.onShowFileChooser` (previously the upload button
+  did nothing), the picked file is readable (`allowContentAccess`), and
+  `POST /api/analyze` is answered in-page by a pure-JS DSP pipeline
+  (`src/lib/offlineAnalyze.ts`: WebAudio decode -> FFT chroma -> chord
+  classification, Krumhansl key estimation, onset-autocorrelation BPM,
+  piano roll, waveform) producing the same analysis JSON as the desktop
+  Python engine. Verified in CI by `scripts/test_offline_analyze.ts`.
+  On desktop, `/api/analyze` still uses the Python server.
 
 ## Permissions
 
@@ -93,7 +99,7 @@ toolchain is fetched from npm/PyPI by `fetch-tools.sh`.
 
 ```bash
 ./android/build.sh
-# -> android/app/build/KeySense-Studio-1.0.0.apk  (copied to ./KeySense-Studio.apk)
+# -> android/app/build/KeySense-Studio-1.0.1.apk  (copied to ./KeySense-Studio.apk)
 ```
 
 The build needs only `node`, `npm`, `python3` and network access to the

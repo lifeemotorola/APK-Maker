@@ -407,7 +407,8 @@ export const App: React.FC = () => {
         );
         const cleanName = analysis.filename.replace(/\.[^.]+$/, '');
         const fileName = `${cleanName}_${shiftedKey?.name.replace(/\s+/g, '') || 'KeySense'}.mid`;
-        downloadBytes(fileName, bytes, 'audio/midi');
+        const savedPath = downloadBytes(fileName, bytes, 'audio/midi');
+        if (savedPath) setAnalyzeStatus(`MIDI exported to ${savedPath}`);
         return;
       }
       const res = await apiFetch('/api/export-midi', {

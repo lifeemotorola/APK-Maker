@@ -1,4 +1,5 @@
 import { isAndroidNative, readAssetText } from './nativeBridge';
+import { analyzeAudioBytes } from './offlineAnalyze';
 
 /**
  * fetch() wrapper that works both against the desktop KeySense server
@@ -9,7 +10,7 @@ import { isAndroidNative, readAssetText } from './nativeBridge';
  *   GET /api/health        -> static ok payload
  *   GET /api/demos         -> {"demos": [...]} from assets/demos/manifest.json
  *   GET /api/demos/:id     -> assets/demos/:id.json (precomputed analysis)
- *   POST /api/analyze      -> 422 friendly message (needs the desktop DSP server)
+ *   POST /api/analyze      -> full OFFLINE analysis via lib/offlineAnalyze.ts (JS DSP)
  *   /demos/* audio files   -> served by the native WebViewClient (not via fetch)
  *   POST /api/export-midi  -> handled client-side via lib/midiExport.ts
  */
@@ -50,14 +51,33 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
   }
 
   if (path === '/api/analyze') {
-    return jsonResponse(
-      {
-        error:
-          'Uploading & analyzing song files requires the KeySense desktop server. ' +
-          'In the Android app, use the built-in demo songs or play live via MIDI / Bluetooth (USB or BLE MIDI keyboard).',
-      },
-      422
-    );
+    // Fully offline in the APK: decode the uploaded audio with WebAudio and run
+    // the JS DSP pipeline (src/lib/offlineAnalyze.ts) — same SongAnalysis shape
+    // as the desktop Python engine.
+    try {
+      const body = init?.body;
+      let bytes: Uint8Array;
+      if (body instanceof Blob) bytes = new Uint8Array(await body.arrayBuffer());
+      else if (body instanceof ArrayBuffer) bytes = new Uint8Array(body);
+      else if (typeof body === 'string') bytes = new TextEncoder().encode(body);
+      else if (body && typeof (body as ArrayBufferView).byteLength === 'number') {
+        const v = body as ArrayBufferView;
+        bytes = new Uint8Array(v.buffer as ArrayBuffer, v.byteOffset, v.byteLength);
+      } else throw new Error('empty upload body');
+      let filename = 'uploaded_song.wav';
+      const h = init?.headers as Headers | Record<string, string> | undefined;
+      if (h) {
+        const xf = h instanceof Headers ? h.get('X-Filename') : h['X-Filename'];
+        if (xf) filename = decodeURIComponent(xf);
+      }
+      const analysis = await analyzeAudioBytes(bytes, filename);
+      return jsonResponse(analysis);
+    } catch (e) {
+      return jsonResponse(
+        { error: 'Audio analysis failed: ' + (e instanceof Error ? e.message : String(e)) },
+        422
+      );
+    }
   }
 
   if (path === '/api/export-midi') {
