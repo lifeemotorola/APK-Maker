@@ -32,6 +32,11 @@ android-marketplace/app/build/
 android-marketplace/app/src/main/assets/www/
 Marketplace.apk
 
+# Music Downloader APK build outputs
+android-musicdl/app/build/
+android-musicdl/app/src/main/assets/www/
+MusicDownloader.apk
+
 # JS Mastery APK build outputs
 android-jsmaster/app/build/
 android-jsmaster/app/src/main/assets/www/

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Music Downloader</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app">
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <img class="brand-icon" src="img/icon.png" alt="Music Downloader icon" />
+        <div>
+          <h1>Music Downloader</h1>
+          <p class="tagline">Search the internet's free music archive and download any song to your device</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="card search-card">
+    <form id="searchForm" class="search-row">
+      <input id="searchInput" type="search" placeholder="Search any type of music (artist, song, genre, live concert...)" autocomplete="off" />
+      <button type="submit" class="go-btn">Search</button>
+    </form>
+    <div class="hint">Source: Internet Archive (archive.org) free audio catalog — mp3, ogg, flac, wav, m4a and more. Files are saved to <b>Music/MusicDownloader</b> on your device.</div>
+    <div id="searchStatus" class="status">ready</div>
+  </section>
+
+  <section class="card">
+    <div class="tabs">
+      <button id="tabSearch" class="tab active">Search results</button>
+      <button id="tabDownloads" class="tab">My downloads <span id="dlCount" class="badge">0</span></button>
+    </div>
+    <ul id="results" class="list"></ul>
+    <ul id="downloads" class="list hidden"></ul>
+  </section>
+
+  <footer class="foot">Downloads are stored locally on your device and show up in your music apps · requires internet for search &amp; download</footer>
+</main>
+
+<div id="playerBar" class="player-bar hidden">
+  <div class="pb-meta">
+    <div id="pbTitle" class="pb-title">—</div>
+    <div id="pbSub" class="pb-sub"></div>
+  </div>
+  <audio id="pbAudio" controls preload="none"></audio>
+  <button id="pbClose" class="pb-close" title="Close player">×</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
