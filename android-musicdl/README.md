@@ -8,6 +8,11 @@ system music app can see them.
 
 ## Features
 
+- Multi-website music search (Internet Archive + Wikimedia Commons +
+  Openverse CC audio, or a single source via the Source chips) plus a
+  **paste-a-direct-link** mode for a file hosted on any website.
+- Cover-art result cards with per-source badges, quick-search chips,
+
 - Cover-art result cards (archive.org item thumbnails), quick-search chips
   (live concerts, jazz, gospel, classical, afrobeat, public-domain 78s),
   recent-search history, and a **Surprise me** button that finds and
@@ -20,7 +25,13 @@ system music app can see them.
 
 ## How it works
 
-- **Search (JS, in the WebView)**: `https://archive.org/advancedsearch.php`
+- **Search (JS, in the WebView) — multiple websites, not only archive.org**:
+  - Internet Archive: `https://archive.org/advancedsearch.php` + per-item `metadata` API (lazy file lists),
+  - Wikimedia Commons: `https://commons.wikimedia.org/w/api.php` (`filetype:audio` search, direct `upload.wikimedia.org` file URLs + thumbnails),
+  - Openverse CC audio: `https://api.openverse.org/v1/audio/?q=...` (keyless, CORS-enabled),
+  - **or paste a direct file link from ANY website** ("Paste a direct link" mode).
+  The Source chips switch between All websites / a single site; results are
+  normalized into one cover-art card grid with a per-source badge.
   with `mediatype:audio AND (<query>)`; per-item `https://archive.org/metadata/<id>`
   lists the downloadable audio files (best format first: mp3 -> ogg -> flac -> ...).
 - **Download (Java, native bridge `MusicDLNative.startDownload`)**: streams the

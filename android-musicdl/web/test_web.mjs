@@ -29,7 +29,12 @@ check(html.includes('app.js') && html.includes('styles.css'), 'index.html loads 
 check(html.includes('id="searchForm"') && html.includes('id="searchInput"'), 'search UI present');
 check(html.includes('id="downloads"') && html.includes('id="playerBar"'), 'downloads list + player bar present');
 
-check(/archive\.org\/advancedsearch\.php/.test(app), 'search hits the archive.org advancedsearch API (internet)');
+check(/archive\.org\/advancedsearch\.php/.test(app), 'source 1: archive.org advancedsearch API');
+check(/commons\.wikimedia\.org\/w\/api\.php/.test(app) && /filetype:audio/.test(app), 'source 2: Wikimedia Commons audio search API');
+check(/api\.openverse\.org\/v1\/audio/.test(app), 'source 3: Openverse CC audio API (keyless)');
+check(/SOURCES/.test(app) && /sourceChips/.test(app) && html.includes('id="sourceChips"'), 'source selector chips (All websites / per-site) in UI');
+check(/directUrl/.test(app) && /directGo/.test(app) && /directPanel/.test(html), 'paste-a-direct-link mode downloads from ANY website');
+check(/Promise\.all/.test(app), 'All-sources search merges results from every website');
 check(/mediatype:audio/.test(app), 'search restricted to audio items (any type of music)');
 check(/archive\.org\/metadata\//.test(app), 'per-item metadata API used to list downloadable files');
 check(/AUDIO_EXT/.test(app) && /\.mp3/.test(app) && /\.flac/.test(app) && /\.ogg/.test(app), 'many audio file types supported (mp3/ogg/flac/wav/m4a...)');
@@ -50,6 +55,7 @@ check(/pushJs/.test(bridge) && /window\.MusicDL/.test(bridge), 'progress pushed 
 
 check(/pushJs/.test(main) && /requestWriteStorageAndRun/.test(main) && /REQUEST_WRITE_STORAGE/.test(main), 'MainActivity: pushJs + legacy storage permission flow');
 check(/archive\.org/.test(main), 'WebView navigation allow-listed to archive.org + loopback');
+check(/rc-source/.test(css), 'results show a per-source badge');
 
 check(/\/dl\//.test(server) && /openInputStream/.test(server), 'LocalServer streams downloaded songs at /dl/<id>');
 check(/127\.0\.0\.1/.test(server), 'LocalServer binds loopback');
@@ -69,8 +75,8 @@ check(/downloadAll/.test(app), 'download-all-files-of-an-item feature');
 check(/classList\.add\('playing'\)/.test(app) || /eq\.classList/.test(app), 'animated equalizer in the player bar');
 check(/addEventListener\('offline'/.test(app) && /addEventListener\('online'/.test(app), 'online/offline indicator');
 check(/grid/.test(html) && /result-card/.test(css), 'results rendered as cover-art card grid');
-check(/identifier/.test(bridge) && /startDownload\(final String id, final String url, final String filename,\s*final String title, final String creator, final String mime,\s*final String identifier\)/s.test(bridge), 'startDownload carries the archive identifier (for covers)');
-check(/pendingDlIdent/.test(main), 'MainActivity threads identifier through the storage-permission retry');
+check(/cover/.test(bridge) && /startDownload\(final String id, final String url, final String filename,\s*final String title, final String creator, final String mime,\s*final String cover\)/s.test(bridge), 'startDownload carries a cover URL (any source)');
+check(/pendingDlCover/.test(main), 'MainActivity threads cover through the storage-permission retry');
 
 if (failures) {
   console.error('\nMUSICDL WEB TEST: ' + failures + ' FAILURE(S)');

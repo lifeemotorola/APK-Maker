@@ -103,6 +103,22 @@ h1 { font-size: 20px; margin: 0; }
 .rc-title { font-size: 12.5px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .rc-sub { font-size: 10.5px; color: var(--muted); font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-formats { font-size: 9.5px; color: var(--accent); font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-source {
+  position: absolute; top: 6px; left: 6px; z-index: 2;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  background: rgba(7, 19, 26, 0.82); color: var(--accent); border: 1px solid rgba(34,211,238,0.4);
+  border-radius: 99px; padding: 3px 8px; backdrop-filter: blur(3px);
+}
+.chip.active { color: var(--gold); border-color: rgba(240,179,92,0.6); background: rgba(240,179,92,0.1); }
+.direct-row { margin-top: 8px; }
+.direct-panel { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.direct-panel input {
+  background: #081620; border: 1px solid var(--card-border); color: var(--text);
+  border-radius: 10px; padding: 10px 12px; font-size: 12.5px; outline: none;
+}
+.direct-panel input:focus { border-color: rgba(34,211,238,0.6); }
+#directUrl { flex: 2; min-width: 200px; }
+#directName { flex: 1; min-width: 140px; }
 .rc-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; }
 
 .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 56vh; overflow-y: auto; }
