@@ -26,8 +26,10 @@ import {
   VoicingMode,
 } from './types';
 import {
+  chordIsInKey,
   formatPrimaryChordLabel,
   getActiveChordMidiNotes,
+  getSongProgression,
   midiToNoteName,
   mod12,
   transposeChordSymbol,
@@ -209,6 +211,22 @@ export const App: React.FC = () => {
   }, [analysis, transpose]);
 
   const useFlats = shiftedKey?.useFlats ?? false;
+
+  // "Relevant progression only": show just the in-key chord progression of the song (default ON)
+  const [onlyInKey, setOnlyInKey] = useState<boolean>(true);
+  const progression = useMemo(
+    () => (analysis ? getSongProgression(analysis) : []),
+    [analysis]
+  );
+  const visibleChords = useMemo(() => {
+    if (!analysis) return [];
+    if (!onlyInKey) return analysis.chords;
+    return analysis.chords.filter((c) => chordIsInKey(c, analysis.key));
+  }, [analysis, onlyInKey]);
+  const visibleAnalysis = useMemo(
+    () => (analysis ? { ...analysis, chords: visibleChords } : null),
+    [analysis, visibleChords]
+  );
 
   // Current & Next Chord Lookup
   const { activeChord, nextChord, activeChordIndex } = useMemo(() => {
@@ -925,6 +943,30 @@ export const App: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Relevant song progression (in-key chords only, in order) */}
+                {progression.length > 0 && (
+                  <div className="mt-2.5 flex items-center gap-1 flex-wrap">
+                    <span className="text-[11px] text-slate-400 mr-1">Progression:</span>
+                    {progression.map((pc, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          const block = analysis?.chords.find((c) => c.symbol === pc.symbol && chordIsInKey(c, analysis.key));
+                          const notes = block
+                            ? getActiveChordMidiNotes(block, voicingMode, transpose)
+                            : { lh: [] as number[], rh: [] as number[], all: [] };
+                          [...notes.lh, ...notes.rh].forEach((m) => pianoSynth.noteOn(m, 0.8, 1.2));
+                        }}
+                        className="px-1.5 py-0.5 rounded bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/30 text-sky-200 text-[11px] font-mono font-semibold transition cursor-pointer"
+                        title={`${pc.symbol} — click to hear (${pc.start.toFixed(1)}s–${pc.end.toFixed(1)}s)`}
+                      >
+                        {pc.roman !== '—' ? pc.roman : pc.nashville}
+                        <span className="text-slate-400 font-normal"> {pc.symbol}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Scale Notes Quick Pills */}
                 <div className="mt-2.5 flex items-center gap-1 flex-wrap">
                   <span className="text-[11px] text-slate-400 mr-1">Scale:</span>
@@ -944,9 +986,22 @@ export const App: React.FC = () => {
               </div>
             </div>
 
+            {/* Relevant-progression filter toggle */}
+            <div className="flex items-center justify-end gap-2">
+              <label className="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={onlyInKey}
+                  onChange={(e) => setOnlyInKey(e.target.checked)}
+                  className="accent-sky-500"
+                />
+                Only in-key progression ({progression.length} chords)
+              </label>
+            </div>
+
             {/* Synchronized Waveform + Chord Timeline */}
             <WaveformTimeline
-              analysis={analysis}
+              analysis={visibleAnalysis ?? analysis}
               currentTime={currentTime}
               isPlaying={isPlaying}
               transpose={transpose}
@@ -962,7 +1017,7 @@ export const App: React.FC = () => {
 
             {/* Interactive 61-Key Studio Piano + Falling Note Waterfall */}
             <StudioPiano
-              chords={analysis.chords}
+              chords={visibleChords}
               pianoRoll={analysis.pianoRoll}
               currentTime={currentTime}
               activeChord={activeChord}
@@ -1005,7 +1060,7 @@ export const App: React.FC = () => {
 
               {bottomTab === 'chords' ? (
                 <ChordDictionaryGrid
-                  chords={analysis.chords}
+                  chords={visibleChords}
                   songKeyName={shiftedKey.name}
                   bpm={analysis.bpm}
                   transpose={transpose}
