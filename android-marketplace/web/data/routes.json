@@ -1,0 +1,222 @@
+[
+ {
+  "id": "r01",
+  "name": "Red Light - Sinkor",
+  "frm": "Red Light",
+  "to": "Sinkor",
+  "fare": "LRD 100",
+  "fareNote": "per drop",
+  "first": "5:00 AM",
+  "last": "9:30 PM",
+  "freq": "every 5-10 min",
+  "stops": [
+   "Red Light junction",
+   "Gurley Street",
+   "Broad Street",
+   "Ashmun Street",
+   "Capitol Hill",
+   "Sinkor junction"
+  ],
+  "notes": "Main kehkeh spine route. Busiest 7-9 AM and 4-7 PM."
+ },
+ {
+  "id": "r02",
+  "name": "Red Light - Paynesville",
+  "frm": "Red Light",
+  "to": "Paynesville",
+  "fare": "LRD 100-150",
+  "fareNote": "depends on drop",
+  "first": "5:30 AM",
+  "last": "9:00 PM",
+  "freq": "every 10-15 min",
+  "stops": [
+   "Red Light",
+   "Broad Street",
+   "UN Drive",
+   "Duport Road",
+   "Paynesville junction",
+   "Red Hill"
+  ],
+  "notes": "Ask the driver to \"drop\" you at your gate street."
+ },
+ {
+  "id": "r03",
+  "name": "Waterside - Broad Street",
+  "frm": "Waterside Market",
+  "to": "Broad Street",
+  "fare": "LRD 50",
+  "fareNote": "per drop",
+  "first": "5:30 AM",
+  "last": "8:30 PM",
+  "freq": "every 5 min",
+  "stops": [
+   "Waterside Market",
+   "Mechlin Street",
+   "Broad Street",
+   "Ashmun Street",
+   "Capitol"
+  ],
+  "notes": "Short hop across the bridge area."
+ },
+ {
+  "id": "r04",
+  "name": "Sinkor - Congo Town",
+  "frm": "Sinkor",
+  "to": "Congo Town",
+  "fare": "LRD 50",
+  "fareNote": "per drop",
+  "first": "5:30 AM",
+  "last": "9:00 PM",
+  "freq": "every 10 min",
+  "stops": [
+   "Sinkor junction",
+   "Tubman Boulevard",
+   "Congo Town junction",
+   "Benson Street"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r05",
+  "name": "Duala - Red Light",
+  "frm": "Duala Market",
+  "to": "Red Light",
+  "fare": "LRD 100",
+  "fareNote": "per drop",
+  "first": "5:00 AM",
+  "last": "9:00 PM",
+  "freq": "every 8-12 min",
+  "stops": [
+   "Duala Market",
+   "ELWA road",
+   "Pipeline",
+   "Red Light junction"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r06",
+  "name": "New Kru Town - Waterside",
+  "frm": "New Kru Town",
+  "to": "Waterside Market",
+  "fare": "LRD 75",
+  "fareNote": "per drop",
+  "first": "5:30 AM",
+  "last": "8:30 PM",
+  "freq": "every 10 min",
+  "stops": [
+   "New Kru Town",
+   "Buchanan Street",
+   "Caldwell junction",
+   "Waterside Market"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r07",
+  "name": "Bushrod Island - Broad Street",
+  "frm": "Bushrod Island",
+  "to": "Broad Street",
+  "fare": "LRD 50",
+  "fareNote": "per drop",
+  "first": "5:30 AM",
+  "last": "8:30 PM",
+  "freq": "every 8 min",
+  "stops": [
+   "Bushrod Island",
+   "Water Side junction",
+   "Mechlin Street",
+   "Broad Street"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r08",
+  "name": "Gardnersville - Sinkor",
+  "frm": "Gardnersville",
+  "to": "Sinkor",
+  "fare": "LRD 100",
+  "fareNote": "per drop",
+  "first": "5:30 AM",
+  "last": "9:00 PM",
+  "freq": "every 12-15 min",
+  "stops": [
+   "Gardnersville",
+   "Barnesville road",
+   "ELWA",
+   "Pipeline",
+   "Sinkor junction"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r09",
+  "name": "West Point - Clara Town",
+  "frm": "West Point",
+  "to": "Clara Town",
+  "fare": "LRD 50",
+  "fareNote": "per drop",
+  "first": "5:30 AM",
+  "last": "8:30 PM",
+  "freq": "every 10 min",
+  "stops": [
+   "West Point",
+   "Freeport area",
+   "Clara Town market"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r10",
+  "name": "Paynesville - Congo Town",
+  "frm": "Paynesville",
+  "to": "Congo Town",
+  "fare": "LRD 75",
+  "fareNote": "per drop",
+  "first": "5:30 AM",
+  "last": "8:45 PM",
+  "freq": "every 15 min",
+  "stops": [
+   "Paynesville junction",
+   "Duport Road",
+   "UN Drive",
+   "Congo Town junction"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r11",
+  "name": "Bali Island - Mamba Point",
+  "frm": "Bali Island",
+  "to": "Mamba Point",
+  "fare": "LRD 50",
+  "fareNote": "per drop",
+  "first": "6:00 AM",
+  "last": "8:00 PM",
+  "freq": "every 15 min",
+  "stops": [
+   "Bali Island",
+   "Randall Street",
+   "Mamba Point junction"
+  ],
+  "notes": ""
+ },
+ {
+  "id": "r12",
+  "name": "Johnsonville - Red Light",
+  "frm": "Johnsonville",
+  "to": "Red Light",
+  "fare": "LRD 150",
+  "fareNote": "per drop",
+  "first": "5:00 AM",
+  "last": "7:30 PM",
+  "freq": "every 20-30 min",
+  "stops": [
+   "Johnsonville",
+   "Brewerville",
+   "Gardnersville",
+   "Red Light junction"
+  ],
+  "notes": "Longer route, fewer cars in the evening."
+ }
+]

@@ -1,0 +1,69 @@
+{
+ "areas": [
+  "Broad Street",
+  "Sinkor",
+  "Congo Town",
+  "Paynesville",
+  "Red Light",
+  "Waterside",
+  "New Kru Town",
+  "Bushrod Island",
+  "Gardnersville",
+  "West Point",
+  "Clara Town",
+  "Logan Town",
+  "Duala",
+  "Bali Island",
+  "Mamba Point",
+  "ELWA",
+  "Pipeline",
+  "Johnsonville",
+  "Brewerville",
+  "Caldwell",
+  "Virginia",
+  "Banjor",
+  "Kailondo"
+ ],
+ "categories": [
+  {
+   "id": "food",
+   "name": "Food & Drink"
+  },
+  {
+   "id": "market",
+   "name": "Markets & Shops"
+  },
+  {
+   "id": "pharmacy",
+   "name": "Pharmacies"
+  },
+  {
+   "id": "clinic",
+   "name": "Clinics & Health"
+  },
+  {
+   "id": "repair",
+   "name": "Repair & Tech"
+  },
+  {
+   "id": "money",
+   "name": "Money Services"
+  },
+  {
+   "id": "education",
+   "name": "Schools & Training"
+  },
+  {
+   "id": "tailor",
+   "name": "Tailors & Fashion"
+  },
+  {
+   "id": "home",
+   "name": "Home & Hardware"
+  },
+  {
+   "id": "salon",
+   "name": "Salons & Barbers"
+  }
+ ]
+}

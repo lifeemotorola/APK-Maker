@@ -1,0 +1,110 @@
+[
+ {
+  "id": "p01",
+  "tag": "event",
+  "area": "Clara Town",
+  "author": "Community",
+  "ts": "2026-11-01T09:00:00",
+  "title": "Community meeting this Saturday",
+  "body": "Town hall meeting at the Clara Town community hall, 10:00 AM Saturday. Agenda: street cleaning, water points, and the new kehkeh stop near the school. All welcome."
+ },
+ {
+  "id": "p02",
+  "tag": "lost",
+  "area": "Waterside",
+  "author": "Community",
+  "ts": "2026-11-02T14:20:00",
+  "title": "Lost wallet near Waterside Market",
+  "body": "Lost a brown wallet near the fish market entrance around 2 PM today. Contains ID and some cash. Please call +231 6 555 0142 if found."
+ },
+ {
+  "id": "p03",
+  "tag": "job",
+  "area": "Duala",
+  "author": "Community",
+  "ts": "2026-10-30T11:00:00",
+  "title": "Shop attendant needed in Duala",
+  "body": "Provisions shop on the main Duala road needs a shop attendant. Mon-Sat, 8 AM-6 PM. Call +231 88 555 0177."
+ },
+ {
+  "id": "p04",
+  "tag": "safety",
+  "area": "Sinkor",
+  "author": "Community",
+  "ts": "2026-10-28T19:30:00",
+  "title": "Street light out on Tubman Boulevard",
+  "body": "The street light near the Sinkor junction has been out for a week. Please be careful walking at night. Reported to the community watch."
+ },
+ {
+  "id": "p05",
+  "tag": "sale",
+  "area": "Banjor",
+  "author": "Community",
+  "ts": "2026-11-01T07:15:00",
+  "title": "Fresh cassava and plantain sale",
+  "body": "Farmer selling bags of cassava and ripe plantain at the Banjor junction, LRD 800 per bag. Today and tomorrow only."
+ },
+ {
+  "id": "p06",
+  "tag": "announcement",
+  "area": "ELWA",
+  "author": "Community",
+  "ts": "2026-10-25T08:00:00",
+  "title": "Water schedule this week",
+  "body": "Liberia Water Corporation: water in ELWA and Pipeline Tuesday and Friday, 6 AM-12 noon. Store water on those days."
+ },
+ {
+  "id": "p07",
+  "tag": "event",
+  "area": "Paynesville",
+  "author": "Community",
+  "ts": "2026-10-31T16:45:00",
+  "title": "Youth football tournament - Red Hill",
+  "body": "Youth football tournament at Red Hill field this Sunday, 2 PM. Teams from Paynesville, Gardnersville and Red Light. Spectators welcome."
+ },
+ {
+  "id": "p08",
+  "tag": "lost",
+  "area": "Red Light",
+  "author": "Community",
+  "ts": "2026-10-29T13:10:00",
+  "title": "Lost phone (Tecno) at Red Light",
+  "body": "Lost a black Tecno phone near the kehkeh garage yesterday afternoon. Reward if returned. +231 77 555 0190."
+ },
+ {
+  "id": "p09",
+  "tag": "job",
+  "area": "Bushrod Island",
+  "author": "Community",
+  "ts": "2026-10-27T10:00:00",
+  "title": "Tailor apprentice wanted",
+  "body": "Tailor shop in Bushrod Island looking for an apprentice. Learn Lappa and alterations. Contact +231 6 555 0163."
+ },
+ {
+  "id": "p10",
+  "tag": "announcement",
+  "area": "Congo Town",
+  "author": "Community",
+  "ts": "2026-10-24T09:30:00",
+  "title": "Power outage notice - Congo Town",
+  "body": "Libtelco expects outages in Congo Town on Thursday 10 AM-2 PM for line maintenance. Plan ahead."
+ },
+ {
+  "id": "p11",
+  "tag": "sale",
+  "area": "New Kru Town",
+  "author": "Community",
+  "ts": "2026-11-02T08:05:00",
+  "title": "Phone accessories clearance sale",
+  "body": "Phone accessories shop near New Kru Town market: cases LRD 200, chargers LRD 300 this week only."
+ },
+ {
+  "id": "p12",
+  "tag": "event",
+  "area": "West Point",
+  "author": "Community",
+  "ts": "2026-10-26T15:00:00",
+  "title": "Beach clean-up, West Point",
+  "body": "Community beach clean-up at West Point beach, Saturday 7 AM. Gloves and bags provided. Bring friends!"
+ }
+]

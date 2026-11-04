@@ -7,6 +7,9 @@ name: Build Android APK
 #                                  via android-newsdesk/build.sh
 #   - job build-biblequiz-apk   -> Bible Quiz (com.biblequiz.app, 2,500+
 #                                  questions) via android-biblequiz/build.sh
+#   - job build-marketplace-apk -> Community Market (com.marketplace.app,
+#                                  offline marketplace & services directory)
+#                                  via android-marketplace/build.sh
 # Each APK is uploaded as a workflow artifact on every run.
 
 on:
@@ -160,5 +163,53 @@ jobs:
             Bible-Quiz.apk
             android-biblequiz/app/build/Bible-Quiz-1.2.apk
             android-biblequiz/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-marketplace-apk:
+    name: Build Marketplace APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (offline data validation)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate the offline directory data
+        run: node android-marketplace/web/test_data.js
+
+      - name: Build the APK (android-marketplace/build.sh)
+        run: ./android-marketplace/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-marketplace/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v Marketplace.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Marketplace-APK
+          path: |
+            Marketplace.apk
+            android-marketplace/app/build/Marketplace-1.0.apk
+            android-marketplace/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
