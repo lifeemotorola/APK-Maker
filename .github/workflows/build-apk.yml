@@ -10,6 +10,9 @@ name: Build Android APK
 #   - job build-marketplace-apk -> Community Market (com.marketplace.app,
 #                                  offline marketplace & services directory)
 #                                  via android-marketplace/build.sh
+#   - job build-keyfinder-apk   -> KeyFinder Player (com.keyfinder.player,
+#                                  offline song player with on-device key
+#                                  detection) via android-keyfinder/build.sh
 #   - job build-jsmaster-apk    -> JS Mastery (com.jsmaster.app, interactive
 #                                  JavaScript course: 50 topics, 350
 #                                  practices, in-app book guide, quizzes,
@@ -216,6 +219,55 @@ jobs:
             Marketplace.apk
             android-marketplace/app/build/Marketplace-1.0.apk
             android-marketplace/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-keyfinder-apk:
+    name: Build KeyFinder-Player APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (web shell test + esbuild bundle)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate the player web shell
+        run: node android-keyfinder/web/test_web.mjs
+
+      - name: Build the APK (android-keyfinder/build.sh)
+        run: ./android-keyfinder/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-keyfinder/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v KeyFinder-Player.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: KeyFinder-Player-APK
+          path: |
+            KeyFinder-Player.apk
+            android-keyfinder/app/build/KeyFinder-Player-1.0.apk
+            android-keyfinder/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
 

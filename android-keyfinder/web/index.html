@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>KeyFinder Player</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">KF</span>
+      <div>
+        <h1>KeyFinder Player</h1>
+        <p class="tagline">Advanced song player that finds the key of any song — fully offline</p>
+      </div>
+    </div>
+    <label class="add-btn" title="Add your own audio files (mp3, wav, ogg, m4a, flac)">
+      <input id="fileInput" type="file" accept="audio/*" multiple hidden />
+      + Add songs
+    </label>
+  </header>
+
+  <!-- Now playing + detected key -->
+  <section class="card now-playing">
+    <div class="np-main">
+      <div class="np-title-wrap">
+        <span class="label">Now playing</span>
+        <h2 id="npTitle">—</h2>
+        <p id="npArtist" class="np-artist">Pick a song from the library below</p>
+      </div>
+      <div class="key-badge" id="keyBadge">
+        <span class="label">Detected key</span>
+        <div class="key-name" id="keyName">—</div>
+        <div class="key-sub" id="keySub">waiting for a song…</div>
+      </div>
+    </div>
+
+    <!-- Waveform -->
+    <canvas id="wave" height="90"></canvas>
+    <div class="time-row">
+      <span id="timeCur">0:00</span>
+      <div class="loop-row">
+        <button id="loopA" class="chip-btn" title="Set loop start (A)">A</button>
+        <button id="loopB" class="chip-btn" title="Set loop end (B)">B</button>
+        <button id="loopClear" class="chip-btn" title="Clear loop">Clear</button>
+        <span id="loopLabel" class="loop-label"></span>
+      </div>
+      <span id="timeTotal">0:00</span>
+    </div>
+
+    <!-- Transport -->
+    <div class="transport">
+      <button id="prevBtn" class="t-btn" title="Previous">|&lt;</button>
+      <button id="playBtn" class="t-btn play" title="Play / pause">&gt;</button>
+      <button id="nextBtn" class="t-btn" title="Next">&gt;|</button>
+      <label class="rate-wrap">Speed
+        <select id="rateSel">
+          <option value="0.5">0.5x</option>
+          <option value="0.75">0.75x</option>
+          <option value="1" selected>1x</option>
+          <option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2">2x</option>
+        </select>
+      </label>
+      <label class="vol-wrap">Vol
+        <input id="volSlider" type="range" min="0" max="100" value="80" />
+      </label>
+    </div>
+  </section>
+
+  <!-- Key analysis panel -->
+  <section class="card key-panel">
+    <div class="panel-head">
+      <h3>Key analysis</h3>
+      <span id="analysisStatus" class="status">idle</span>
+    </div>
+    <div id="keyDetails" class="key-details hidden">
+      <div class="kd-row">
+        <div class="kd-cell"><span class="kd-label">Key</span><span class="kd-val" id="kdKey">—</span></div>
+        <div class="kd-cell"><span class="kd-label">Camelot</span><span class="kd-val" id="kdCamelot">—</span></div>
+        <div class="kd-cell"><span class="kd-label">Confidence</span><span class="kd-val" id="kdConf">—</span></div>
+      </div>
+      <div class="kd-row">
+        <div class="kd-cell"><span class="kd-label">Relative key</span><span class="kd-val" id="kdRel">—</span></div>
+        <div class="kd-cell"><span class="kd-label">Alternate</span><span class="kd-val" id="kdAlt">—</span></div>
+        <div class="kd-cell"><span class="kd-label">Tempo</span><span class="kd-val" id="kdBpm">—</span></div>
+      </div>
+      <div class="conf-bar"><div id="confFill" class="conf-fill"></div></div>
+      <div class="scale-row">
+        <span class="kd-label">Scale</span>
+        <span id="scalePills" class="pills"></span>
+      </div>
+      <div class="chroma-wrap">
+        <span class="kd-label">Chroma profile</span>
+        <div id="chromaBars" class="chroma"></div>
+      </div>
+      <div class="prog-row">
+        <span class="kd-label">Progression</span>
+        <span id="progChips" class="pills"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Library -->
+  <section class="card library">
+    <div class="panel-head">
+      <h3>Library</h3>
+      <span id="libCount" class="status"></span>
+    </div>
+    <ul id="playlist" class="playlist"></ul>
+  </section>
+
+  <footer class="foot">Runs 100% offline inside the APK · key detection: chroma + Krumhansl-Schmuckler, on-device</footer>
+</main>
+<script src="keyfinder.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

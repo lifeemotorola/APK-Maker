@@ -22,6 +22,11 @@ android-biblequiz/app/build/
 android-biblequiz/app/src/main/assets/www/
 Bible-Quiz.apk
 
+# KeyFinder Player APK build outputs
+android-keyfinder/app/build/
+android-keyfinder/app/src/main/assets/www/
+KeyFinder-Player.apk
+
 # Community Market APK build outputs
 android-marketplace/app/build/
 android-marketplace/app/src/main/assets/www/
