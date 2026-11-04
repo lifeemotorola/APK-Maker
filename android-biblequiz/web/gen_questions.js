@@ -34,7 +34,7 @@ const CAT = {
   OT: 'Old Testament', NT: 'New Testament', PPL: 'People', PLC: 'Places',
   EV: 'Events', BKS: 'Books of the Bible', QTE: 'Quotes & Sayings',
   NUM: 'Numbers & Facts', PM: 'Parables & Miracles',
-  VH: 'Verse Hunt', FB: 'Fill in the Blank',
+  VH: 'Verse Hunt', FB: 'Fill in the Blank', GK: 'General Knowledge',
 };
 const DIFF = { e: 'easy', m: 'medium', h: 'hard' };
 
@@ -139,6 +139,21 @@ function addQ(cat, diff, q, options, answerText, verseRef, explanation) {
     n++;
   }
   console.log('curated questions added:', n, '(unique:', bank.length + ')');
+}
+
+// ------------------------------------------------------- general knowledge
+{
+  const gk = JSON.parse(fs.readFileSync(path.join(HERE, 'gk.json'), 'utf8'));
+  let n = 0;
+  for (const [cat, diff, q, ans, wrongs, v, x] of gk.questions) {
+    if (cat !== 'GK' || !DIFF[diff] || !Array.isArray(wrongs) || wrongs.length !== 3) {
+      console.error('FATAL: malformed gk entry:', q);
+      process.exit(1);
+    }
+    addQ(CAT.GK, DIFF[diff], q, wrongs, ans, null, x || null);
+    n++;
+  }
+  console.log('general-knowledge questions added:', n, '(unique:', bank.length + ')');
 }
 
 // ---------------------------------------------------------------- generated: books
@@ -333,6 +348,8 @@ function validate() {
     cats.add(q.c); diffs.add(q.d);
   }
   if (bank.length < 2000) problems.push('bank too small: ' + bank.length);
+  const gkCount = bank.filter(q => q.c === CAT.GK).length;
+  if (gkCount < 80) problems.push('too few General Knowledge questions: ' + gkCount);
   if (problems.length) {
     console.error('VALIDATION FAILED:\n' + problems.slice(0, 20).join('\n'));
     process.exit(1);
