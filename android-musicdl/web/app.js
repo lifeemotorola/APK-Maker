@@ -1,13 +1,17 @@
 /* Music Downloader — app logic (runs inside the APK WebView).
  *
- * Search: Internet Archive advancedsearch API (mediatype:audio), metadata API
- * per item for the downloadable audio files (mp3/ogg/flac/wav/m4a...). Cover
- * art comes from https://archive.org/services/img/<identifier>.
- * Download: native bridge (MusicDLNative.startDownload) streams the file in
- * Java and saves it to Music/MusicDownloader via MediaStore; progress events
- * arrive via window.MusicDL.onEvent. Finished downloads play locally at
- * /dl/<id>. Extras: quick-search chips, search history, random "Surprise me"
- * discovery, animated equalizer player bar, online/offline indicator.
+ * Multi-source music search over the internet — not only archive.org:
+ *   - Internet Archive (advancedsearch + metadata APIs, lazy file lists)
+ *   - Wikimedia Commons (w/api.php filetype:audio search, direct file URLs)
+ *   - Openverse CC audio (api.openverse.org/v1/audio, keyless)
+ *   - plus a "paste a direct link" mode for a file hosted on ANY website.
+ *
+ * Downloads go through the native bridge (MusicDLNative.startDownload):
+ * streamed in Java and saved to Music/MusicDownloader via MediaStore;
+ * progress events arrive via window.MusicDL.onEvent. Finished downloads
+ * play locally at /dl/<id>. Extras: cover-art cards, quick-search chips,
+ * search history, random "Surprise me", animated equalizer player bar,
+ * online/offline indicator.
  */
 (function () {
   'use strict';
@@ -17,6 +21,8 @@
     netBanner: $('netBanner'), netPill: $('netPill'),
     form: $('searchForm'), input: $('searchInput'), status: $('searchStatus'),
     surpriseBtn: $('surpriseBtn'), quickChips: $('quickChips'), historyChips: $('historyChips'),
+    sourceChips: $('sourceChips'),
+    directToggle: $('directToggle'), directPanel: $('directPanel'), directUrl: $('directUrl'), directName: $('directName'), directGo: $('directGo'),
     tabSearch: $('tabSearch'), tabDownloads: $('tabDownloads'),
     results: $('results'), downloads: $('downloads'), dlCount: $('dlCount'),
     playerBar: $('playerBar'), pbAudio: $('pbAudio'), pbTitle: $('pbTitle'), pbSub: $('pbSub'),
@@ -26,12 +32,20 @@
 
   var state = {
     tab: 'search',
-    metaCache: {},   // identifier -> {files:[...], error}
-    expanded: {},    // identifier -> bool
+    source: 'all',
+    metaCache: {},   // archive identifier -> {files:[...], error}
+    expanded: {},    // item id -> bool
     progress: {},    // download id -> last event
   };
 
   var AUDIO_EXT = ['.mp3', '.ogg', '.opus', '.flac', '.m4a', '.wav', '.wma', '.aac', '.aiff'];
+  var SOURCES = [
+    { key: 'all', label: 'All websites' },
+    { key: 'archive', label: 'Internet Archive' },
+    { key: 'commons', label: 'Wikimedia Commons' },
+    { key: 'openverse', label: 'Openverse CC audio' },
+  ];
+  var SOURCE_LABEL = { archive: 'Internet Archive', commons: 'Wikimedia', openverse: 'Openverse', link: 'Direct link' };
   var QUICK = [
     { label: 'Live concerts', q: 'collection:etree' },
     { label: 'Jazz', q: 'jazz' },
@@ -43,7 +57,7 @@
   var HIST_KEY = 'musicdl-history';
 
   function extOf(name) {
-    var n = (name || '').toLowerCase();
+    var n = (name || '').toLowerCase().split('?')[0].split('#')[0];
     for (var i = 0; i < AUDIO_EXT.length; i++) if (n.endsWith(AUDIO_EXT[i])) return AUDIO_EXT[i];
     return '';
   }
@@ -51,7 +65,7 @@
     var e = extOf(name);
     return { '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.opus': 'audio/ogg', '.flac': 'audio/flac',
              '.m4a': 'audio/mp4', '.wav': 'audio/wav', '.wma': 'audio/x-ms-wma', '.aac': 'audio/aac',
-             '.aiff': 'audio/aiff' }[e] || 'audio/mpeg';
+             '.aiff': 'audio/aiff' }[e] || 'application/octet-stream';
   }
   function fmtBytes(n) {
     if (!n || n < 0) return '?';
@@ -60,15 +74,25 @@
     return n.toFixed(n >= 100 || i === 0 ? 0 : 1) + ' ' + u[i];
   }
   function fmtDur(sec) {
-    sec = parseInt(sec, 10);
-    if (!sec) return '';
-    var m = Math.floor(sec / 60), s = sec % 60;
+    sec = parseFloat(sec);
+    if (!sec || !isFinite(sec)) return '';
+    var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
+  }
+  function stripTags(s) {
+    return String(s == null ? '' : s).replace(/<[^>]*>/g, '').trim();
+  }
+  function baseName(url) {
+    try {
+      var p = decodeURIComponent(String(url).split('?')[0].split('#')[0]);
+      var seg = p.split('/').filter(Boolean).pop() || '';
+      return seg || 'song';
+    } catch (e) { return 'song'; }
   }
   function coverUrl(id) { return 'https://archive.org/services/img/' + encodeURIComponent(id); }
   function cssId(id) { return String(id).replace(/[^A-Za-z0-9_-]/g, '_'); }
@@ -82,6 +106,24 @@
   }
   window.addEventListener('online', updateNet);
   window.addEventListener('offline', updateNet);
+
+  /* --------------------------- source chips --------------------------- */
+  function renderSourceChips() {
+    els.sourceChips.innerHTML = '<span class="chip-label">Source</span>';
+    SOURCES.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (state.source === s.key ? ' active' : '');
+      b.textContent = s.label;
+      b.addEventListener('click', function () {
+        state.source = s.key;
+        renderSourceChips();
+        var q = els.input.value.trim();
+        if (q) doSearch(q);
+      });
+      els.sourceChips.appendChild(b);
+    });
+  }
 
   /* --------------------------- chips / history --------------------------- */
   function renderChips() {
@@ -125,101 +167,183 @@
     renderChips();
   }
 
-  /* --------------------------- search --------------------------- */
+  /* --------------------------- sources --------------------------- */
+  function searchArchive(q) {
+    var query = 'mediatype:audio AND (' + q + ')';
+    var url = 'https://archive.org/advancedsearch.php?q=' + encodeURIComponent(query)
+      + '&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=duration&fl[]=item_size&fl[]=format'
+      + '&rows=40&page=1&output=json';
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      return ((j.response && j.response.docs) || []).map(function (d) {
+        var id = d.identifier;
+        return {
+          source: 'archive', id: id,
+          title: Array.isArray(d.title) ? d.title[0] : (d.title || id),
+          creator: Array.isArray(d.creator) ? d.creator.join(', ') : (d.creator || ''),
+          duration: d.duration || 0, size: d.item_size || 0,
+          formats: Array.isArray(d.format) ? d.format.join(', ') : (d.format || ''),
+          cover: coverUrl(id), files: null, // lazy: fetched from the metadata API
+        };
+      });
+    });
+  }
+
+  function searchCommons(q) {
+    var url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*'
+      + '&generator=search&gsrsearch=' + encodeURIComponent('filetype:audio ' + q)
+      + '&gsrnamespace=6&gsrlimit=30&prop=imageinfo&iiprop=url%7Csize%7Cmime&iiurlwidth=300';
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var pages = (j.query && j.query.pages) || {};
+      return Object.keys(pages).map(function (k) { return pages[k]; }).map(function (p) {
+        var ii = (p.imageinfo && p.imageinfo[0]) || {};
+        var em = ii.extmetadata || {};
+        var name = (p.title || 'audio').replace(/^File:/, '');
+        return {
+          source: 'commons', id: 'commons-' + p.pageid,
+          title: name,
+          creator: stripTags(em.Artist && em.Artist.value) || stripTags(em.Credit && em.Credit.value) || '',
+          duration: 0, size: ii.size || 0,
+          formats: (ii.mime || '').replace('audio/', ''),
+          cover: ii.thumburl || ii.url || '',
+          files: [{ name: name, url: ii.url, size: ii.size || 0, mime: ii.mime || mimeOf(name) }],
+        };
+      }).filter(function (it) { return it.files[0].url; });
+    });
+  }
+
+  function searchOpenverse(q) {
+    var url = 'https://api.openverse.org/v1/audio/?q=' + encodeURIComponent(q) + '&page_size=20';
+    return fetch(url).then(function (r) {
+      if (r.status === 429) throw new Error('Openverse rate limit reached — try again in a little while');
+      return r.json();
+    }).then(function (j) {
+      return (j.results || []).map(function (a) {
+        var name = baseName(a.url) || a.title || 'audio';
+        if (!extOf(name)) name = name + '.mp3';
+        return {
+          source: 'openverse', id: 'ov-' + (a.id || name),
+          title: a.title || name,
+          creator: a.creator || '',
+          duration: a.duration || 0, size: 0,
+          formats: (a.license || '') + ' · ' + extOf(name).slice(1),
+          cover: a.thumbnail || '',
+          files: [{ name: name, url: a.url, size: 0, mime: mimeOf(name) }],
+        };
+      }).filter(function (it) { return it.files[0].url; });
+    });
+  }
+
+  var SEARCHERS = { archive: searchArchive, commons: searchCommons, openverse: searchOpenverse };
+
   function setStatus(msg, cls) {
     els.status.textContent = msg;
     els.status.className = 'status' + (cls ? ' ' + cls : '');
   }
 
-  function searchApi(query, rows, extra) {
-    var q = 'mediatype:audio AND (' + query + ')';
-    var url = 'https://archive.org/advancedsearch.php?q=' + encodeURIComponent(q)
-      + '&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=duration&fl[]=item_size&fl[]=format'
-      + '&rows=' + (rows || 40) + '&page=1&output=json' + (extra || '');
-    return fetch(url).then(function (r) { return r.json(); });
-  }
-
   function doSearch(query) {
     if (navigator.onLine === false) { setStatus('you are offline — connect to the internet to search', 'err'); return; }
     pushHistory(query);
-    setStatus('searching archive.org for "' + query + '"...', 'busy');
-    searchApi(query, 40).then(function (j) {
-      var docs = (j.response && j.response.docs) || [];
-      setStatus(docs.length + ' result(s)', 'ok');
-      renderResults(docs);
-    }).catch(function (e) {
-      setStatus('search failed: ' + (e && e.message ? e.message : e) + ' — check your internet connection', 'err');
+    var keys = state.source === 'all' ? ['archive', 'commons', 'openverse'] : [state.source];
+    setStatus('searching ' + (state.source === 'all' ? 'all websites' : SOURCE_LABEL[state.source]) + ' for "' + query + '"...', 'busy');
+    var tasks = keys.map(function (k) {
+      return SEARCHERS[k](query).then(function (items) {
+        return { key: k, items: items, ok: true };
+      }).catch(function (e) {
+        return { key: k, items: [], ok: false, err: e };
+      });
+    });
+    Promise.all(tasks).then(function (res) {
+      var items = [];
+      var failed = [];
+      res.forEach(function (r) {
+        if (r.ok) items = items.concat(r.items);
+        else failed.push(SOURCE_LABEL[r.key] + (r.err && r.err.message ? ': ' + r.err.message : ''));
+      });
+      setStatus(items.length + ' result(s) from ' + res.filter(function (r) { return r.ok; }).length + ' source(s)'
+        + (failed.length ? ' — ' + failed.join('; ') : ''), items.length ? 'ok' : 'err');
+      renderResults(items);
     });
   }
 
-  /* Surprise me: random item from the live-music / public-domain collections */
+  /* Surprise me: random item from archive.org live/public-domain collections */
   function surpriseMe() {
     if (navigator.onLine === false) { setStatus('you are offline — connect to the internet first', 'err'); return; }
     setStatus('finding a random free track for you...', 'busy');
-    searchApi('collection:(etree OR georgeblood OR audio_live_music)', 50, '&sort[]=downloads%20desc').then(function (j) {
-      var docs = (j.response && j.response.docs) || [];
-      if (!docs.length) { setStatus('no surprise found, try a normal search', 'err'); return; }
-      var pick = docs[Math.floor(Math.random() * docs.length)];
-      setStatus('surprise: ' + (Array.isArray(pick.title) ? pick.title[0] : pick.title) + ' — loading files...', 'ok');
-      els.input.value = '';
-      renderResults([pick]);
-      // auto-expand and auto-preview the best file
-      var id = pick.identifier;
-      state.expanded[id] = true;
-      loadMeta(id, function (files) {
-        renderResults([pick]);
-        if (files.length) playUrl(files[0].url, files[0].name, 'surprise stream from archive.org');
-      });
+    searchArchive('collection:(etree OR georgeblood OR audio_live_music)').then(function (items) {
+      // archive search above lacks the downloads-sort; re-query with sort for popularity
+      return fetch('https://archive.org/advancedsearch.php?q=' + encodeURIComponent('mediatype:audio AND collection:(etree OR georgeblood OR audio_live_music)')
+        + '&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=duration&fl[]=item_size&rows=50&page=1&output=json&sort[]=downloads%20desc')
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var docs = (j.response && j.response.docs) || [];
+          if (!docs.length) throw new Error('nothing found');
+          var d = docs[Math.floor(Math.random() * docs.length)];
+          var id = d.identifier;
+          var item = {
+            source: 'archive', id: id,
+            title: Array.isArray(d.title) ? d.title[0] : (d.title || id),
+            creator: Array.isArray(d.creator) ? d.creator.join(', ') : (d.creator || ''),
+            duration: d.duration || 0, size: d.item_size || 0,
+            formats: '', cover: coverUrl(id), files: null,
+          };
+          setStatus('surprise: ' + item.title + ' — loading files...', 'ok');
+          els.input.value = '';
+          renderResults([item]);
+          state.expanded[id] = true;
+          loadMeta(id, function (files) {
+            renderResults([item]);
+            if (files.length) playUrl(files[0].url, files[0].name, 'surprise stream from archive.org');
+          });
+        });
     }).catch(function (e) {
       setStatus('surprise failed: ' + (e && e.message ? e.message : e), 'err');
     });
   }
 
-  function renderResults(docs) {
+  /* --------------------------- results --------------------------- */
+  function renderResults(items) {
     els.results.innerHTML = '';
-    if (!docs.length) {
-      els.results.innerHTML = '<div class="item-title" style="padding:8px">No results — try a different artist, song or genre.</div>';
+    if (!items.length) {
+      els.results.innerHTML = '<div class="item-title" style="padding:8px">No results — try a different artist, song, genre or another source.</div>';
       return;
     }
-    docs.forEach(function (d) {
-      var id = d.identifier;
-      var title = Array.isArray(d.title) ? d.title[0] : (d.title || id);
-      var creator = Array.isArray(d.creator) ? d.creator.join(', ') : (d.creator || '');
-      var formats = Array.isArray(d.format) ? d.format.join(', ') : (d.format || '');
-
+    items.forEach(function (item) {
       var card = document.createElement('div');
       card.className = 'result-card';
       var cover = document.createElement('div');
       cover.className = 'cover';
-      cover.innerHTML = '<div class="cover-fallback">MD</div>';
-      var img = document.createElement('img');
-      img.src = coverUrl(id);
-      img.alt = '';
-      img.loading = 'lazy';
-      img.addEventListener('load', function () {
-        var fb = cover.querySelector('.cover-fallback');
-        if (fb) fb.style.display = 'none';
-      });
-      img.addEventListener('error', function () { img.style.display = 'none'; });
-      cover.appendChild(img);
+      cover.innerHTML = '<span class="rc-source">' + esc(SOURCE_LABEL[item.source] || item.source) + '</span>'
+        + '<div class="cover-fallback">MD</div>';
+      if (item.cover) {
+        var img = document.createElement('img');
+        img.src = item.cover;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.addEventListener('load', function () {
+          var fb = cover.querySelector('.cover-fallback');
+          if (fb) fb.style.display = 'none';
+        });
+        img.addEventListener('error', function () { img.style.display = 'none'; });
+        cover.appendChild(img);
+      }
       card.appendChild(cover);
 
       var body = document.createElement('div');
       body.className = 'rc-body';
-      body.innerHTML = '<div class="rc-title" title="' + esc(title) + '">' + esc(title) + '</div>'
-        + '<div class="rc-sub">' + esc(creator) + (fmtDur(d.duration) ? ' · ' + fmtDur(d.duration) : '') + (d.item_size ? ' · ' + fmtBytes(d.item_size) : '') + '</div>'
-        + (formats ? '<div class="rc-formats">' + esc(formats) + '</div>' : '');
+      body.innerHTML = '<div class="rc-title" title="' + esc(item.title) + '">' + esc(item.title) + '</div>'
+        + '<div class="rc-sub">' + esc(item.creator) + (fmtDur(item.duration) ? ' · ' + fmtDur(item.duration) : '') + (item.size ? ' · ' + fmtBytes(item.size) : '') + '</div>'
+        + (item.formats ? '<div class="rc-formats">' + esc(item.formats) + '</div>' : '');
       var actions = document.createElement('div');
       actions.className = 'rc-actions';
       var filesBtn = document.createElement('button');
       filesBtn.className = 'btn';
-      filesBtn.textContent = state.expanded[id] ? 'Hide files' : 'Files';
-      filesBtn.addEventListener('click', function () { toggleFiles(id, card); });
+      filesBtn.textContent = state.expanded[item.id] ? 'Hide files' : 'Files';
+      filesBtn.addEventListener('click', function () { toggleFiles(item, card); });
       var allBtn = document.createElement('button');
       allBtn.className = 'btn ghost';
       allBtn.textContent = 'Get all';
       allBtn.title = 'Download every audio file in this item';
-      allBtn.addEventListener('click', function () { downloadAll(id, title, creator); });
+      allBtn.addEventListener('click', function () { downloadAll(item); });
       actions.appendChild(filesBtn);
       actions.appendChild(allBtn);
       body.appendChild(actions);
@@ -228,26 +352,35 @@
       var files = document.createElement('div');
       files.className = 'files hidden';
       files.style.padding = '0 10px 10px';
-      files.id = 'files-' + cssId(id);
       card.appendChild(files);
-      if (state.expanded[id] && state.metaCache[id]) renderFiles(id, files);
+      if (state.expanded[item.id]) ensureFiles(item, files);
 
       els.results.appendChild(card);
     });
   }
 
-  function toggleFiles(id, card) {
-    state.expanded[id] = !state.expanded[id];
+  function toggleFiles(item, card) {
+    state.expanded[item.id] = !state.expanded[item.id];
     var box = card.querySelector('.files');
-    if (state.expanded[id]) {
+    if (state.expanded[item.id]) {
       box.classList.remove('hidden');
-      if (!state.metaCache[id]) loadMeta(id, function () { renderFiles(id, box); });
-      else renderFiles(id, box);
+      ensureFiles(item, box);
     } else {
       box.classList.add('hidden');
     }
     var btn = card.querySelector('.rc-actions .btn');
-    if (btn) btn.textContent = state.expanded[id] ? 'Hide files' : 'Files';
+    if (btn) btn.textContent = state.expanded[item.id] ? 'Hide files' : 'Files';
+  }
+
+  /* files for an item: ready-made for commons/openverse, lazy metadata for archive */
+  function ensureFiles(item, box) {
+    if (item.files) { renderFiles(item, box); return; }
+    if (!state.metaCache[item.id]) {
+      box.innerHTML = '<div class="item-sub">loading files...</div>';
+      loadMeta(item.id, function () { renderFiles(item, box); });
+    } else {
+      renderFiles(item, box);
+    }
   }
 
   function loadMeta(id, done) {
@@ -281,18 +414,19 @@
       });
   }
 
-  function renderFiles(id, box) {
-    var cache = state.metaCache[id];
+  function renderFiles(item, box) {
+    var files = item.files || (state.metaCache[item.id] && state.metaCache[item.id].files) || [];
+    var err = !item.files && state.metaCache[item.id] && state.metaCache[item.id].error;
     box.innerHTML = '';
-    if (cache.error) {
-      box.innerHTML = '<div class="item-sub st-error">metadata failed: ' + esc(cache.error) + '</div>';
+    if (err) {
+      box.innerHTML = '<div class="item-sub st-error">metadata failed: ' + esc(err) + '</div>';
       return;
     }
-    if (!cache.files.length) {
+    if (!files.length) {
       box.innerHTML = '<div class="item-sub">no directly downloadable audio files in this item</div>';
       return;
     }
-    cache.files.forEach(function (f) {
+    files.forEach(function (f) {
       var row = document.createElement('div');
       row.className = 'file-row';
       row.innerHTML = '<span class="file-name" title="' + esc(f.name) + '">' + esc(f.name) + '</span>'
@@ -300,13 +434,13 @@
       var prev = document.createElement('button');
       prev.className = 'btn ghost';
       prev.textContent = 'Preview';
-      prev.addEventListener('click', function () { playUrl(f.url, f.name, 'streaming from archive.org'); });
+      prev.addEventListener('click', function () { playUrl(f.url, f.name, 'streaming from ' + (SOURCE_LABEL[item.source] || item.source)); });
       var dl = document.createElement('button');
       dl.className = 'btn';
       dl.textContent = 'Download';
       dl.addEventListener('click', function () {
         dl.disabled = true;
-        startOneDownload(id, f);
+        startOneDownload(item, f);
       });
       row.appendChild(prev);
       row.appendChild(dl);
@@ -314,28 +448,42 @@
     });
   }
 
-  function startOneDownload(identifier, f, title, creator) {
-    var dlId = 'dl-' + identifier + '-' + f.name.replace(/[^A-Za-z0-9._-]/g, '_');
-    N.startDownload(dlId, f.url, f.name, title || f.name, creator || '', f.mime, identifier);
-    state.progress[dlId] = { type: 'progress', id: dlId, status: 'downloading', pct: 0, filename: f.name, title: title || f.name, creator: creator || '', identifier: identifier };
+  function startOneDownload(item, f) {
+    var dlId = 'dl-' + item.id + '-' + f.name.replace(/[^A-Za-z0-9._-]/g, '_');
+    N.startDownload(dlId, f.url, f.name, item.title || f.name, item.creator || '', f.mime || mimeOf(f.name), item.cover || '');
+    state.progress[dlId] = { type: 'progress', id: dlId, status: 'downloading', pct: 0, filename: f.name, title: item.title || f.name, creator: item.creator || '', cover: item.cover || '' };
     switchTab('downloads');
     renderDownloads();
     return dlId;
   }
 
-  function downloadAll(id, title, creator) {
-    var cache = state.metaCache[id];
-    var files = cache && cache.files ? cache.files : [];
-    if (!files.length) {
-      loadMeta(id, function (fs) {
-        fs.forEach(function (f) { startOneDownload(id, f, title, creator); });
-        setStatus('queued ' + fs.length + ' file(s) from ' + (title || id), 'ok');
+  function downloadAll(item) {
+    var files = item.files || (state.metaCache[item.id] && state.metaCache[item.id].files) || [];
+    if (!files.length && item.source === 'archive') {
+      loadMeta(item.id, function (fs) {
+        fs.forEach(function (f) { startOneDownload(item, f); });
+        setStatus('queued ' + fs.length + ' file(s) from ' + item.title, 'ok');
       });
     } else {
-      files.forEach(function (f) { startOneDownload(id, f, title, creator); });
-      setStatus('queued ' + files.length + ' file(s) from ' + (title || id), 'ok');
+      files.forEach(function (f) { startOneDownload(item, f); });
+      setStatus('queued ' + files.length + ' file(s) from ' + item.title, 'ok');
     }
   }
+
+  /* --------------------------- direct link (any website) --------------------------- */
+  els.directToggle.addEventListener('click', function () {
+    els.directPanel.classList.toggle('hidden');
+  });
+  els.directGo.addEventListener('click', function () {
+    var url = els.directUrl.value.trim();
+    if (!/^https?:\/\//i.test(url)) { setStatus('paste a full http(s) link to an audio file', 'err'); return; }
+    if (navigator.onLine === false) { setStatus('you are offline — connect to the internet to download', 'err'); return; }
+    var name = els.directName.value.trim() || baseName(url);
+    if (!extOf(name)) name = name + '.mp3';
+    var item = { source: 'link', id: 'link-' + Date.now(), title: name, creator: '', cover: '', files: [{ name: name, url: url, size: 0, mime: mimeOf(name) }] };
+    setStatus('downloading ' + name + ' ...', 'busy');
+    startOneDownload(item, item.files[0]);
+  });
 
   /* --------------------------- downloads --------------------------- */
   window.MusicDL = {
@@ -355,7 +503,7 @@
             type: 'progress', id: id, status: reg[id].status, pct: reg[id].pct || 0,
             done: reg[id].done || 0, size: reg[id].size || 0,
             filename: reg[id].filename, title: reg[id].title, creator: reg[id].creator,
-            identifier: reg[id].identifier || '', message: reg[id].message || '',
+            cover: reg[id].cover || '', message: reg[id].message || '',
           };
         }
       });
@@ -368,7 +516,7 @@
     els.dlCount.textContent = String(ids.length);
     els.downloads.innerHTML = '';
     if (!ids.length) {
-      els.downloads.innerHTML = '<li><div class="item-title">Nothing downloaded yet</div><div class="item-sub">Search above and press Download on any file.</div></li>';
+      els.downloads.innerHTML = '<li><div class="item-title">Nothing downloaded yet</div><div class="item-sub">Search above and press Download on any file — or paste a direct link.</div></li>';
       return;
     }
     ids.sort(function (a, b) { return (state.progress[b].done || 0) - (state.progress[a].done || 0); });
@@ -378,8 +526,8 @@
       var li = document.createElement('li');
       var top = document.createElement('div');
       top.className = 'item-top';
-      var coverHtml = ev.identifier
-        ? '<img class="item-cover" loading="lazy" src="' + coverUrl(ev.identifier) + '" alt="" onerror="this.style.visibility=\'hidden\'" />'
+      var coverHtml = ev.cover
+        ? '<img class="item-cover" loading="lazy" src="' + esc(ev.cover) + '" alt="" onerror="this.style.visibility=\'hidden\'" />'
         : '';
       top.innerHTML = coverHtml + '<div class="item-meta"><div class="item-title">' + esc(ev.title || ev.filename || id) + '</div>'
         + '<div class="item-sub"><span class="st-' + esc(st) + '">' + esc(st) + '</span>'
@@ -465,8 +613,9 @@
   });
   els.surpriseBtn.addEventListener('click', surpriseMe);
 
-  if (N && N.log) N.log('Music Downloader web UI v2 loaded, platform=' + N.platform());
+  if (N && N.log) N.log('Music Downloader web UI v3 (multi-source) loaded, platform=' + N.platform());
   updateNet();
+  renderSourceChips();
   renderChips();
   refreshDownloadsFromNative();
   renderDownloads();

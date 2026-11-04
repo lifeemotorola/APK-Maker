@@ -28,9 +28,18 @@
       <button type="submit" class="go-btn">Search</button>
       <button type="button" id="surpriseBtn" class="go-btn surprise" title="Play a random free track from the archive">Surprise me</button>
     </form>
+    <div class="chips" id="sourceChips"></div>
     <div class="chips" id="quickChips"></div>
     <div class="chips history" id="historyChips"></div>
-    <div class="hint">Source: Internet Archive (archive.org) free audio catalog — mp3, ogg, flac, wav, m4a and more. Files are saved to <b>Music/MusicDownloader</b> on your device.</div>
+    <div class="direct-row">
+      <button type="button" id="directToggle" class="chip">Paste a direct link from any website</button>
+    </div>
+    <div id="directPanel" class="direct-panel hidden">
+      <input id="directUrl" type="url" placeholder="https://any-website.com/song.mp3 (direct file link)" autocomplete="off" />
+      <input id="directName" type="text" placeholder="File name (optional, e.g. song.mp3)" autocomplete="off" />
+      <button type="button" id="directGo" class="go-btn">Download link</button>
+    </div>
+    <div class="hint">Sources: Internet Archive, Wikimedia Commons and Openverse CC audio — plus any direct file link from any website. Audio types: mp3, ogg, flac, wav, m4a and more. Files are saved to <b>Music/MusicDownloader</b> on your device.</div>
     <div id="searchStatus" class="status">ready</div>
   </section>
 
