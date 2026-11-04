@@ -17,6 +17,10 @@ name: Build Android APK
 #                                  download any type of music over the internet
 #                                  from the Internet Archive free audio catalog)
 #                                  via android-musicdl/build.sh
+#   - job build-wificam-apk     -> WiFi Cam (com.wificam.app): phone camera as a
+#                                  webcam over WiFi (MJPEG/LAN) + computer
+#                                  driver in wificam-driver/
+#                                  via android-wificam/build.sh
 #   - job build-jsmaster-apk    -> JS Mastery (com.jsmaster.app, interactive
 #                                  JavaScript course: 50 topics, 350
 #                                  practices, in-app book guide, quizzes,
@@ -320,6 +324,59 @@ jobs:
             MusicDownloader.apk
             android-musicdl/app/build/MusicDownloader-1.0.apk
             android-musicdl/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-wificam-apk:
+    name: Build WiFiCam APK + driver test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (web shell test)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Python 3.11 (driver test)
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate the WiFi Cam web shell
+        run: node android-wificam/web/test_web.mjs
+
+      - name: Test the computer driver (MJPEG parser)
+        run: |
+          python3 -m py_compile wificam-driver/wificam_driver.py wificam-driver/test_driver.py
+          python3 wificam-driver/test_driver.py
+
+      - name: Build the APK (android-wificam/build.sh)
+        run: ./android-wificam/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-wificam/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v Wificam.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: WiFiCam-APK
+          path: |
+            Wificam.apk
+            android-wificam/app/build/Wificam-1.0.apk
+            android-wificam/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
 
