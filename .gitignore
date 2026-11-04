@@ -26,3 +26,8 @@ Bible-Quiz.apk
 android-marketplace/app/build/
 android-marketplace/app/src/main/assets/www/
 Marketplace.apk
+
+# JS Mastery APK build outputs
+android-jsmaster/app/build/
+android-jsmaster/app/src/main/assets/www/
+JS-Master.apk

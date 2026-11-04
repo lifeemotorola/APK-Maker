@@ -10,6 +10,10 @@ name: Build Android APK
 #   - job build-marketplace-apk -> Community Market (com.marketplace.app,
 #                                  offline marketplace & services directory)
 #                                  via android-marketplace/build.sh
+#   - job build-jsmaster-apk    -> JS Mastery (com.jsmaster.app, interactive
+#                                  JavaScript course: 50 topics, 5,250+
+#                                  practices, quizzes, certificate)
+#                                  via android-jsmaster/build.sh
 # Each APK is uploaded as a workflow artifact on every run.
 
 on:
@@ -211,5 +215,55 @@ jobs:
             Marketplace.apk
             android-marketplace/app/build/Marketplace-1.0.apk
             android-marketplace/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-jsmaster-apk:
+    name: Build JS-Master APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (course generator + VM tests)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Generate + VM-test the course (50 topics, 5,250 practices)
+        run: |
+          node android-jsmaster/web/gen_course.js /tmp/jsm-www/data
+          node android-jsmaster/web/test_course.js /tmp/jsm-www/data
+
+      - name: Build the APK (android-jsmaster/build.sh)
+        run: ./android-jsmaster/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-jsmaster/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v JS-Master.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: JS-Master-APK
+          path: |
+            JS-Master.apk
+            android-jsmaster/app/build/JS-Master-1.0.apk
+            android-jsmaster/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
