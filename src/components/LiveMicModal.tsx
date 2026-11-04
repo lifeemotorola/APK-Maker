@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, Radio, Square, Wand2, X } from 'lucide-react';
 import { classifyLiveChroma, midiToNoteName } from '../lib/musicTheory';
+import { isAndroidNative, requestMicPermissionNative } from '../lib/nativeBridge';
 
 interface LiveMicModalProps {
   isOpen: boolean;
@@ -71,24 +72,39 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Microphone access is not available in this browser context.');
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-        },
-      });
+      // Some Android WebViews reject the full constraint set; fall back to plain audio.
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+          },
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       streamRef.current = stream;
 
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ctx = new AudioCtx();
       audioCtxRef.current = ctx;
+      // make sure the context is running (WebView autoplay policies can suspend it)
+      if (ctx.state === 'suspended') {
+        try { await ctx.resume(); } catch { /* best effort */ }
+      }
 
       const src = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 8192;
       analyser.smoothingTimeConstant = 0.72;
       src.connect(analyser);
+      // route through a muted gain to destination so the graph is always pulled
+      const mute = ctx.createGain();
+      mute.gain.value = 0;
+      analyser.connect(mute);
+      mute.connect(ctx.destination);
 
       const freqData = new Float32Array(analyser.frequencyBinCount);
       const smoothChroma = new Array<number>(12).fill(0);
@@ -214,8 +230,21 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
 
         <div className="p-5 space-y-4">
           {errorMsg && (
-            <div className="rounded-xl bg-rose-500/15 border border-rose-500/40 p-3 text-xs text-rose-200">
-              {errorMsg}
+            <div className="rounded-xl bg-rose-500/15 border border-rose-500/40 p-3 text-xs text-rose-200 space-y-2">
+              <div>{errorMsg}</div>
+              {isAndroidNative() && (
+                <button
+                  onClick={() => {
+                    requestMicPermissionNative();
+                    setErrorMsg(null);
+                    setTimeout(() => startMic(), 400);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/30 hover:bg-rose-500/50 text-rose-100 font-semibold cursor-pointer"
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  Grant microphone permission &amp; retry
+                </button>
+              )}
             </div>
           )}
 

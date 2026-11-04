@@ -52,7 +52,9 @@ public class MainActivity extends Activity {
     public static final String BASE_URL = "https://keysense.local/";
 
     private static final int REQUEST_FILE_CHOOSER = 2001;
+    private static final int REQUEST_MIC_PERMISSION = 1002;
     private ValueCallback<Uri[]> fileChooserCallback;
+    private PermissionRequest pendingMicRequest;
 
     private WebView webView;
     private MidiController midiController;
@@ -135,6 +137,28 @@ public class MainActivity extends Activity {
             // Bluetooth permissions affect which MIDI devices are visible
             midiController.refreshDevices();
         }
+        if (requestCode == REQUEST_MIC_PERMISSION && pendingMicRequest != null) {
+            PermissionRequest req = pendingMicRequest;
+            pendingMicRequest = null;
+            boolean granted = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (Manifest.permission.RECORD_AUDIO.equals(permissions[i])
+                        && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    granted = true;
+                }
+            }
+            if (granted) req.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+            else req.deny();
+        }
+    }
+
+    /** Called from the page (window.KeySenseNative.requestMicPermission) to ask for mic access. */
+    public boolean requestMicPermission() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_MIC_PERMISSION);
+        return false;
     }
 
     // ------------------------------------------------------------------
@@ -338,16 +362,24 @@ public class MainActivity extends Activity {
         @Override
         public void onPermissionRequest(PermissionRequest request) {
             List<String> granted = new ArrayList<>();
+            boolean needMic = false;
             for (String res : request.getResources()) {
                 if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res)) {
                     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                         granted.add(res);
+                    } else {
+                        needMic = true; // ask the user for RECORD_AUDIO first, then grant
                     }
                 } else if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) {
                     // camera not used by KeySense
                 } else {
                     granted.add(res);
                 }
+            }
+            if (needMic && pendingMicRequest == null) {
+                pendingMicRequest = request;
+                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_MIC_PERMISSION);
+                return;
             }
             if (!granted.isEmpty()) {
                 request.grant(granted.toArray(new String[0]));
