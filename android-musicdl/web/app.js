@@ -4,8 +4,8 @@
  * ceenaija.com-style homepage: nav bar (HOME / TRENDING / GOSPEL / NAIJA /
  * HYMNS / ARTISTS / MY DOWNLOADS), curated sections (Trending Now, Latest
  * Gospel, Nigerian Gospel & Afrobeats, Hymns, Global Tunes) fed by
- * multi-website search (Internet Archive + Wikimedia Commons + Openverse CC
- * audio, or any direct link), song cards with Preview + DOWNLOAD MP3, a
+ * multi-website search (Wikimedia Commons + Openverse CC audio, or any
+ * direct link), song cards with Preview + DOWNLOAD MP3, a
  * search view with sort/format filters, and a My-downloads library.
  *
  * Downloads go through the native bridge (MusicDLNative.startDownload):
@@ -36,7 +36,6 @@
     source: 'all',
     sort: 'relevance',
     format: 'all',
-    metaCache: {},
     expanded: {},
     progress: {},
     lastItems: [],
@@ -46,18 +45,17 @@
   var AUDIO_EXT = ['.mp3', '.ogg', '.opus', '.flac', '.m4a', '.wav', '.wma', '.aac', '.aiff'];
   var SOURCES = [
     { key: 'all', label: 'All websites' },
-    { key: 'archive', label: 'Internet Archive' },
     { key: 'commons', label: 'Wikimedia Commons' },
     { key: 'openverse', label: 'Openverse CC audio' },
   ];
-  var SOURCE_LABEL = { archive: 'Internet Archive', commons: 'Wikimedia', openverse: 'Openverse', link: 'Direct link' };
+  var SOURCE_LABEL = { commons: 'Wikimedia', openverse: 'Openverse', link: 'Direct link' };
   /* ceenaija-style homepage sections (queries run against the free sources) */
   var SECTIONS = [
-    { id: 'trending', title: 'Trending Now', q: 'gospel OR afrobeats OR naija', sort: 'popular', source: 'archive', limit: 12 },
-    { id: 'gospel', title: 'Latest Gospel Songs', q: 'gospel worship song', sort: 'popular', source: 'all', limit: 12 },
-    { id: 'naija', title: 'Nigerian Gospel & Afrobeats', q: 'nigerian gospel OR afrobeat', sort: 'popular', source: 'all', limit: 12 },
-    { id: 'hymns', title: 'Hymns & Praise', q: 'hymn praise worship', sort: 'popular', source: 'all', limit: 10 },
-    { id: 'global', title: 'Global Tunes', q: 'african music OR world music', sort: 'popular', source: 'archive', limit: 10 },
+    { id: 'trending', title: 'Trending Now', q: 'gospel OR afrobeats OR naija', source: 'all', limit: 12 },
+    { id: 'gospel', title: 'Latest Gospel Songs', q: 'gospel worship song', source: 'all', limit: 12 },
+    { id: 'naija', title: 'Nigerian Gospel & Afrobeats', q: 'nigerian gospel OR afrobeat', source: 'all', limit: 12 },
+    { id: 'hymns', title: 'Hymns & Praise', q: 'hymn praise worship', source: 'all', limit: 10 },
+    { id: 'global', title: 'Global Tunes', q: 'african music OR world music', source: 'all', limit: 10 },
   ];
   var QUICK = [
     { label: 'Trending gospel', q: 'trending gospel songs' },
@@ -65,8 +63,8 @@
     { label: 'Mercy Chinwo', q: 'mercy chinwo' },
     { label: 'Hillsong', q: 'hillsong worship' },
     { label: 'Afrobeat', q: 'afrobeat' },
-    { label: 'Live concerts', q: 'collection:etree' },
-    { label: 'Public domain 78s', q: 'collection:georgeblood' },
+    { label: 'Live music', q: 'live music concert' },
+    { label: 'Classical', q: 'classical music' },
   ];
   var HIST_KEY = 'musicdl-history';
   var FORMATS = [
@@ -109,7 +107,6 @@
       return p.split('/').filter(Boolean).pop() || 'song';
     } catch (e) { return 'song'; }
   }
-  function coverUrl(id) { return 'https://archive.org/services/img/' + encodeURIComponent(id); }
 
   /* --------------------------- net status --------------------------- */
   function updateNet() {
@@ -224,26 +221,6 @@
   }
 
   /* --------------------------- sources --------------------------- */
-  var ARCHIVE_SORT = { relevance: '', popular: '&sort[]=downloads%20desc', newest: '&sort[]=date%20desc' };
-  function searchArchive(q, sort) {
-    var query = 'mediatype:audio AND (' + q + ')';
-    var url = 'https://archive.org/advancedsearch.php?q=' + encodeURIComponent(query)
-      + '&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=duration&fl[]=item_size&fl[]=format'
-      + '&rows=40&page=1&output=json' + (ARCHIVE_SORT[sort || state.sort] || '');
-    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
-      return ((j.response && j.response.docs) || []).map(function (d) {
-        var id = d.identifier;
-        return {
-          source: 'archive', id: id,
-          title: Array.isArray(d.title) ? d.title[0] : (d.title || id),
-          creator: Array.isArray(d.creator) ? d.creator.join(', ') : (d.creator || ''),
-          duration: d.duration || 0, size: d.item_size || 0,
-          formats: Array.isArray(d.format) ? d.format.join(', ') : (d.format || ''),
-          cover: coverUrl(id), files: null,
-        };
-      });
-    });
-  }
   function searchCommons(q) {
     var url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*'
       + '&generator=search&gsrsearch=' + encodeURIComponent('filetype:audio ' + q)
@@ -285,7 +262,7 @@
       }).filter(function (it) { return it.files[0].url; });
     });
   }
-  var SEARCHERS = { archive: searchArchive, commons: searchCommons, openverse: searchOpenverse };
+  var SEARCHERS = { commons: searchCommons, openverse: searchOpenverse };
 
   function setStatus(msg, cls) {
     els.status.textContent = msg;
@@ -296,7 +273,7 @@
     if (navigator.onLine === false) { setStatus('you are offline — connect to the internet to search', 'err'); return; }
     pushHistory(query);
     switchView('search');
-    var keys = state.source === 'all' ? ['archive', 'commons', 'openverse'] : [state.source];
+    var keys = state.source === 'all' ? ['commons', 'openverse'] : [state.source];
     setStatus('searching ' + (state.source === 'all' ? 'all websites' : SOURCE_LABEL[state.source]) + ' for "' + query + '"...', 'busy');
     renderSkeletons();
     var tasks = keys.map(function (k) {
@@ -321,7 +298,6 @@
   function itemHasFormat(item) {
     if (state.format === 'all') return true;
     var hay = (item.formats || '') + ' ' + (item.files || []).map(function (f) { return extOf(f.name); }).join(' ');
-    if (item.source === 'archive' && !item.files) return hay.toLowerCase().indexOf(state.format.slice(1)) !== -1;
     return hay.toLowerCase().indexOf(state.format) !== -1;
   }
   function sortItems(items) {
@@ -342,7 +318,7 @@
       els.homeView.appendChild(wrap);
       var row = wrap.querySelector('.h-row');
       var st = wrap.querySelector('.sec-status');
-      var keys = sec.source === 'all' ? ['archive', 'commons', 'openverse'] : [sec.source];
+      var keys = sec.source === 'all' ? ['commons', 'openverse'] : [sec.source];
       Promise.all(keys.map(function (k) {
         return SEARCHERS[k](sec.q, sec.sort).then(function (items) { return items; }).catch(function () { return []; });
       })).then(function (parts) {
@@ -360,30 +336,14 @@
   function surpriseMe() {
     if (navigator.onLine === false) { setStatus('you are offline — connect to the internet first', 'err'); return; }
     setStatus('finding a random free track for you...', 'busy');
-    searchArchive('collection:(etree OR georgeblood OR audio_live_music)', 'popular').then(function () {
-      return fetch('https://archive.org/advancedsearch.php?q=' + encodeURIComponent('mediatype:audio AND collection:(etree OR georgeblood OR audio_live_music)')
-        + '&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=duration&fl[]=item_size&rows=50&page=1&output=json&sort[]=downloads%20desc')
-        .then(function (r) { return r.json(); });
-    }).then(function (j) {
-      var docs = (j.response && j.response.docs) || [];
-      if (!docs.length) throw new Error('nothing found');
-      var d = docs[Math.floor(Math.random() * docs.length)];
-      var id = d.identifier;
-      var item = {
-        source: 'archive', id: id,
-        title: Array.isArray(d.title) ? d.title[0] : (d.title || id),
-        creator: Array.isArray(d.creator) ? d.creator.join(', ') : (d.creator || ''),
-        duration: d.duration || 0, size: d.item_size || 0, formats: '', cover: coverUrl(id), files: null,
-      };
-      setStatus('surprise: ' + item.title + ' — loading files...', 'ok');
+    searchOpenverse('gospel OR afrobeat OR live music').then(function (items) {
+      if (!items.length) throw new Error('nothing found');
+      var item = items[Math.floor(Math.random() * items.length)];
+      setStatus('surprise: ' + item.title + ' — playing preview', 'ok');
       els.input.value = '';
       switchView('search');
       renderResults([item]);
-      state.expanded[id] = true;
-      loadMeta(id, function (files) {
-        renderResults([item]);
-        if (files.length) playUrl(files[0].url, files[0].name, 'surprise stream from archive.org');
-      });
+      if (item.files.length) playUrl(item.files[0].url, item.files[0].name, 'surprise stream from ' + SOURCE_LABEL[item.source]);
     }).catch(function (e) {
       setStatus('surprise failed: ' + (e && e.message ? e.message : e), 'err');
     });
@@ -471,48 +431,11 @@
     else box.classList.add('hidden');
   }
 
-  function ensureFiles(item, box) {
-    if (item.files) { renderFiles(item, box); return; }
-    if (!state.metaCache[item.id]) {
-      box.innerHTML = '<div class="item-sub">loading files...</div>';
-      loadMeta(item.id, function () { renderFiles(item, box); });
-    } else renderFiles(item, box);
-  }
-
-  function loadMeta(id, done) {
-    fetch('https://archive.org/metadata/' + encodeURIComponent(id)).then(function (r) { return r.json(); })
-      .then(function (m) {
-        var files = [];
-        (m.files || []).forEach(function (f) {
-          if (f.name && extOf(f.name) && f.name.indexOf('/') === -1) {
-            files.push({
-              name: f.name,
-              url: 'https://archive.org/download/' + id + '/' + encodeURIComponent(f.name).replace(/%2F/gi, '/'),
-              size: parseInt(f.size, 10) || 0, format: f.format || '', mime: mimeOf(f.name),
-            });
-          }
-        });
-        var rank = { '.mp3': 0, '.ogg': 1, '.opus': 1, '.flac': 2, '.m4a': 3, '.aac': 3, '.wav': 4, '.aiff': 4, '.wma': 5 };
-        files.sort(function (a, b) {
-          var ra = rank[extOf(a.name)] != null ? rank[extOf(a.name)] : 9;
-          var rb = rank[extOf(b.name)] != null ? rank[extOf(b.name)] : 9;
-          return ra - rb || b.size - a.size;
-        });
-        files = files.slice(0, 8);
-        state.metaCache[id] = { files: files };
-        if (done) done(files);
-      })
-      .catch(function (e) {
-        state.metaCache[id] = { error: String(e && e.message ? e.message : e), files: [] };
-        if (done) done([]);
-      });
-  }
+  function ensureFiles(item, box) { renderFiles(item, box); }
 
   function renderFiles(item, box) {
-    var files = item.files || (state.metaCache[item.id] && state.metaCache[item.id].files) || [];
-    var err = !item.files && state.metaCache[item.id] && state.metaCache[item.id].error;
+    var files = item.files || [];
     box.innerHTML = '';
-    if (err) { box.innerHTML = '<div class="item-sub st-error">metadata failed: ' + esc(err) + '</div>'; return; }
     if (!files.length) { box.innerHTML = '<div class="item-sub">no directly downloadable audio files in this item</div>'; return; }
     files.forEach(function (f) {
       var row = document.createElement('div');
@@ -533,17 +456,12 @@
 
   /* DOWNLOAD MP3 quick button: best file, preferring .mp3 */
   function quickMp3(item) {
-    function best(files) {
-      var mp3s = files.filter(function (f) { return extOf(f.name) === '.mp3'; });
-      var pool = mp3s.length ? mp3s : files;
-      if (!pool.length) { toast('no downloadable audio file found for this item', true); return; }
-      startOneDownload(item, pool[0]);
-      toast('Downloading MP3: ' + (item.title || pool[0].name));
-    }
-    if (item.files) { best(item.files); return; }
-    if (state.metaCache[item.id] && state.metaCache[item.id].files) { best(state.metaCache[item.id].files); return; }
-    toast('Loading files...');
-    loadMeta(item.id, function (files) { best(files); });
+    var files = item.files || [];
+    var mp3s = files.filter(function (f) { return extOf(f.name) === '.mp3'; });
+    var pool = mp3s.length ? mp3s : files;
+    if (!pool.length) { toast('no downloadable audio file found for this item', true); return; }
+    startOneDownload(item, pool[0]);
+    toast('Downloading MP3: ' + (item.title || pool[0].name));
   }
 
   function startOneDownload(item, f) {
@@ -556,16 +474,9 @@
   }
 
   function downloadAll(item) {
-    var files = item.files || (state.metaCache[item.id] && state.metaCache[item.id].files) || [];
-    if (!files.length && item.source === 'archive') {
-      loadMeta(item.id, function (fs) {
-        fs.forEach(function (f) { startOneDownload(item, f); });
-        setStatus('queued ' + fs.length + ' file(s) from ' + item.title, 'ok');
-      });
-    } else {
-      files.forEach(function (f) { startOneDownload(item, f); });
-      setStatus('queued ' + files.length + ' file(s) from ' + item.title, 'ok');
-    }
+    var files = item.files || [];
+    files.forEach(function (f) { startOneDownload(item, f); });
+    setStatus('queued ' + files.length + ' file(s) from ' + item.title, 'ok');
   }
 
   /* --------------------------- direct link --------------------------- */

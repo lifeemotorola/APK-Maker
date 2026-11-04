@@ -13,7 +13,7 @@ nav bar (HOME / TRENDING / GOSPEL / NAIJA / HYMNS / ARTISTS / MY DOWNLOADS),
 curated homepage sections (Trending Now, Latest Gospel Songs, Nigerian
 Gospel & Afrobeats, Hymns & Praise, Global Tunes) as horizontal cover-art
 rows, and per-song **DOWNLOAD MP3** buttons next to Preview — all fed by the
-multi-website free sources below (plus direct links).
+free sources below (plus direct links).
 
 ## Features
 
@@ -22,7 +22,7 @@ multi-website free sources below (plus direct links).
   **paste-a-direct-link** mode for a file hosted on any website.
 - Cover-art result cards with per-source badges, quick-search chips,
 
-- Cover-art result cards (archive.org item thumbnails), quick-search chips
+- Cover-art result cards (per-source thumbnails), quick-search chips
   (live concerts, jazz, gospel, classical, afrobeat, public-domain 78s),
   recent-search history, and a **Surprise me** button that finds and
   auto-plays a random free track.
@@ -34,15 +34,13 @@ multi-website free sources below (plus direct links).
 
 ## How it works
 
-- **Search (JS, in the WebView) — multiple websites, not only archive.org**:
-  - Internet Archive: `https://archive.org/advancedsearch.php` + per-item `metadata` API (lazy file lists),
+- **Search (JS, in the WebView) — multiple websites**:
   - Wikimedia Commons: `https://commons.wikimedia.org/w/api.php` (`filetype:audio` search, direct `upload.wikimedia.org` file URLs + thumbnails),
   - Openverse CC audio: `https://api.openverse.org/v1/audio/?q=...` (keyless, CORS-enabled),
   - **or paste a direct file link from ANY website** ("Paste a direct link" mode).
   The Source chips switch between All websites / a single site; results are
   normalized into one cover-art card grid with a per-source badge.
-  with `mediatype:audio AND (<query>)`; per-item `https://archive.org/metadata/<id>`
-  lists the downloadable audio files (best format first: mp3 -> ogg -> flac -> ...).
+
 - **Download (Java, native bridge `MusicDLNative.startDownload`)**: streams the
   file with `HttpURLConnection` on a background thread and writes it via
   `MediaStore.Audio` (`RELATIVE_PATH = Music/MusicDownloader`) on API 29+, or
@@ -53,9 +51,9 @@ multi-website free sources below (plus direct links).
   so the "My downloads" list survives restarts.
 - **Playback**: finished downloads are streamed back to the page by the
   loopback `LocalServer` at `/dl/<id>`; previews stream directly from
-  archive.org. A bottom player bar plays either source.
+  the source site. A bottom player bar plays either source.
 - **Shell**: WebView served from `LocalServer` on `http://127.0.0.1:<port>/`;
-  external navigation restricted to archive.org + loopback; cleartext only for
+  external navigation restricted to the loopback server only; cleartext only for
   localhost (`res/xml/network_security_config.xml`); requires the `INTERNET`
   permission.
 

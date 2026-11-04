@@ -22,8 +22,8 @@ import java.io.IOException;
  * Music Downloader — Android shell.
  *
  * Serves the bundled web app (assets/www) from a loopback LocalServer and
- * lets the page talk to the internet (archive.org search + downloads are done
- * from Java in NativeBridge, which saves songs into the public Music folder
+ * lets the page talk to the internet (Wikimedia Commons / Openverse search +
+ * downloads are done from Java in NativeBridge, which saves songs into the public Music folder
  * via MediaStore). External http(s) navigation from the page is allowed only
  * for the app itself; cleartext is restricted to 127.0.0.1 (see
  * res/xml/network_security_config.xml).
@@ -103,10 +103,10 @@ public class MainActivity extends Activity {
                 String scheme = u.getScheme();
                 if (scheme != null && (scheme.equals("http") || scheme.equals("https"))) {
                     String host = u.getHost();
-                    // the bundled app itself is served from loopback; the app
-                    // only ever talks to archive.org over https from JS/Java
-                    if (!"127.0.0.1".equals(host) && !"localhost".equals(host)
-                            && !"archive.org".equals(host) && !host.endsWith(".archive.org")) {
+                    // the bundled app itself is served from loopback; the page
+                    // only fetches from the remaining music sources (Wikimedia
+                    // Commons, Openverse) over https from JS
+                    if (!"127.0.0.1".equals(host) && !"localhost".equals(host)) {
                         return true;
                     }
                 }
