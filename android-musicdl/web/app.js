@@ -21,7 +21,8 @@
     netBanner: $('netBanner'), netPill: $('netPill'),
     form: $('searchForm'), input: $('searchInput'), status: $('searchStatus'),
     surpriseBtn: $('surpriseBtn'), quickChips: $('quickChips'), historyChips: $('historyChips'),
-    sourceChips: $('sourceChips'),
+    sourceChips: $('sourceChips'), sortSel: $('sortSel'), fmtChips: $('fmtChips'),
+    clearFinished: $('clearFinished'), toast: $('toast'),
     directToggle: $('directToggle'), directPanel: $('directPanel'), directUrl: $('directUrl'), directName: $('directName'), directGo: $('directGo'),
     tabSearch: $('tabSearch'), tabDownloads: $('tabDownloads'),
     results: $('results'), downloads: $('downloads'), dlCount: $('dlCount'),
@@ -33,6 +34,8 @@
   var state = {
     tab: 'search',
     source: 'all',
+    sort: 'relevance',
+    format: 'all',
     metaCache: {},   // archive identifier -> {files:[...], error}
     expanded: {},    // item id -> bool
     progress: {},    // download id -> last event
@@ -55,6 +58,41 @@
     { label: 'Public domain 78s', q: 'collection:georgeblood' },
   ];
   var HIST_KEY = 'musicdl-history';
+  var FORMATS = [
+    { key: 'all', label: 'All' }, { key: '.mp3', label: 'MP3' }, { key: '.ogg', label: 'OGG' },
+    { key: '.flac', label: 'FLAC' }, { key: '.wav', label: 'WAV' }, { key: '.m4a', label: 'M4A' },
+  ];
+  function renderFmtChips() {
+    els.fmtChips.innerHTML = '';
+    FORMATS.forEach(function (f) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (state.format === f.key ? ' active' : '');
+      b.textContent = f.label;
+      b.addEventListener('click', function () {
+        state.format = f.key;
+        renderFmtChips();
+        var q = els.input.value.trim();
+        if (q) doSearch(q); else renderResults(state.lastItems || []);
+      });
+      els.fmtChips.appendChild(b);
+    });
+  }
+  function itemHasFormat(item) {
+    if (state.format === 'all') return true;
+    var hay = (item.formats || '') + ' ' + (item.files || []).map(function (f) { return extOf(f.name); }).join(' ');
+    if (item.source === 'archive' && !item.files) {
+      // formats string from archive fl[]=format, e.g. "MP3, OGG"
+      return hay.toLowerCase().indexOf(state.format.slice(1)) !== -1;
+    }
+    return hay.toLowerCase().indexOf(state.format) !== -1;
+  }
+  function sortItems(items) {
+    if (state.sort === 'az') {
+      return items.slice().sort(function (a, b) { return String(a.title).localeCompare(String(b.title)); });
+    }
+    return items;
+  }
 
   function extOf(name) {
     var n = (name || '').toLowerCase().split('?')[0].split('#')[0];
@@ -168,11 +206,16 @@
   }
 
   /* --------------------------- sources --------------------------- */
+  var ARCHIVE_SORT = {
+    relevance: '',
+    popular: '&sort[]=downloads%20desc',
+    newest: '&sort[]=date%20desc',
+  };
   function searchArchive(q) {
     var query = 'mediatype:audio AND (' + q + ')';
     var url = 'https://archive.org/advancedsearch.php?q=' + encodeURIComponent(query)
       + '&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=duration&fl[]=item_size&fl[]=format'
-      + '&rows=40&page=1&output=json';
+      + '&rows=40&page=1&output=json' + (ARCHIVE_SORT[state.sort] || '');
     return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
       return ((j.response && j.response.docs) || []).map(function (d) {
         var id = d.identifier;
@@ -245,6 +288,7 @@
     pushHistory(query);
     var keys = state.source === 'all' ? ['archive', 'commons', 'openverse'] : [state.source];
     setStatus('searching ' + (state.source === 'all' ? 'all websites' : SOURCE_LABEL[state.source]) + ' for "' + query + '"...', 'busy');
+    renderSkeletons();
     var tasks = keys.map(function (k) {
       return SEARCHERS[k](query).then(function (items) {
         return { key: k, items: items, ok: true };
@@ -259,6 +303,8 @@
         if (r.ok) items = items.concat(r.items);
         else failed.push(SOURCE_LABEL[r.key] + (r.err && r.err.message ? ': ' + r.err.message : ''));
       });
+      items = sortItems(items.filter(itemHasFormat));
+      state.lastItems = items;
       setStatus(items.length + ' result(s) from ' + res.filter(function (r) { return r.ok; }).length + ' source(s)'
         + (failed.length ? ' — ' + failed.join('; ') : ''), items.length ? 'ok' : 'err');
       renderResults(items);
@@ -301,6 +347,16 @@
   }
 
   /* --------------------------- results --------------------------- */
+  function renderSkeletons() {
+    els.results.innerHTML = '';
+    for (var i = 0; i < 8; i++) {
+      var card = document.createElement('div');
+      card.className = 'result-card skeleton-card';
+      card.innerHTML = '<div class="cover"></div><div class="rc-body">'
+        + '<div class="sk-line"></div><div class="sk-line short"></div><div class="sk-line short"></div></div>';
+      els.results.appendChild(card);
+    }
+  }
   function renderResults(items) {
     els.results.innerHTML = '';
     if (!items.length) {
@@ -486,10 +542,28 @@
   });
 
   /* --------------------------- downloads --------------------------- */
+  var toastTimer = null;
+  function toast(msg, isErr) {
+    els.toast.textContent = msg;
+    els.toast.className = 'toast' + (isErr ? ' err' : '');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { els.toast.classList.add('hidden'); }, 4200);
+  }
+
   window.MusicDL = {
     onEvent: function (ev) {
       if (!ev || !ev.id) return;
+      var prev = state.progress[ev.id];
+      var now = Date.now();
+      if (ev.type === 'progress' && ev.status === 'downloading' && prev && prev._t) {
+        var dt = (now - prev._t) / 1000;
+        var dd = (ev.done || 0) - (prev.done || 0);
+        if (dt > 0 && dd >= 0) ev._speed = dd / dt;
+      }
+      ev._t = now;
       state.progress[ev.id] = ev;
+      if (ev.type === 'done') toast('Saved: ' + (ev.title || ev.filename) + ' -> Music/MusicDownloader');
+      if (ev.type === 'error') toast('Download failed: ' + (ev.message || ev.id), true);
       if (state.tab === 'downloads') renderDownloads();
     },
   };
@@ -569,7 +643,12 @@
         li.appendChild(p);
         var lab = document.createElement('div');
         lab.className = 'prog-label';
-        lab.textContent = (ev.pct >= 0 ? ev.pct + '%' : '...') + (ev.size > 0 ? ' · ' + fmtBytes(ev.done || 0) + ' / ' + fmtBytes(ev.size) : '');
+        var extra = '';
+        if (ev.size > 0 && ev._speed > 0 && ev.pct < 100) {
+          var eta = Math.max(0, (ev.size - (ev.done || 0)) / ev._speed);
+          extra = ' · ' + fmtBytes(ev._speed) + '/s · ETA ' + (eta >= 60 ? Math.ceil(eta / 60) + 'm' : Math.ceil(eta) + 's');
+        }
+        lab.textContent = (ev.pct >= 0 ? ev.pct + '%' : '...') + (ev.size > 0 ? ' · ' + fmtBytes(ev.done || 0) + ' / ' + fmtBytes(ev.size) : '') + extra;
         li.appendChild(lab);
       }
       els.downloads.appendChild(li);
@@ -604,6 +683,28 @@
     if (tab === 'downloads') renderDownloads();
   }
   els.tabSearch.addEventListener('click', function () { switchTab('search'); });
+  els.sortSel.addEventListener('change', function () {
+    state.sort = els.sortSel.value;
+    var q = els.input.value.trim();
+    if (q) doSearch(q);
+  });
+  els.clearFinished.addEventListener('click', function () {
+    Object.keys(state.progress).forEach(function (id) {
+      var st = state.progress[id].status;
+      if (st === 'done' || st === 'cancelled' || st === 'error') {
+        try { N.deleteDownload(id); } catch (e) { /* ignore */ }
+        delete state.progress[id];
+      }
+    });
+    renderDownloads();
+    toast('Finished downloads cleared from the list');
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement !== els.input && document.activeElement !== $('directUrl') && document.activeElement !== $('directName')) {
+      e.preventDefault();
+      els.input.focus();
+    }
+  });
   els.tabDownloads.addEventListener('click', function () { switchTab('downloads'); });
 
   els.form.addEventListener('submit', function (e) {
@@ -616,6 +717,7 @@
   if (N && N.log) N.log('Music Downloader web UI v3 (multi-source) loaded, platform=' + N.platform());
   updateNet();
   renderSourceChips();
+  renderFmtChips();
   renderChips();
   refreshDownloadsFromNative();
   renderDownloads();
