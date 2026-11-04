@@ -254,6 +254,52 @@ export function classifyLiveChroma(
   };
 }
 
+export interface ProgressionChord {
+  symbol: string;
+  roman: string;
+  nashville: string;
+  rootPc: number;
+  start: number;
+  end: number;
+  duration: number;
+}
+
+/** A chord is "relevant" to the song when every one of its pitch classes belongs to the detected key scale. */
+export function chordIsInKey(
+  chord: { symbol: string; pitchClasses: number[] },
+  key: { scalePitchClasses: number[] }
+): boolean {
+  if (!chord || chord.symbol === 'N.C.') return false;
+  return chord.pitchClasses.every((pc) => key.scalePitchClasses.includes(pc));
+}
+
+/**
+ * The song's relevant chord progression: only the in-key chords, in order,
+ * with consecutive repeats collapsed (I - V - vi - IV ...).
+ */
+export function getSongProgression(analysis: { key: KeyInfo; chords: ChordBlock[] }): ProgressionChord[] {
+  const out: ProgressionChord[] = [];
+  for (const c of analysis.chords) {
+    if (!chordIsInKey(c, analysis.key)) continue;
+    const last = out[out.length - 1];
+    if (last && last.symbol === c.symbol) {
+      last.end = c.end;
+      last.duration = +(last.end - last.start).toFixed(3);
+    } else {
+      out.push({
+        symbol: c.symbol,
+        roman: c.roman,
+        nashville: c.nashville,
+        rootPc: c.rootPc,
+        start: c.start,
+        end: c.end,
+        duration: c.duration,
+      });
+    }
+  }
+  return out;
+}
+
 export function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return '0:00';
   const m = Math.floor(sec / 60);

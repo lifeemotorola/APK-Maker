@@ -47,6 +47,8 @@ fi
 mkdir -p "$BUILD"
 npx esbuild scripts/test_offline_analyze.ts --bundle --platform=node --format=esm --outfile="$BUILD/test_offline.mjs"
 node "$BUILD/test_offline.mjs"
+npx esbuild scripts/test_progression.ts --bundle --platform=node --format=esm --outfile="$BUILD/test_progression.mjs"
+node "$BUILD/test_progression.mjs"
 node scripts/test_livemic_shell.mjs
 
 echo "==> [2/6] Building web UI (Vite)"
