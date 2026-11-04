@@ -78,6 +78,14 @@ check(/grid/.test(html) && /result-card/.test(css), 'results rendered as cover-a
 check(/cover/.test(bridge) && /startDownload\(final String id, final String url, final String filename,\s*final String title, final String creator, final String mime,\s*final String cover\)/s.test(bridge), 'startDownload carries a cover URL (any source)');
 check(/pendingDlCover/.test(main), 'MainActivity threads cover through the storage-permission retry');
 
+check(html.includes('id="sortSel"') && /popular/.test(app) && /ARCHIVE_SORT/.test(app), 'sort control (relevance/popular/newest/A-Z) wired to the search APIs');
+check(html.includes('id="fmtChips"') && /itemHasFormat/.test(app), 'format filter chips (MP3/OGG/FLAC/WAV/M4A)');
+check(/renderSkeletons/.test(app) && /shimmer/.test(css), 'loading skeleton cards while searching');
+check(/_speed/.test(app) && /ETA/.test(app), 'download speed + ETA shown in progress rows');
+check(/id="toast"/.test(html) && /function toast/.test(app), 'toast notifications on done/error');
+check(/clearFinished/.test(app) && /Clear finished/.test(html), 'clear-finished button for the downloads list');
+check(/e\.key === '\/'/.test(app), 'keyboard shortcut: / focuses search');
+
 if (failures) {
   console.error('\nMUSICDL WEB TEST: ' + failures + ' FAILURE(S)');
   process.exit(1);

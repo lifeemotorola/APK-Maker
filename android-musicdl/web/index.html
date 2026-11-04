@@ -29,6 +29,17 @@
       <button type="button" id="surpriseBtn" class="go-btn surprise" title="Play a random free track from the archive">Surprise me</button>
     </form>
     <div class="chips" id="sourceChips"></div>
+    <div class="chips row2">
+      <span class="chip-label">Sort</span>
+      <select id="sortSel" class="chip select">
+        <option value="relevance">Relevance</option>
+        <option value="popular">Most downloaded</option>
+        <option value="newest">Newest</option>
+        <option value="az">Title A–Z</option>
+      </select>
+      <span class="chip-label">Format</span>
+      <span id="fmtChips"></span>
+    </div>
     <div class="chips" id="quickChips"></div>
     <div class="chips history" id="historyChips"></div>
     <div class="direct-row">
@@ -47,6 +58,7 @@
     <div class="tabs">
       <button id="tabSearch" class="tab active">Search results</button>
       <button id="tabDownloads" class="tab">My downloads <span id="dlCount" class="badge">0</span></button>
+      <button id="clearFinished" class="tab ghost-tab" title="Remove all finished/cancelled/errored downloads from the list">Clear finished</button>
     </div>
     <div id="results" class="grid"></div>
     <ul id="downloads" class="list hidden"></ul>
@@ -54,6 +66,8 @@
 
   <footer class="foot">Downloads are stored locally on your device and show up in your music apps · requires internet for search &amp; download</footer>
 </main>
+
+<div id="toast" class="toast hidden"></div>
 
 <div id="playerBar" class="player-bar hidden">
   <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i></div>

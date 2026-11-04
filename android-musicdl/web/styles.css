@@ -168,4 +168,22 @@ h1 { font-size: 20px; margin: 0; }
 #pbAudio { flex: 1; height: 38px; }
 .pb-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 0 6px; }
 
+.chips.row2 { align-items: center; }
+.chip.select { appearance: none; padding: 5px 10px; font-family: inherit; cursor: pointer; }
+.ghost-tab { margin-left: auto; }
+.skeleton-card .cover, .skeleton-card .sk-line {
+  background: linear-gradient(100deg, #0A1826 40%, #12283A 50%, #0A1826 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+.skeleton-card .sk-line { height: 10px; border-radius: 5px; margin-top: 7px; }
+.skeleton-card .sk-line.short { width: 60%; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.toast {
+  position: fixed; right: 14px; bottom: 86px; z-index: 90; max-width: 300px;
+  background: rgba(8, 22, 32, 0.97); border: 1px solid rgba(52, 211, 153, 0.5);
+  color: var(--text); border-radius: 12px; padding: 10px 14px; font-size: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.toast.err { border-color: rgba(248, 113, 113, 0.55); }
 .foot { text-align: center; font-size: 10.5px; color: var(--muted); padding: 8px 0 4px; }
