@@ -39,6 +39,7 @@ declare global {
       readAsset(path: string): string | null;
       saveFile(filename: string, base64Data: string, mime: string): string | null;
       bluetoothSupported(): boolean;
+      requestMicPermission(): boolean;
       log(msg: string): void;
     };
     KeySenseMidi?: Record<string, (...args: any[]) => void>;
@@ -129,6 +130,15 @@ export function saveNativeFile(filename: string, data: Uint8Array, mime: string)
 export function bluetoothSupported(): boolean {
   if (!isAndroidNative()) return false;
   return !!window.KeySenseNative!.bluetoothSupported();
+}
+
+export function requestMicPermissionNative(): boolean {
+  if (!isAndroidNative()) return true; // desktop browsers ask per-site
+  try {
+    return !!window.KeySenseNative!.requestMicPermission();
+  } catch {
+    return false;
+  }
 }
 
 export function nativeLog(msg: string): void {

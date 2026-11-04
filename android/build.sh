@@ -39,7 +39,7 @@ echo "Using Java: $JAVA ($("$JAVA" -version 2>&1 | head -1))"
 
 "$HERE/fetch-tools.sh"
 
-echo "==> [1/6] Testing the offline song analyzer (Node)"
+echo "==> [1/6] Testing offline analyzer + live-mic shell (Node)"
 cd "$ROOT"
 if [ ! -d node_modules ]; then
     npm install --no-audit --no-fund
@@ -47,6 +47,7 @@ fi
 mkdir -p "$BUILD"
 npx esbuild scripts/test_offline_analyze.ts --bundle --platform=node --format=esm --outfile="$BUILD/test_offline.mjs"
 node "$BUILD/test_offline.mjs"
+node scripts/test_livemic_shell.mjs
 
 echo "==> [2/6] Building web UI (Vite)"
 npx vite build --outDir "$APP/src/main/assets/www" --emptyOutDir

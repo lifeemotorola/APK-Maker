@@ -71,6 +71,11 @@ public class NativeBridge {
     }
 
     @JavascriptInterface
+    public boolean requestMicPermission() {
+        return activity.requestMicPermission();
+    }
+
+    @JavascriptInterface
     public boolean bluetoothSupported() {
         PackageManager pm = activity.getPackageManager();
         return pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
