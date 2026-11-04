@@ -40,9 +40,12 @@ declare global {
       saveFile(filename: string, base64Data: string, mime: string): string | null;
       bluetoothSupported(): boolean;
       requestMicPermission(): boolean;
+      startNativeMic(): boolean;
+      stopNativeMic(): void;
       log(msg: string): void;
     };
     KeySenseMidi?: Record<string, (...args: any[]) => void>;
+    KeySenseMic?: { pushPcm(base64Pcm16: string, sampleRate: number): void };
   }
 }
 
@@ -138,6 +141,51 @@ export function requestMicPermissionNative(): boolean {
     return !!window.KeySenseNative!.requestMicPermission();
   } catch {
     return false;
+  }
+}
+
+/* ---- native mic capture (AudioRecord fallback when getUserMedia fails) ---- */
+const micListeners = new Set<(pcm: Float32Array, sampleRate: number) => void>();
+let micBridgeInstalled = false;
+
+function installMicBridge(): void {
+  if (micBridgeInstalled || typeof window === 'undefined') return;
+  micBridgeInstalled = true;
+  window.KeySenseMic = {
+    pushPcm: (b64: string, sampleRate: number) => {
+      try {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const int16 = new Int16Array(bytes.buffer);
+        const pcm = new Float32Array(int16.length);
+        for (let i = 0; i < int16.length; i++) pcm[i] = int16[i] / 32768;
+        micListeners.forEach((cb) => {
+          try { cb(pcm, sampleRate); } catch { /* listener error must not break the bridge */ }
+        });
+      } catch { /* ignore malformed payload */ }
+    },
+  };
+}
+
+export function subscribeNativeMic(cb: (pcm: Float32Array, sampleRate: number) => void): () => void {
+  installMicBridge();
+  micListeners.add(cb);
+  return () => micListeners.delete(cb);
+}
+
+export function startNativeMic(): boolean {
+  if (!isAndroidNative()) return false;
+  try {
+    return !!window.KeySenseNative!.startNativeMic();
+  } catch {
+    return false;
+  }
+}
+
+export function stopNativeMic(): void {
+  if (isAndroidNative()) {
+    try { window.KeySenseNative!.stopNativeMic(); } catch { /* ignore */ }
   }
 }
 

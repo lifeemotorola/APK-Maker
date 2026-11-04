@@ -42,6 +42,18 @@ check(/createGain\(\)[\s\S]*?gain\.value = 0[\s\S]*?ctx\.destination/.test(modal
 check(/getUserMedia\(\{ audio: true \}\)/.test(modal), 'getUserMedia falls back to { audio: true }');
 check(/Grant microphone permission/.test(modal), 'error UI offers grant-permission & retry (native)');
 
+check(/startNativeMic/.test(bridge), 'NativeBridge exposes startNativeMic (AudioRecord capture)');
+check(/AudioRecord/.test(bridge) && /AudioSource\.MIC/.test(bridge), 'native mic uses AudioRecord MIC source');
+check(/stopNativeMic/.test(bridge), 'NativeBridge exposes stopNativeMic');
+check(/pushPcm/.test(bridge), 'native mic pushes PCM to window.KeySenseMic.pushPcm');
+check(/startNativeMic\(\): boolean/.test(nb), 'Window.KeySenseNative interface declares startNativeMic');
+check(/KeySenseMic\?:/.test(nb), 'Window.KeySenseMic bridge interface declared');
+check(/subscribeNativeMic/.test(nb), 'subscribeNativeMic helper exported');
+check(/startNativeMic\(\)/.test(modal), 'LiveMicModal falls back to native AudioRecord capture');
+check(/subscribeNativeMic/.test(modal), 'LiveMicModal feeds native PCM into the analyser graph');
+check(/createBufferSource/.test(modal), 'native PCM played through BufferSource into analyser');
+check(/disabled=\{!streamRef\.current\}/.test(modal), 'record button disabled in native-capture mode');
+
 if (failures) {
   console.error(`LIVEMIC SHELL TEST: ${failures} FAILED`);
   process.exit(1);

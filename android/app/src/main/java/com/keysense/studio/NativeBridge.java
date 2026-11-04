@@ -3,6 +3,10 @@ package com.keysense.studio;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.pm.PackageManager;
+import android.Manifest;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -73,6 +77,88 @@ public class NativeBridge {
     @JavascriptInterface
     public boolean requestMicPermission() {
         return activity.requestMicPermission();
+    }
+
+    // ------------------------------------------------------------------
+    // Native microphone capture fallback (AudioRecord -> page via bridge).
+    // Used when WebView getUserMedia fails with "Could not start audio source"
+    // (NotReadableError) on some devices/WebView builds.
+    // ------------------------------------------------------------------
+
+    private static final int MIC_SAMPLE_RATE = 22050;
+    private Thread micThread;
+    private volatile boolean micRunning;
+    private AudioRecord audioRecord;
+
+    @JavascriptInterface
+    public synchronized boolean startNativeMic() {
+        if (activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            activity.requestMicPermission();
+            return false;
+        }
+        if (micRunning) return true;
+        try {
+            int minBuf = AudioRecord.getMinBufferSize(MIC_SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT);
+            int bufSize = Math.max(minBuf, 8192);
+            AudioRecord rec = new AudioRecord(MediaRecorder.AudioSource.MIC, MIC_SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize);
+            if (rec.getState() != AudioRecord.STATE_INITIALIZED) {
+                rec.release();
+                return false;
+            }
+            audioRecord = rec;
+            rec.startRecording();
+            micRunning = true;
+            final AudioRecord recFinal = rec;
+            micThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    short[] pcm = new short[2048];
+                    while (micRunning) {
+                        int n;
+                        try {
+                            n = recFinal.read(pcm, 0, pcm.length);
+                        } catch (Exception e) {
+                            break;
+                        }
+                        if (n > 0) {
+                            byte[] bytes = new byte[n * 2];
+                            for (int i = 0; i < n; i++) {
+                                bytes[i * 2] = (byte) (pcm[i] & 0xff);
+                                bytes[i * 2 + 1] = (byte) ((pcm[i] >> 8) & 0xff);
+                            }
+                            String b64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
+                            activity.pushJs("if(window.KeySenseMic){window.KeySenseMic.pushPcm(\"" + b64 + "\"," + MIC_SAMPLE_RATE + ")}");
+                        }
+                    }
+                }
+            }, "keysense-mic");
+            micThread.start();
+            return true;
+        } catch (Exception e) {
+            Log.e(MainActivity.TAG, "startNativeMic failed", e);
+            micRunning = false;
+            if (audioRecord != null) {
+                try { audioRecord.release(); } catch (Exception ignored) {}
+                audioRecord = null;
+            }
+            return false;
+        }
+    }
+
+    @JavascriptInterface
+    public synchronized void stopNativeMic() {
+        micRunning = false;
+        if (micThread != null) {
+            try { micThread.join(400); } catch (InterruptedException ignored) {}
+            micThread = null;
+        }
+        if (audioRecord != null) {
+            try { audioRecord.stop(); } catch (Exception ignored) {}
+            try { audioRecord.release(); } catch (Exception ignored) {}
+            audioRecord = null;
+        }
     }
 
     @JavascriptInterface
