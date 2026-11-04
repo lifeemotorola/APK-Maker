@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  var APP_VERSION = '1.0';
+  var APP_VERSION = '1.1';
   var APP_AUTHOR = 'Emmanuel Suah';
 
   /* ------------------------------ dom helpers ---------------------------- */
@@ -92,7 +92,7 @@
 
   /* ------------------------------ state ---------------------------------- */
   function defaultState() {
-    return { solved: {}, quiz: {}, exam: null, name: '', theme: 'day' };
+    return { solved: {}, quiz: {}, exam: null, name: '', theme: 'day', stars: {}, days: {} };
   }
   var S = defaultState();
 
@@ -122,6 +122,14 @@
   }
   function allDone() { return COURSE.topics.every(topicDone); }
   function totalSolved() { return Object.keys(S.solved).length; }
+  function dayStr(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function recordDay() { var t = dayStr(new Date()); if (!S.days[t]) { S.days[t] = true; kvSet('state', S); } }
+  function streak() {
+    var n = 0, d = new Date();
+    if (!S.days[dayStr(d)]) d.setDate(d.getDate() - 1);
+    while (S.days[dayStr(d)]) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
 
   /* ------------------------------ router --------------------------------- */
   var screen = { name: 'home' };
@@ -195,7 +203,7 @@
       var id = 'run' + Math.random().toString(36).slice(2);
       var done = false;
       var timer = setTimeout(function () {
-        finish({ ok: false, logs: [], error: 'Time limit (3s) exceeded — infinite loop?' });
+        finish({ ok: false, logs: [], error: 'Time limit (' + Math.round((timeoutMs || 3000) / 1000) + 's) exceeded — infinite loop?' });
       }, timeoutMs || 3000);
       function finish(res) {
         if (done) return; done = true;
@@ -205,24 +213,26 @@
         resolve(res);
       }
       function onmsg(e) {
-        if (e.source === ifr.contentWindow && e.data && e.data.id === id) finish(e.data.res);
+        if (e.data && e.data.__jsm && e.data.id === id) finish(e.data.res);
       }
       window.addEventListener('message', onmsg);
       var safe = String(code).replace(/<\/script/gi, '<\\/script');
-      var testJs = test ? JSON.stringify(test) : 'null';
+      var testJs = test ? JSON.stringify(test).replace(/<\/script/gi, '<\\/script') : 'null';
       ifr.srcdoc = '<!DOCTYPE html><html><body><div id="out"></div><script>' +
         'var __logs = [];' +
         'function __cap(){ __logs.push(Array.prototype.map.call(arguments, function(x){ return typeof x === "string" ? x : JSON.stringify(x); }).join(" ")); }' +
         'console.log = __cap; console.warn = __cap; console.error = __cap; console.info = __cap;' +
-        'function __finish(ok, error){ parent.postMessage({ id: ' + JSON.stringify(id) + ', res: { ok: !!ok, logs: __logs, error: error || null } }, "*"); }' +
+        'function __finish(ok, error){ parent.postMessage({ __jsm: 1, id: ' + JSON.stringify(id) + ', res: { ok: !!ok, logs: __logs, error: error || null } }, "*"); }' +
         'window.onerror = function(m){ __finish(false, String(m)); };' +
+        'window.addEventListener("unhandledrejection", function(e){ __finish(false, "Unhandled rejection: " + String(e && e.reason)); });' +
+        '</script><script>' +
         'try {' + safe + '\n' +
         (test ? 'var __r = eval(' + testJs + ');' : '') +
         (test
           ? 'if (__r && typeof __r.then === "function") { __r.then(function(v){ __finish(v); }, function(e){ __finish(false, String(e)); }); } else { __finish(__r); }'
           : '__finish(true);') +
         '} catch (e) { __finish(false, String((e && e.message) || e)); }' +
-        '<\\/script></body></html>';
+        '</script></body></html>';
     });
   }
 
@@ -245,6 +255,7 @@
       <span class="chip">${I('book')} ${done}/${COURSE.count} topics</span>
       <span class="chip">${I('target')} ${totalSolved().toLocaleString()}/${COURSE.totalPractices.toLocaleString()} practices</span>
       <span class="chip">${I('trophy')} quiz avg ${avg}%</span>
+      <span class="chip">${I('flame')} ${streak()}-day streak</span>
       <span class="chip">${I('award')} ${S.exam ? 'exam ' + S.exam + '%' : 'exam locked'}</span>
     </div>
     <div class="card">
@@ -269,6 +280,7 @@
   <section class="screen">
     <h1 class="screen-title">${COURSE.count} topics</h1>
     <p class="screen-sub">Finish a topic (80% of its practices + quiz 5/8) to unlock the next. ${COURSE.totalPractices.toLocaleString()} practices in total.</p>
+    <input id="topicSearch" class="search-input" type="search" placeholder="Search topics…" autocomplete="off">
     ${groups.map(function (lv) {
       return `<h3 class="group-label">${lv}</h3><div class="card-list">` + COURSE.topics.filter(function (t) { return t.level === lv; }).map(function (t) {
         var unlocked = topicUnlocked(t), done = topicDone(t), sc = solvedCount(t.id);
@@ -285,6 +297,17 @@
     bindNav();
     $all('[data-topic]').forEach(function (b) {
       b.addEventListener('click', function () { go('topic', { id: b.dataset.topic }); });
+    });
+    var ts = document.getElementById('topicSearch');
+    if (ts) ts.addEventListener('input', function () {
+      var q = ts.value.trim().toLowerCase();
+      $all('.topic-row').forEach(function (r) {
+        r.classList.toggle('hidden', !!q && r.textContent.toLowerCase().indexOf(q) === -1);
+      });
+      $all('.card-list').forEach(function (cl) {
+        var any = $all('.topic-row:not(.hidden)', cl).length > 0;
+        if (cl.previousElementSibling) cl.previousElementSibling.classList.toggle('hidden', !any);
+      });
     });
   }
 
@@ -304,30 +327,56 @@
     </div>
     <div class="lv-bar"><div style="width:${Math.round(100 * sc / t.practices)}%"></div></div>
     <div class="r-actions">
-      <button class="btn" id="goPractices">${I('code')} Practices (${t.practices})</button>
-      <button class="btn ghost" id="goQuiz">${I('target')} Quiz (8)</button>
+      <button class="btn" id="goQuiz">${I('target')} Quiz (8)${quiz != null ? ' · best ' + quiz + '/8' : ''}</button>
+      <button class="btn ghost" id="randBtn">${I('shuffle')} Random unsolved</button>
+    </div>
+    <div class="chip-row" id="pracFilters">
+      <button class="chip-btn active" data-filter="all">${I('list')} All ${t.practices}</button>
+      <button class="chip-btn" data-filter="unsolved">${I('code')} Unsolved</button>
+      <button class="chip-btn" data-filter="starred">${I('star')} Starred</button>
     </div>
     <div id="practiceList" class="card-list"></div>
   </section>${navBar('topics')}`);
     bindNav();
-    document.getElementById('goPractices').addEventListener('click', function () {
+    var pracFilter = 'all';
+    function renderPracList() {
       loadPractices(t.id).then(function (list) {
-        $('#practiceList').innerHTML = list.map(function (p, idx) {
-          var done = !!S.solved[p.id];
-          return `<button class="card prac-row ${done ? 'done' : ''}" data-prac="${idx}">
+        var items = list.map(function (p, idx) { return { p: p, idx: idx }; }).filter(function (it) {
+          if (pracFilter === 'unsolved') return !S.solved[it.p.id];
+          if (pracFilter === 'starred') return !!S.stars[it.p.id];
+          return true;
+        });
+        $('#practiceList').innerHTML = items.length ? items.map(function (it) {
+          var p = it.p, done = !!S.solved[p.id], starred = !!S.stars[p.id];
+          return `<button class="card prac-row ${done ? 'done' : ''}" data-prac="${it.idx}">
             <span class="prac-state">${done ? I('check') : I('code')}</span>
-            <span class="biz-main"><b class="biz-name">Practice ${idx + 1}</b>
+            <span class="biz-main"><b class="biz-name">Practice ${it.idx + 1}</b>
             <span class="biz-meta">${esc(p.prompt.length > 90 ? p.prompt.slice(0, 90) + '…' : p.prompt)}</span></span>
+            ${starred ? '<span class="prac-star">' + I('starFill') + '</span>' : ''}
           </button>`;
-        }).join('');
+        }).join('') : '<div class="card note-card">' + I('info') + '<p>Nothing here — switch filter or solve more practices.</p></div>';
         $all('[data-prac]').forEach(function (b) {
           b.addEventListener('click', function () { go('practice', { id: t.id, idx: +b.dataset.prac }); });
         });
       });
+    }
+    $all('#pracFilters [data-filter]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        pracFilter = b.dataset.filter;
+        $all('#pracFilters .chip-btn').forEach(function (x) { x.classList.toggle('active', x === b); });
+        renderPracList();
+      });
+    });
+    document.getElementById('randBtn').addEventListener('click', function () {
+      loadPractices(t.id).then(function (list) {
+        var unsolved = [];
+        list.forEach(function (p, idx) { if (!S.solved[p.id]) unsolved.push(idx); });
+        var pool = unsolved.length ? unsolved : list.map(function (p, idx) { return idx; });
+        go('practice', { id: t.id, idx: pool[Math.floor(Math.random() * pool.length)] });
+      });
     });
     document.getElementById('goQuiz').addEventListener('click', function () { go('quiz', { id: t.id }); });
-    // auto-load practice list
-    document.getElementById('goPractices').click();
+    renderPracList();
   }
 
   /* ----------------------------- practice -------------------------------- */
@@ -348,6 +397,8 @@
         <button class="btn" id="runBtn">${I('play')} Run &amp; test</button>
         <button class="btn ghost sm" id="hintBtn">${I('bulb')} Hint</button>
         <button class="btn ghost sm" id="solBtn">${I('eye')} Solution</button>
+        <button class="btn ghost sm" id="runSolBtn">${I('play')} Run solution</button>
+        <button class="btn ghost sm" id="starBtn">${S.stars[p.id] ? I('starFill') : I('star')} ${S.stars[p.id] ? 'Starred' : 'Star'}</button>
       </div>
       <div id="hintBox" class="hint-box hidden"></div>
       <div id="outBox" class="out-box hidden"></div>
@@ -384,6 +435,24 @@
       document.getElementById('solBtn').addEventListener('click', function () {
         editor.value = p.solution;
         toast('Solution loaded — press Run & test', 'eye');
+      });
+      document.getElementById('runSolBtn').addEventListener('click', function () {
+        var out = document.getElementById('outBox');
+        out.classList.remove('hidden');
+        out.innerHTML = '<p class="hint">Running the solution…</p>';
+        runUserCode(p.solution, p.test, 3000).then(function (res) {
+          out.className = 'out-box ' + (res.ok ? 'pass' : 'fail');
+          out.innerHTML = (res.logs.length ? '<pre class="logs">' + esc(res.logs.join('\n')) + '</pre>' : '') +
+            (res.error ? '<pre class="err">' + esc(res.error) + '</pre>' : '') +
+            '<p class="verdict">' + (res.ok ? I('check') + ' The solution passes — now type it yourself and run.' : I('x') + ' Solution did not pass (please report this topic).') + '</p>';
+        });
+      });
+      document.getElementById('starBtn').addEventListener('click', function () {
+        if (S.stars[p.id]) { delete S.stars[p.id]; toast('Removed from starred', 'star'); }
+        else { S.stars[p.id] = true; toast('Starred — find it under the Starred filter', 'starFill'); }
+        kvSet('state', S);
+        var b = document.getElementById('starBtn');
+        b.innerHTML = (S.stars[p.id] ? I('starFill') : I('star')) + ' ' + (S.stars[p.id] ? 'Starred' : 'Star');
       });
       document.getElementById('prevP').addEventListener('click', function () { if (idx > 0) go('practice', { id: screen.id, idx: idx - 1 }); });
       document.getElementById('nextP').addEventListener('click', function () { if (idx < list.length - 1) go('practice', { id: screen.id, idx: idx + 1 }); });
@@ -590,6 +659,9 @@ for (let i = 1; i <= 5; i++) {
   /* ------------------------------- boot ---------------------------------- */
   Promise.all([loadCourse(), kvGet('state')]).then(function (r) {
     if (r[1]) S = Object.assign(defaultState(), r[1]);
+    if (!S.stars) S.stars = {};
+    if (!S.days) S.days = {};
+    recordDay();
     try { render(); } catch (e) {
       dismissSplash();
       app.innerHTML = '<div class="card" style="margin:40px 16px"><h2 class="screen-title">Could not start</h2>' +

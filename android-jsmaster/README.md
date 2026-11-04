@@ -1,4 +1,4 @@
-# JS Mastery — interactive JavaScript course APK (beginner -> advanced)
+# JS Mastery v1.1 — interactive JavaScript course APK (beginner -> advanced)
 
 A single signed Android APK, `com.jsmaster.app` (minSdk 23 / targetSdk 34),
 **by Emmanuel Suah**: a full **offline** interactive course to learn
@@ -27,7 +27,16 @@ JavaScript from absolute beginner to advanced, with real-time practice.
   calls the Android system print dialog (`MainActivity` -> `PrintManager` via
   `webView.createPrintDocumentAdapter`), and `@media print` CSS prints only
   the certificate.
-- Progress (solved practices, quiz scores, exam, name) is cached in the
+- **v1.1 features**: live topic **search**, practice filters (All / Unsolved /
+  **Starred** with a per-practice star toggle), **Random unsolved** jump button,
+  **Run solution** (executes the official solution through the same runner),
+  a **day streak** counter on Home, and richer lessons — every topic now also
+  has a **Common pitfalls** list and a **Where you will use this** section.
+- **Runner regression test**: `web/test_runner.js` extracts the shipped
+  srcdoc/postMessage runner from `app.js` and executes it in a VM (hello-world,
+  practice test, syntax error, failing test, promise test, `</script>` in a
+  string) — wired into `build.sh` and CI so a broken Run button can never ship.
+- Progress (solved practices, quiz scores, exam, name, stars, streak days) is cached in the
   WebView's **local SQLite database** (WebSQL `jsmaster`, localStorage
   fallback). Hardware BACK walks the in-app screen stack.
 
@@ -40,7 +49,7 @@ the build on any failure. Both run in `build.sh` and CI.
 ## Layout
 ```
 android-jsmaster/
-  build.sh                 offline build pipeline (see header)
+  build.sh                 offline build pipeline (gen + course tests + runner test + emoji gate)
   web/
     index.html             app shell + splash
     styles.css             day/night themes + print stylesheet
@@ -48,6 +57,7 @@ android-jsmaster/
     app.js                 router, sandboxed code runner, progress (SQLite), screens
     gen_course.js          course generator (50 topics / 5,250 practices)
     test_course.js         VM validator — executes every solution+test
+    test_runner.js         VM test of the shipped in-app code runner
     img/hero.jpg           bundled artwork
   app/
     src/main/AndroidManifest.xml
@@ -58,5 +68,5 @@ android-jsmaster/
 
 ## Build
 ```bash
-./android-jsmaster/build.sh     # -> app/build/JS-Master-1.0.apk + ./JS-Master.apk
+./android-jsmaster/build.sh     # -> app/build/JS-Master-1.1.apk + ./JS-Master.apk
 ```

@@ -228,3 +228,29 @@ body {
   .certificate { margin: 0; box-shadow: none; }
   .cert-border { box-shadow: none; outline-offset: -10px; }
 }
+
+/* --------------------- v1.1 features: search, filters, stars, streak ------- */
+.search-input {
+  width: 100%; padding: 11px 14px; margin: 4px 0 10px; border-radius: 10px;
+  border: 1px solid var(--card-border); background: var(--card); color: var(--text);
+  font: inherit; font-weight: 600; outline: none;
+}
+.search-input:focus { border-color: var(--gold-bright); box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18); }
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 12px; }
+.chip-btn {
+  border: 1px solid var(--card-border); background: var(--card); color: var(--muted);
+  border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-variant: small-caps;
+  transition: transform 0.12s, background 0.15s, color 0.15s;
+}
+.chip-btn .ico { width: 15px; height: 15px; }
+.chip-btn:hover { transform: translateY(-1px); border-color: var(--gold); color: var(--gold); }
+.chip-btn.active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+.prac-star { display: inline-flex; color: var(--gold); }
+.prac-star .ico { width: 18px; height: 18px; }
+.lesson-pitfalls { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--red); opacity: 0.9; font-size: 14.5px; }
+.lesson-real {
+  background: rgba(67, 56, 202, 0.08); border-left: 3px solid var(--indigo-2);
+  padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 14.5px; margin: 4px 0 0;
+}
+:root[data-theme='night'] .lesson-real { background: rgba(129, 140, 248, 0.12); }

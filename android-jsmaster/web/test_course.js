@@ -59,6 +59,7 @@ async function checkPractice(topicId, p) {
 for (const t of index.topics) {
   levels[t.level] = (levels[t.level] || 0) + 1;
   ok(typeof t.lesson === 'string' && t.lesson.includes('<h2>'), `${t.id}: has lesson HTML`);
+  ok(t.lesson.includes('Common pitfalls') && t.lesson.includes('Where you will use this'), `${t.id}: lesson has pitfalls + real-world details`);
   ok(Array.isArray(t.quiz) && t.quiz.length >= 8, `${t.id}: has >= 8 quiz questions (${t.quiz?.length})`);
   const file = path.join(DIR, 'p', t.id + '.json');
   ok(fs.existsSync(file), `${t.id}: practice file exists`);

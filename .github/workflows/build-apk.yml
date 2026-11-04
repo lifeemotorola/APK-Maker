@@ -244,8 +244,9 @@ jobs:
 
       - name: Generate + VM-test the course (50 topics, 5,250 practices)
         run: |
-          node android-jsmaster/web/gen_course.js /tmp/jsm-www/data
-          node android-jsmaster/web/test_course.js /tmp/jsm-www/data
+          node android-jsmaster/web/gen_course.js /tmp/jsm-www
+          node android-jsmaster/web/test_course.js /tmp/jsm-www
+          node android-jsmaster/web/test_runner.js
 
       - name: Build the APK (android-jsmaster/build.sh)
         run: ./android-jsmaster/build.sh
@@ -263,7 +264,7 @@ jobs:
           name: JS-Master-APK
           path: |
             JS-Master.apk
-            android-jsmaster/app/build/JS-Master-1.0.apk
+            android-jsmaster/app/build/JS-Master-1.1.apk
             android-jsmaster/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
