@@ -57,6 +57,12 @@ check(existsSync(join(ROOT, 'demos', 'manifest.json')), 'demos/manifest.json exi
 // css sanity: no emoji-ish glyphs are checked separately by check_no_emoji.py
 check(!/\u{1F300}-\u{1FAFF}/u.test(css), 'styles.css has no emoji range glyphs');
 
+check(html.includes('img/hero.png') || html.includes('img/icon.png'), 'hero banner uses the generated PNG artwork');
+check(read('styles.css').includes("url('img/bg.png')"), 'styles.css uses the generated background PNG');
+check(/mipmap-/.test(manifest) || /@mipmap\/ic_launcher/.test(manifest), 'manifest launcher icon points at PNG mipmaps');
+check(/cp "\$WEB\/img\/"\*\.png/.test(build), 'build.sh stages web/img PNGs into assets/www/img');
+check(existsSync(join(HERE, 'img', 'icon.png')) && existsSync(join(HERE, 'img', 'bg.png')) && existsSync(join(HERE, 'img', 'hero.png')), 'generated icon.png + bg.png + hero.png exist');
+
 if (failures) {
   console.error('\nKEYFINDER WEB TEST: ' + failures + ' FAILURE(S)');
   process.exit(1);

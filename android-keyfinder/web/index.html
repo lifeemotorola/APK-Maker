@@ -8,18 +8,20 @@
 </head>
 <body>
 <main class="app">
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-badge">KF</span>
-      <div>
-        <h1>KeyFinder Player</h1>
-        <p class="tagline">Advanced song player that finds the key of any song — fully offline</p>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <img class="brand-icon" src="img/icon.png" alt="KeyFinder Player icon" />
+        <div>
+          <h1>KeyFinder Player</h1>
+          <p class="tagline">Advanced song player that finds the key of any song — fully offline</p>
+        </div>
       </div>
+      <label class="add-btn" title="Add your own audio files (mp3, wav, ogg, m4a, flac)">
+        <input id="fileInput" type="file" accept="audio/*" multiple hidden />
+        + Add songs
+      </label>
     </div>
-    <label class="add-btn" title="Add your own audio files (mp3, wav, ogg, m4a, flac)">
-      <input id="fileInput" type="file" accept="audio/*" multiple hidden />
-      + Add songs
-    </label>
   </header>
 
   <!-- Now playing + detected key -->
