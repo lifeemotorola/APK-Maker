@@ -25,6 +25,7 @@
     refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3.5V8h-4.5"/>',
     star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"/>',
     starFill: '<path fill="currentColor" stroke="none" d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"/>',
+    shuffle: '<path d="M3 7h4l10 10h4"/><path d="M3 17h4l2.5-2.5"/><path d="M13.5 9.5 17 7h4"/><path d="M18 4.5 21 7l-3 2.5M18 14.5 21 17l-3 2.5"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     trash: '<path d="M4.5 6.5h15"/><path d="M9 6V4.5h6V6"/><path d="M6.5 6.5 7.5 20h9l1-13.5"/><path d="M10 10v6M14 10v6"/>',

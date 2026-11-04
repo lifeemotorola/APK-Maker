@@ -1151,12 +1151,75 @@ function genFor(t, i) {
 }
 
 // ------------------------------------------------------------------ build
+function escHtml(x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// DEEP: per-topic extra lesson detail — common pitfalls + real-world usage.
+// Keyed by topic id; lessonHtml() merges these into every lesson.
+const DEEP = {
+  welcome: { pitfalls: ["JavaScript is case-sensitive: Name and name are two different things.", "A missing closing quote or bracket is the most common beginner error."], real: "Every interactive website, mobile web app — and this very course app — runs on JavaScript." },
+  variables: { pitfalls: ["Reassigning a const throws a TypeError at runtime.", "An undeclared assignment (x = 5 without let) creates a global in sloppy mode.", "Shadowing: an inner variable with the same name hides the outer one."], real: "Variables store everything your app remembers: scores, names, cart items, settings." },
+  'data-types': { pitfalls: ["typeof null === 'object' is a historic bug that was never fixed.", "NaN === NaN is false — use Number.isNaN(x) instead of global isNaN, which coerces."], real: "APIs return JSON with mixed types; checking types prevents crashes on unexpected data." },
+  numbers: { pitfalls: ["0.1 + 0.2 !== 0.3 in floating point; round before comparing or for money.", "Division by zero gives Infinity, not an error.", "Always pass the radix: parseInt(x, 10)."], real: "Prices, distances, scores and analytics all rely on correct number handling." },
+  strings: { pitfalls: ["Strings are immutable: methods return a NEW string, they do not modify the original.", "Template literals need backticks, not quotes.", "Indexing past the end gives undefined, not an error."], real: "Formatting messages, building URLs and rendering text in the UI." },
+  operators: { pitfalls: ["+ with a string coerces the other side: 1 + '2' is '12'.", "Use === instead of == to avoid surprise coercion.", "% keeps the sign of the dividend with negative numbers."], real: "Calculating totals, splitting bills, checking even/odd with the remainder." },
+  comparison: { pitfalls: ["== coerces types ('5' == 5 is true); === does not.", "Objects and arrays compare by reference, not by value.", "0, '', null, undefined and NaN are all falsy conditions."], real: "Form validation, showing/hiding UI, game logic like 'health <= 0'." },
+  'if-else': { pitfalls: ["A single = inside a condition assigns instead of comparing.", "else binds to the NEAREST if — use braces to be explicit."], real: "Grading, access control, showing different screens for different users." },
+  'loops-for': { pitfalls: ["Modifying the counter inside the body changes the iteration count.", "break exits the whole loop; continue skips just one iteration.", "i++ and ++i rarely matter, but inside an expression they can."], real: "Rendering lists, processing every item in a cart, building tables." },
+  'loops-while': { pitfalls: ["If the condition never becomes false you get an infinite loop — this app stops it after 3 seconds.", "do-while runs the body at least once, even when the condition is already false."], real: "Waiting for input, retrying requests, game loops that run until a condition." },
+  functions: { pitfalls: ["A function without return returns undefined.", "Objects are passed by reference — mutations inside persist outside.", "Declarations are hoisted; function expressions are not."], real: "Every reusable piece of logic in every app: calculateTax(), formatDate(), sendMessage()." },
+  scope: { pitfalls: ["let/const are block-scoped; var is function-scoped and leaks out of blocks.", "Inner scopes can read outer variables, never the other way round.", "Redeclaring a let in the same scope is a SyntaxError."], real: "Keeping helper variables private inside modules so nothing else can break them." },
+  arrays: { pitfalls: ["Arrays are objects, but always use arr.length.", "push returns the new length, not the array.", "arr[100] on a short array creates holes (a sparse array)."], real: "Lists of products, messages, quiz questions — the most-used structure in apps." },
+  objects: { pitfalls: ["Dot vs bracket notation: obj['key'] is needed when the key has spaces or comes from a variable.", "Comparing objects with === compares references, not contents.", "JSON.parse gives plain objects without methods."], real: "Storing one record — a user, a product, a setting — as key/value pairs." },
+  'array-methods': { pitfalls: ["push/pop/splice MUTATE the original; concat returns a new array.", "splice changes the array in place — a classic source of bugs.", "forEach returns nothing and cannot be awaited."], real: "Transforming API data into UI lists, counting, updating carts." },
+  'template-strings': { pitfalls: ["Expressions go inside ${...}; a plain $ does nothing.", "Newlines inside a template literal are real newlines in the string.", "Nested quotes inside ${} are fine, but keep it readable."], real: "Building HTML snippets, emails, messages: Hello ${name}, you have ${n} items." },
+  destructuring: { pitfalls: ["const {a} = null throws — default it: function f({a} = {}) {}", "Array destructuring skips by position: const [x, , z] = arr.", "You can nest: const {user: {name}} = data."], real: "Unpacking API responses, options objects and state in one line." },
+  'type-coercion': { pitfalls: ["'' + 1 is '1' but '' - 1 is 0: plus goes string, minus goes number.", "Boolean('false') is true — any non-empty string is truthy.", "Convert explicitly: Number(x), String(x), Boolean(x)."], real: "Reading form inputs and URL parameters (always strings) before using them as numbers." },
+  'console-debug': { pitfalls: ["In real devtools, console.log(object) shows a live reference; here it prints JSON.", "Remove or silence logs before shipping — they can leak data.", "console.table, console.time and console.count are handy in browsers."], real: "Debugging: this is how developers see what their code is actually doing." },
+  'arrow-functions': { pitfalls: ["Arrow functions have no own this — they inherit it from outside.", "A single-expression body returns automatically: x => x * 2.", "Use a normal function when you need arguments or a dynamic this."], real: "Callbacks everywhere: array methods, event handlers, promises." },
+  'spread-rest': { pitfalls: ["Spread copies: const b = [...a] — mutating b does not affect a.", "With objects, later keys win: {...a, ...b}.", "Rest must come last: function sum(...nums)."], real: "Merging configs, copying arrays before sorting, collecting arguments." },
+  'map-filter': { pitfalls: ["map returns a new array of the same length; filter returns only matches.", "Chaining is fine but keep it readable.", "Do not use map for side effects — use forEach."], real: "Turning raw API data into display data; showing only items matching a search." },
+  reduce: { pitfalls: ["Always give an initial value, or the first element becomes the accumulator.", "reduce can build any shape: objects, strings, counts.", "For a plain sum, a for loop is often clearer."], real: "Totals, counts, grouping items by category, building objects from lists." },
+  'find-some-every': { pitfalls: ["find returns the first match or undefined; some/every return booleans.", "every on an empty array is true (vacuous truth) — watch out.", "includes is cleaner than indexOf !== -1."], real: "Checking whether a user exists, whether all items are valid, finding a product by id." },
+  sorting: { pitfalls: ["sort() MUTATES the original — copy first: [...arr].sort().", "Default sort is lexicographic: [10, 9].sort() gives [10, 9]! Always pass a comparator.", "Compare numbers with (a, b) => a - b."], real: "Leaderboards, prices low-to-high, latest news first." },
+  'string-methods': { pitfalls: ["slice accepts negative indexes; substring swaps them instead.", "replace changes only the first match — use replaceAll or /g for all.", "trim() cleans both ends — perfect for form input."], real: "Cleaning user input, formatting phone numbers, building URL slugs." },
+  json: { pitfalls: ["JSON.stringify silently drops functions, undefined and symbols.", "JSON.parse throws on invalid JSON — wrap it in try/catch.", "JSON has no Date type: dates become strings; revive them manually."], real: "Saving settings to storage, sending data to servers, reading config files." },
+  dates: { pitfalls: ["Months are 0-based: January is 0, December is 11.", "new Date('2026-02-30') rolls over to March instead of erroring.", "Timestamps are milliseconds (Date.now()); seconds need / 1000."], real: "Countdowns, 'posted 3 days ago', scheduling, booking apps." },
+  'try-catch': { pitfalls: ["catch catches runtime errors, not syntax errors in the same file.", "finally runs always — use it for cleanup.", "Always throw new Error(...) so you get a stack trace."], real: "Handling network failures, bad input, missing data — without crashing the app." },
+  callbacks: { pitfalls: ["A callback is just a function passed to be called later.", "Deeply nested callbacks become callback hell — promises fix that.", "Always handle errors in callbacks, Node-style (err, result)."], real: "Event handlers, timers, file reads, API responses." },
+  promises: { pitfalls: ["A promise settles once — later resolve/reject calls are ignored.", "Always add .catch: an unhandled rejection breaks the flow.", "Promise.all rejects fast if any input rejects; allSettled waits for all."], real: "Fetching data, joining multiple requests, every modern async API." },
+  'async-await': { pitfalls: ["await only works inside an async function (or module top level).", "await looks synchronous but is still asynchronous.", "Wrap await in try/catch, or use .catch on the call."], real: "Clean sequential-looking code for loading, logging in, saving — everywhere." },
+  timers: { pitfalls: ["setTimeout(fn, 0) still waits for the current code to finish.", "Always clearTimeout/clearInterval when done, or you leak.", "setInterval drifts; for precise timing, chain setTimeout."], real: "Slideshows, countdowns, debounced search input, auto-save." },
+  dom: { pitfalls: ["querySelector returns the first match; querySelectorAll returns all.", "textContent is safe; innerHTML with user data is an XSS risk.", "Query elements only after the DOM exists."], real: "Everything visible in a web app: menus, lists, forms, popups." },
+  regex: { pitfalls: ["With the g flag, test() is stateful (lastIndex) — reset or avoid.", "Escape special chars in dynamic patterns before building a RegExp.", "Use test() for booleans, match/replace for transforming."], real: "Validating emails and phone numbers, finding hashtags, cleaning text." },
+  closures: { pitfalls: ["A closure remembers the variables of the scope where it was created.", "Loop callbacks with var share one binding — let fixes it.", "Closures can leak memory if references stay alive."], real: "Private counters and caches, factories, memoization, event handlers." },
+  'this-keyword': { pitfalls: ["In a plain function call, this is undefined in strict mode (or window otherwise).", "Arrow functions inherit this — that is why they suit callbacks.", "call/apply/bind set this explicitly."], real: "Methods in objects and classes use this to reach their own data." },
+  prototypes: { pitfalls: ["Methods are looked up the prototype chain until found.", "Prefer Object.prototype.hasOwnProperty.call(obj, x) over obj.hasOwnProperty(x).", "Modern code rarely touches prototypes directly — classes hide it."], real: "How objects share behaviour under the hood — the basis of classes." },
+  classes: { pitfalls: ["class is sugar over prototypes; instanceof still works.", "constructor runs once per new; methods live on the prototype (memory efficient).", "Class fields are per-instance."], real: "Modeling real things — User, Product, Cart, Game — the backbone of modern apps." },
+  inheritance: { pitfalls: ["extends sets up the prototype chain; super() calls the parent constructor.", "Overridden methods should call super.method() to reuse parent logic.", "Composition (objects holding objects) is often simpler than deep inheritance."], real: "Extending base types: AdminUser extends User, SavingsAccount extends Account." },
+  recursion: { pitfalls: ["Every recursion needs a base case that stops the calls.", "Deep recursion can overflow the stack — iterate when depth can be huge.", "Memoize expensive recursion (fibonacci) for speed."], real: "Tree menus, nested comments, file systems, math like factorial." },
+  hof: { pitfalls: ["A higher-order function takes or returns a function: map, filter, setTimeout.", "Returning functions from functions enables factories and configuration.", "Pure functions (no side effects) are easier to test."], real: "Reusable wrappers: withLogging(fn), withAuth(fn), retry(fn, 3)." },
+  generators: { pitfalls: ["function* pauses at yield and resumes on next().", "Generators are lazy — nothing runs until you ask for a value.", "for...of works directly on generators."], real: "Streaming large data, infinite sequences, step-by-step wizards." },
+  iterators: { pitfalls: ["An iterable has Symbol.iterator returning an iterator with next().", "Arrays, strings, Maps and Sets are all iterable.", "Custom iterables let your own objects work with for...of and spread."], real: "Uniformly looping over any collection; building custom data structures." },
+  proxy: { pitfalls: ["A Proxy wraps an object and intercepts get/set/has and more.", "Use Reflect inside handlers to keep default behaviour.", "Proxies add overhead — use for validation, logging, reactive UI."], real: "Reactive frameworks, validation layers, logging, API gateways." },
+  'event-loop': { pitfalls: ["JavaScript is single-threaded: one call stack, with the event loop queueing callbacks.", "Microtasks (promises) run before macrotasks (setTimeout).", "Long synchronous code blocks the UI — keep tasks short."], real: "Why setTimeout(fn, 0) runs after current code, and why the UI freezes on heavy loops." },
+  modules: { pitfalls: ["import bindings are live; default export is one per module.", "Named exports can be many: export function a() {} export function b() {}.", "In this offline app code runs as a classic script; modules need a server or bundler."], real: "Splitting big apps into files: utils.js, api.js, ui.js — the real-world standard." },
+  memory: { pitfalls: ["Unreferenced objects are garbage-collected automatically.", "Common leaks: forgotten timers, growing caches, detached DOM nodes, closures.", "Profile memory in real browser devtools; here, keep arrays bounded."], real: "Keeping apps fast: avoiding leaks, reusing objects, lazy-loading big data." },
+  testing: { pitfalls: ["A test asserts expected behaviour: add(2, 3) must equal 5.", "Test edge cases: 0, negative, empty, huge, wrong type.", "Run tests after every change — this course does exactly that at build time."], real: "Catching bugs before users do — every serious project has automated tests." },
+  'final-project': { pitfalls: ["Start small: get one feature working, then add more.", "Keep state in one place and render from it.", "Use the playground to experiment before writing the final code."], real: "You now have everything needed to build real apps — this course's runner is the same idea." },
+};
+
 function lessonHtml(t) {
+  const d = DEEP[t.id] || {};
+  const pit = (d.pitfalls && d.pitfalls.length ? d.pitfalls : ['Read the error message carefully — it usually names the line.', 'Change one thing at a time, run again, compare.']);
+  const real = d.real || 'A core building block you will combine with other topics in real projects.';
   return `<h2>${t.n}. ${t.title}</h2>
 <p class="lesson-level">${t.level}</p>
 <ul class="lesson-points">${t.points.map(p => `<li>${p}</li>`).join('')}</ul>
 <h3>How to do it</h3>
 <ol class="lesson-steps">${t.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+<h3>Common pitfalls</h3>
+<ul class="lesson-pitfalls">${pit.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>
+<h3>Where you will use this</h3>
+<p class="lesson-real">${escHtml(real)}</p>
 <h3>Example</h3>
 <pre class="code-block"><code>${t.example.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</code></pre>
 <p class="hint">Then try the ${N_PRACTICE} practice problems below — run your code for real.</p>`;
@@ -1165,6 +1228,11 @@ function lessonHtml(t) {
 function main() {
   fs.mkdirSync(path.join(OUT, 'p'), { recursive: true });
   let total = 0;
+  for (const t of TOPICS) {
+    if (!DEEP[t.id] || !DEEP[t.id].pitfalls || !DEEP[t.id].pitfalls.length || !DEEP[t.id].real) {
+      throw new Error('topic ' + t.id + ' is missing DEEP lesson details (pitfalls/real)');
+    }
+  }
   const index = [];
   for (const t of TOPICS) {
     if (!/^[a-z-]+$/.test(t.id)) throw new Error('bad topic id ' + t.id);

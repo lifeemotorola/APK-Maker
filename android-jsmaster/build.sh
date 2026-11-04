@@ -20,7 +20,7 @@
 # (LocalServer on http://127.0.0.1:<port>/). Hardware BACK drives the in-app
 # nav stack; the certificate screen calls Android.printPage() -> system print.
 #
-# Output: android-jsmaster/app/build/JS-Master-1.0.apk
+# Output: android-jsmaster/app/build/JS-Master-1.1.apk
 #         (also copied to the repo root as JS-Master.apk)
 #
 # The Java toolchain is SHARED with the other APK projects in ../android/tools
@@ -65,6 +65,8 @@ cp "$WEB/img/"*.jpg "$WWW/img/"
 node "$WEB/gen_course.js" "$WWW/data"
 # executes every practice solution + test in a VM — fails the build if any break
 node "$WEB/test_course.js" "$WWW/data"
+# proves the shipped in-app sandboxed-iframe runner (srcdoc + postMessage) works
+node "$WEB/test_runner.js"
 
 # fonts (extracted from the repo's obs-news-desk.zip)
 python3 - "$ZIP" "$WWW/fonts" <<'PY'
@@ -114,7 +116,7 @@ rm -f "$BUILD/res.zip" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" "$BUILD"/JS-Ma
     -I "$TOOLS/android.jar" \
     --manifest "$APP/src/main/AndroidManifest.xml" \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 1 --version-name 1.0 \
+    --version-code 2 --version-name 1.1 \
     "$BUILD/res.zip" \
     -A "$APP/src/main/assets"
 
@@ -127,17 +129,17 @@ echo "==> [6/6] Signing (apksigner, v1+v2, debug key)"
     --ks-key-alias androiddebugkey \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD/JS-Master-1.0.apk" \
+    --out "$BUILD/JS-Master-1.1.apk" \
     "$BUILD/aligned.apk"
 
 echo "==> Verifying signature"
-"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/JS-Master-1.0.apk"
+"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/JS-Master-1.1.apk"
 
 echo "==> APK badging"
-"$TOOLS/aapt2" dump badging "$BUILD/JS-Master-1.0.apk" > "$BUILD/badging.txt" || true
+"$TOOLS/aapt2" dump badging "$BUILD/JS-Master-1.1.apk" > "$BUILD/badging.txt" || true
 head -25 "$BUILD/badging.txt"
 
-cp "$BUILD/JS-Master-1.0.apk" "$ROOT/JS-Master.apk"
+cp "$BUILD/JS-Master-1.1.apk" "$ROOT/JS-Master.apk"
 echo
-echo "DONE: $BUILD/JS-Master-1.0.apk"
+echo "DONE: $BUILD/JS-Master-1.1.apk"
 echo "      (also copied to $ROOT/JS-Master.apk)"
