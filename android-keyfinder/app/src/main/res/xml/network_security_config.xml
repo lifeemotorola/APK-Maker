@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app only talks to its own loopback HTTP server (LocalServer on
+     127.0.0.1). Cleartext is permitted for localhost only; everything else
+     stays blocked. (On API 23-27 the attribute is ignored and cleartext is
+     allowed by default anyway.) -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
