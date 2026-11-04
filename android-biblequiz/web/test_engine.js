@@ -106,7 +106,8 @@ const gen1 = BQ.chapterVerses(kjv, 'Genesis', 1);
 ok(gen1.length === 31 && gen1[0].name === 'Genesis 1:1', 'Genesis 1 has 31 verses');
 
 // --- modes / categories ---
-ok(Object.keys(BQ.MODES).length === 4, '4 game modes');
+ok(Object.keys(BQ.MODES).length >= 5, '4 game modes');
+ok(!!BQ.MODES.general && BQ.MODES.general.name === 'General Knowledge', 'general knowledge mode present');
 ok(BQ.CATEGORIES[0] === 'All' && BQ.CATEGORIES.length >= 9, `categories list (${BQ.CATEGORIES.length})`);
 
 console.log('\n' + (fails === 0 ? 'ENGINE TESTS: ALL PASSED' : `ENGINE TESTS: ${fails} FAILED`));

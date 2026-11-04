@@ -1,0 +1,1312 @@
+{
+ "questions": [
+  [
+   "GK",
+   "e",
+   "What is the capital city of Liberia?",
+   "Monrovia",
+   [
+    "Accra",
+    "Freetown",
+    "Abidjan"
+   ],
+   "Monrovia is Liberia's capital and largest city."
+  ],
+  [
+   "GK",
+   "e",
+   "Which ocean borders Liberia to the southwest?",
+   "Atlantic Ocean",
+   [
+    "Indian Ocean",
+    "Pacific Ocean",
+    "Red Sea"
+   ],
+   "Liberia's coastline lies on the Atlantic Ocean."
+  ],
+  [
+   "GK",
+   "e",
+   "What is the largest desert in the world?",
+   "Sahara",
+   [
+    "Gobi",
+    "Kalahari",
+    "Atacama"
+   ],
+   "The Sahara covers most of North Africa."
+  ],
+  [
+   "GK",
+   "e",
+   "Which river is the longest in the world?",
+   "Nile",
+   [
+    "Amazon",
+    "Yangtze",
+    "Mississippi"
+   ],
+   "The Nile flows about 6,650 km through northeastern Africa."
+  ],
+  [
+   "GK",
+   "m",
+   "On which continent is Egypt located?",
+   "Africa",
+   [
+    "Asia",
+    "Europe",
+    "South America"
+   ],
+   "Egypt is in the northeast corner of Africa."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the smallest country in the world by area?",
+   "Vatican City",
+   [
+    "Monaco",
+    "San Marino",
+    "Liechtenstein"
+   ],
+   "Vatican City is about 0.44 square kilometres."
+  ],
+  [
+   "GK",
+   "m",
+   "Which country has the most natural lakes?",
+   "Canada",
+   [
+    "Russia",
+    "USA",
+    "Finland"
+   ],
+   "Canada has more lakes than the rest of the world combined."
+  ],
+  [
+   "GK",
+   "m",
+   "Mount Kilimanjaro is in which country?",
+   "Tanzania",
+   [
+    "Kenya",
+    "Ethiopia",
+    "Uganda"
+   ],
+   "Kilimanjaro is Africa's highest peak, in Tanzania."
+  ],
+  [
+   "GK",
+   "h",
+   "Which African country was never colonised?",
+   "Ethiopia",
+   [
+    "Liberia",
+    "Egypt",
+    "Ghana"
+   ],
+   "Ethiopia defeated Italy in 1896 and was never colonised (Liberia was founded by freed slaves)."
+  ],
+  [
+   "GK",
+   "e",
+   "What is the capital of Nigeria?",
+   "Abuja",
+   [
+    "Lagos",
+    "Kano",
+    "Ibadan"
+   ],
+   "Abuja became Nigeria's capital in 1991; Lagos was the old capital."
+  ],
+  [
+   "GK",
+   "e",
+   "What is the capital of Ghana?",
+   "Accra",
+   [
+    "Kumasi",
+    "Tamale",
+    "Cape Coast"
+   ],
+   "Accra is Ghana's capital and largest city."
+  ],
+  [
+   "GK",
+   "m",
+   "The country of Guinea is named after which word?",
+   "A region/word meaning 'land of the blacks'",
+   [
+    "A bird",
+    "A river",
+    "A queen"
+   ],
+   "Guinea comes from a term for the region of West Africa."
+  ],
+  [
+   "GK",
+   "m",
+   "Which African country has the largest population?",
+   "Nigeria",
+   [
+    "Ethiopia",
+    "Egypt",
+    "DR Congo"
+   ],
+   "Nigeria is Africa's most populous country."
+  ],
+  [
+   "GK",
+   "h",
+   "Lake Victoria is shared by which three countries?",
+   "Tanzania, Uganda and Kenya",
+   [
+    "Kenya, Ethiopia, Sudan",
+    "Tanzania, Zambia, Malawi",
+    "Uganda, Rwanda, Burundi"
+   ],
+   "Lake Victoria is the largest lake in Africa."
+  ],
+  [
+   "GK",
+   "e",
+   "What is the official language of Liberia?",
+   "English",
+   [
+    "French",
+    "Portuguese",
+    "Krio only"
+   ],
+   "English is the official language of Liberia."
+  ],
+  [
+   "GK",
+   "m",
+   "The CFA franc is used in how many African countries?",
+   "14",
+   [
+    "8",
+    "20",
+    "5"
+   ],
+   "14 countries in West and Central Africa use the CFA franc."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the currency of Liberia?",
+   "Liberian dollar",
+   [
+    "Naira",
+    "Cedi",
+    "Shilling"
+   ],
+   "Liberia uses the Liberian dollar (LRD); US dollars are also widely accepted."
+  ],
+  [
+   "GK",
+   "e",
+   "What planet is known as the Red Planet?",
+   "Mars",
+   [
+    "Venus",
+    "Jupiter",
+    "Mercury"
+   ],
+   "Mars looks red because of iron oxide (rust) on its surface."
+  ],
+  [
+   "GK",
+   "e",
+   "How many bones are in the adult human body?",
+   "206",
+   [
+    "186",
+    "226",
+    "256"
+   ],
+   "The adult human skeleton has 206 bones."
+  ],
+  [
+   "GK",
+   "e",
+   "What gas do plants absorb from the air?",
+   "Carbon dioxide",
+   [
+    "Oxygen",
+    "Nitrogen",
+    "Hydrogen"
+   ],
+   "Plants take in CO2 for photosynthesis and release oxygen."
+  ],
+  [
+   "GK",
+   "e",
+   "What is the chemical symbol for water?",
+   "H2O",
+   [
+    "CO2",
+    "O2",
+    "NaCl"
+   ],
+   "Water is two hydrogen atoms and one oxygen atom."
+  ],
+  [
+   "GK",
+   "e",
+   "What is the fastest land animal?",
+   "Cheetah",
+   [
+    "Lion",
+    "Greyhound",
+    "Horse"
+   ],
+   "Cheetahs can reach about 110 km/h in short bursts."
+  ],
+  [
+   "GK",
+   "m",
+   "How many planets are in the solar system?",
+   "8",
+   [
+    "9",
+    "7",
+    "10"
+   ],
+   "Since 2006, Pluto is classed as a dwarf planet, leaving 8 planets."
+  ],
+  [
+   "GK",
+   "m",
+   "What force keeps us on the ground?",
+   "Gravity",
+   [
+    "Magnetism",
+    "Friction",
+    "Inertia"
+   ],
+   "Gravity pulls objects toward the Earth's centre."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the powerhouse of the cell?",
+   "Mitochondria",
+   [
+    "Nucleus",
+    "Ribosome",
+    "Chloroplast"
+   ],
+   "Mitochondria produce most of a cell's energy (ATP)."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the boiling point of water at sea level?",
+   "100 degrees Celsius",
+   [
+    "90 degrees Celsius",
+    "110 degrees Celsius",
+    "80 degrees Celsius"
+   ],
+   "Water boils at 100 °C (212 °F) at sea level."
+  ],
+  [
+   "GK",
+   "m",
+   "Which metal is liquid at room temperature?",
+   "Mercury",
+   [
+    "Lead",
+    "Iron",
+    "Aluminium"
+   ],
+   "Mercury is the only metal that is liquid at room temperature."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the largest organ of the human body?",
+   "Skin",
+   [
+    "Liver",
+    "Heart",
+    "Brain"
+   ],
+   "The skin is the body's largest organ."
+  ],
+  [
+   "GK",
+   "h",
+   "What is the speed of light in a vacuum?",
+   "About 300,000 km per second",
+   [
+    "About 150,000 km/s",
+    "About 30,000 km/s",
+    "About 1,000,000 km/s"
+   ],
+   "Light travels at roughly 299,792 km/s in a vacuum."
+  ],
+  [
+   "GK",
+   "h",
+   "How many chromosomes do humans have?",
+   "46",
+   [
+    "44",
+    "48",
+    "23 pairs plus extras"
+   ],
+   "Humans have 46 chromosomes (23 pairs)."
+  ],
+  [
+   "GK",
+   "e",
+   "What do bees make?",
+   "Honey",
+   [
+    "Silk",
+    "Wax only",
+    "Milk"
+   ],
+   "Honey bees produce honey from flower nectar."
+  ],
+  [
+   "GK",
+   "m",
+   "Which planet has the most moons?",
+   "Saturn",
+   [
+    "Jupiter",
+    "Mars",
+    "Earth"
+   ],
+   "Saturn has over 140 confirmed moons, the most of any planet."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the hardest natural substance?",
+   "Diamond",
+   [
+    "Gold",
+    "Quartz",
+    "Granite"
+   ],
+   "Diamond is the hardest known natural material."
+  ],
+  [
+   "GK",
+   "h",
+   "What is the chemical symbol for gold?",
+   "Au",
+   [
+    "Ag",
+    "Gd",
+    "Go"
+   ],
+   "Au comes from the Latin 'aurum', meaning gold."
+  ],
+  [
+   "GK",
+   "e",
+   "How many legs does a spider have?",
+   "8",
+   [
+    "6",
+    "10",
+    "12"
+   ],
+   "Spiders are arachnids and have eight legs."
+  ],
+  [
+   "GK",
+   "m",
+   "What part of the plant makes food?",
+   "Leaves",
+   [
+    "Roots",
+    "Stem",
+    "Flower"
+   ],
+   "Leaves carry out photosynthesis to make food."
+  ],
+  [
+   "GK",
+   "h",
+   "What is DNA short for?",
+   "Deoxyribonucleic acid",
+   [
+    "Dinucleic acid",
+    "Deoxyribose nucleic acid",
+    "Dual nucleic acid"
+   ],
+   "DNA carries the genetic instructions of living things."
+  ],
+  [
+   "GK",
+   "e",
+   "In which year did World War II end?",
+   "1945",
+   [
+    "1939",
+    "1950",
+    "1941"
+   ],
+   "World War II ended in 1945."
+  ],
+  [
+   "GK",
+   "e",
+   "Who was the first President of the United States?",
+   "George Washington",
+   [
+    "Thomas Jefferson",
+    "Abraham Lincoln",
+    "John Adams"
+   ],
+   "George Washington served from 1789 to 1797."
+  ],
+  [
+   "GK",
+   "m",
+   "Which ancient civilisation built the pyramids at Giza?",
+   "The Egyptians",
+   [
+    "The Romans",
+    "The Greeks",
+    "The Persians"
+   ],
+   "The pyramids of Giza were built by ancient Egyptians."
+  ],
+  [
+   "GK",
+   "m",
+   "Liberia declared independence in which year?",
+   "1847",
+   [
+    "1822",
+    "1857",
+    "1901"
+   ],
+   "Liberia became Africa's first republic on 26 July 1847."
+  ],
+  [
+   "GK",
+   "m",
+   "Who was the first President of Liberia?",
+   "Joseph Jenkins Roberts",
+   [
+    "William Tubman",
+    "Samuel Doe",
+    "Charles Taylor"
+   ],
+   "Joseph Jenkins Roberts became president in 1848."
+  ],
+  [
+   "GK",
+   "h",
+   "The Berlin Wall fell in which year?",
+   "1989",
+   [
+    "1979",
+    "1991",
+    "1985"
+   ],
+   "The Berlin Wall fell on 9 November 1989."
+  ],
+  [
+   "GK",
+   "m",
+   "Which country first put a man on the Moon?",
+   "United States",
+   [
+    "Russia",
+    "China",
+    "United Kingdom"
+   ],
+   "Apollo 11 landed on the Moon in July 1969."
+  ],
+  [
+   "GK",
+   "m",
+   "Who painted the Mona Lisa?",
+   "Leonardo da Vinci",
+   [
+    "Michelangelo",
+    "Raphael",
+    "Van Gogh"
+   ],
+   "Leonardo da Vinci painted the Mona Lisa around 1503-1519."
+  ],
+  [
+   "GK",
+   "e",
+   "The Great Wall is in which country?",
+   "China",
+   [
+    "Japan",
+    "India",
+    "Mongolia"
+   ],
+   "The Great Wall of China stretches thousands of kilometres."
+  ],
+  [
+   "GK",
+   "m",
+   "Who discovered America in 1492?",
+   "Christopher Columbus",
+   [
+    "Vasco da Gama",
+    "James Cook",
+    "Ferdinand Magellan"
+   ],
+   "Columbus reached the Americas in 1492 under Spain."
+  ],
+  [
+   "GK",
+   "h",
+   "In which year did the Titanic sink?",
+   "1912",
+   [
+    "1905",
+    "1915",
+    "1920"
+   ],
+   "The Titanic sank on 15 April 1912."
+  ],
+  [
+   "GK",
+   "m",
+   "Which empire was ruled by Julius Caesar?",
+   "The Roman Empire",
+   [
+    "The Greek Empire",
+    "The Ottoman Empire",
+    "The Persian Empire"
+   ],
+   "Julius Caesar was a leader of the Roman Republic/Empire."
+  ],
+  [
+   "GK",
+   "e",
+   "What did the Wright brothers invent?",
+   "The aeroplane",
+   [
+    "The car",
+    "The telephone",
+    "The light bulb"
+   ],
+   "Orville and Wilbur Wright flew the first powered aeroplane in 1903."
+  ],
+  [
+   "GK",
+   "e",
+   "What is 7 x 8?",
+   "56",
+   [
+    "48",
+    "54",
+    "64"
+   ],
+   "7 x 8 = 56."
+  ],
+  [
+   "GK",
+   "e",
+   "What is 15 + 27?",
+   "42",
+   [
+    "41",
+    "43",
+    "32"
+   ],
+   "15 + 27 = 42."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the square root of 144?",
+   "12",
+   [
+    "14",
+    "11",
+    "16"
+   ],
+   "12 x 12 = 144."
+  ],
+  [
+   "GK",
+   "m",
+   "How many sides does a hexagon have?",
+   "6",
+   [
+    "5",
+    "7",
+    "8"
+   ],
+   "A hexagon has six sides (hexa = six)."
+  ],
+  [
+   "GK",
+   "m",
+   "What is 100 - 37?",
+   "63",
+   [
+    "67",
+    "53",
+    "73"
+   ],
+   "100 - 37 = 63."
+  ],
+  [
+   "GK",
+   "h",
+   "What is the next prime number after 7?",
+   "11",
+   [
+    "9",
+    "10",
+    "13"
+   ],
+   "Primes after 7: 11 (9 and 10 are not prime)."
+  ],
+  [
+   "GK",
+   "e",
+   "How many minutes are in an hour?",
+   "60",
+   [
+    "50",
+    "100",
+    "30"
+   ],
+   "One hour has 60 minutes."
+  ],
+  [
+   "GK",
+   "m",
+   "What is 3/4 as a percentage?",
+   "75%",
+   [
+    "25%",
+    "50%",
+    "66%"
+   ],
+   "3/4 = 75%."
+  ],
+  [
+   "GK",
+   "h",
+   "What is 12 x 12?",
+   "144",
+   [
+    "124",
+    "132",
+    "156"
+   ],
+   "12 x 12 = 144."
+  ],
+  [
+   "GK",
+   "e",
+   "How many days are in a leap year?",
+   "366",
+   [
+    "365",
+    "364",
+    "367"
+   ],
+   "A leap year has 366 days (an extra day in February)."
+  ],
+  [
+   "GK",
+   "e",
+   "Who wrote 'Romeo and Juliet'?",
+   "William Shakespeare",
+   [
+    "Charles Dickens",
+    "Jane Austen",
+    "Oscar Wilde"
+   ],
+   "Shakespeare wrote Romeo and Juliet around 1595."
+  ],
+  [
+   "GK",
+   "m",
+   "How many strings does a standard guitar have?",
+   "6",
+   [
+    "4",
+    "5",
+    "7"
+   ],
+   "A standard guitar has six strings."
+  ],
+  [
+   "GK",
+   "m",
+   "Which instrument has 88 keys?",
+   "Piano",
+   [
+    "Organ",
+    "Accordion",
+    "Harp"
+   ],
+   "A standard piano has 88 keys."
+  ],
+  [
+   "GK",
+   "e",
+   "What do you call a painting of yourself?",
+   "A self-portrait",
+   [
+    "A landscape",
+    "A still life",
+    "An abstract"
+   ],
+   "A self-portrait is a portrait of the artist by the artist."
+  ],
+  [
+   "GK",
+   "m",
+   "How many colours are in a rainbow?",
+   "7",
+   [
+    "5",
+    "6",
+    "8"
+   ],
+   "A rainbow traditionally has 7 colours: red, orange, yellow, green, blue, indigo, violet."
+  ],
+  [
+   "GK",
+   "h",
+   "Who composed the 'Ode to Joy'?",
+   "Beethoven",
+   [
+    "Mozart",
+    "Bach",
+    "Chopin"
+   ],
+   "Beethoven's 9th Symphony includes the 'Ode to Joy'."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the Mona Lisa's other name?",
+   "La Gioconda",
+   [
+    "La Madonna",
+    "The Scream",
+    "Girl with a Pearl Earring"
+   ],
+   "The Mona Lisa is also called La Gioconda."
+  ],
+  [
+   "GK",
+   "e",
+   "How many players are on a football (soccer) team on the field?",
+   "11",
+   [
+    "9",
+    "10",
+    "12"
+   ],
+   "A soccer team fields 11 players."
+  ],
+  [
+   "GK",
+   "e",
+   "In which sport is the term 'love' used for zero?",
+   "Tennis",
+   [
+    "Golf",
+    "Cricket",
+    "Badminton"
+   ],
+   "In tennis, zero is called 'love'."
+  ],
+  [
+   "GK",
+   "m",
+   "How often are the Summer Olympic Games held?",
+   "Every 4 years",
+   [
+    "Every 2 years",
+    "Every 3 years",
+    "Every 5 years"
+   ],
+   "The Summer Olympics are held every four years."
+  ],
+  [
+   "GK",
+   "m",
+   "What colour is the centre ring of an archery target?",
+   "Gold (yellow)",
+   [
+    "Red",
+    "Blue",
+    "Black"
+   ],
+   "The centre of an archery target is gold/yellow."
+  ],
+  [
+   "GK",
+   "m",
+   "A marathon is about how many kilometres?",
+   "42",
+   [
+    "26",
+    "50",
+    "32"
+   ],
+   "A marathon is 42.195 km."
+  ],
+  [
+   "GK",
+   "h",
+   "Which country has won the most FIFA World Cups?",
+   "Brazil",
+   [
+    "Germany",
+    "Argentina",
+    "Italy"
+   ],
+   "Brazil has won the World Cup 5 times."
+  ],
+  [
+   "GK",
+   "e",
+   "How many players are on a basketball team on the court?",
+   "5",
+   [
+    "6",
+    "4",
+    "7"
+   ],
+   "A basketball team has 5 players on the court."
+  ],
+  [
+   "GK",
+   "e",
+   "What does 'www' stand for?",
+   "World Wide Web",
+   [
+    "World Web Wide",
+    "Wide World Web",
+    "Web World Wide"
+   ],
+   "www stands for World Wide Web."
+  ],
+  [
+   "GK",
+   "m",
+   "What does 'HTTP' stand for?",
+   "HyperText Transfer Protocol",
+   [
+    "High Text Transfer Protocol",
+    "Hyperlink Text Transfer Protocol",
+    "Host Transfer Text Protocol"
+   ],
+   "HTTP is the protocol used by web browsers."
+  ],
+  [
+   "GK",
+   "e",
+   "Who co-founded Apple Inc.?",
+   "Steve Jobs",
+   [
+    "Bill Gates",
+    "Elon Musk",
+    "Larry Page"
+   ],
+   "Steve Jobs co-founded Apple with Steve Wozniak and Ronald Wayne."
+  ],
+  [
+   "GK",
+   "m",
+   "What does 'CPU' stand for?",
+   "Central Processing Unit",
+   [
+    "Computer Personal Unit",
+    "Central Program Utility",
+    "Core Processing Utility"
+   ],
+   "The CPU is the main processor of a computer."
+  ],
+  [
+   "GK",
+   "e",
+   "Which company makes the Android operating system?",
+   "Google",
+   [
+    "Apple",
+    "Microsoft",
+    "Samsung"
+   ],
+   "Google develops Android."
+  ],
+  [
+   "GK",
+   "h",
+   "In computing, what is a 'byte' made of?",
+   "8 bits",
+   [
+    "4 bits",
+    "16 bits",
+    "2 bits"
+   ],
+   "One byte equals 8 bits."
+  ],
+  [
+   "GK",
+   "m",
+   "What does 'GPS' stand for?",
+   "Global Positioning System",
+   [
+    "General Positioning Satellite",
+    "Global Program System",
+    "Geographic Position Service"
+   ],
+   "GPS uses satellites to find your location."
+  ],
+  [
+   "GK",
+   "e",
+   "What does 'USB' stand for?",
+   "Universal Serial Bus",
+   [
+    "United Serial Bus",
+    "Universal System Bus",
+    "Ultra Serial Bus"
+   ],
+   "USB is a common connection standard."
+  ],
+  [
+   "GK",
+   "e",
+   "What is the largest animal in the world?",
+   "Blue whale",
+   [
+    "Elephant",
+    "Giraffe",
+    "Shark"
+   ],
+   "The blue whale is the largest animal ever known."
+  ],
+  [
+   "GK",
+   "e",
+   "How many hearts does an octopus have?",
+   "3",
+   [
+    "1",
+    "2",
+    "4"
+   ],
+   "Octopuses have three hearts."
+  ],
+  [
+   "GK",
+   "m",
+   "What is a group of lions called?",
+   "A pride",
+   [
+    "A pack",
+    "A herd",
+    "A flock"
+   ],
+   "A group of lions is called a pride."
+  ],
+  [
+   "GK",
+   "m",
+   "Which bird is known for imitating sounds?",
+   "Parrot",
+   [
+    "Eagle",
+    "Robin",
+    "Crow"
+   ],
+   "Parrots can mimic human speech and other sounds."
+  ],
+  [
+   "GK",
+   "h",
+   "What is the only mammal that can truly fly?",
+   "Bat",
+   [
+    "Flying squirrel",
+    "Sugar glider",
+    "Colugo"
+   ],
+   "Bats are the only mammals capable of sustained flight."
+  ],
+  [
+   "GK",
+   "e",
+   "What do cows drink?",
+   "Water",
+   [
+    "Milk",
+    "Juice",
+    "Tea"
+   ],
+   "Cows drink water like other animals."
+  ],
+  [
+   "GK",
+   "m",
+   "How long does a honey bee live in summer?",
+   "About 6 weeks",
+   [
+    "6 months",
+    "6 days",
+    "1 year"
+   ],
+   "Worker honey bees live roughly six weeks in summer."
+  ],
+  [
+   "GK",
+   "e",
+   "Which planet do we live on?",
+   "Earth",
+   [
+    "Mars",
+    "Venus",
+    "Saturn"
+   ],
+   "We live on Earth, the third planet from the Sun."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the closest star to Earth?",
+   "The Sun",
+   [
+    "Proxima Centauri",
+    "Sirius",
+    "Alpha Centauri"
+   ],
+   "The Sun is the star closest to Earth."
+  ],
+  [
+   "GK",
+   "m",
+   "How long does it take Earth to orbit the Sun?",
+   "1 year (365.25 days)",
+   [
+    "1 month",
+    "1 week",
+    "10 years"
+   ],
+   "Earth completes one orbit in about one year."
+  ],
+  [
+   "GK",
+   "h",
+   "What is a light-year a measure of?",
+   "Distance",
+   [
+    "Time",
+    "Brightness",
+    "Speed"
+   ],
+   "A light-year is the distance light travels in one year."
+  ],
+  [
+   "GK",
+   "m",
+   "Which planet is known for its rings?",
+   "Saturn",
+   [
+    "Mars",
+    "Venus",
+    "Mercury"
+   ],
+   "Saturn is famous for its bright ring system."
+  ],
+  [
+   "GK",
+   "h",
+   "What is the name of our galaxy?",
+   "The Milky Way",
+   [
+    "Andromeda",
+    "Orion",
+    "The Whirlpool"
+   ],
+   "Our galaxy is called the Milky Way."
+  ],
+  [
+   "GK",
+   "e",
+   "How many letters are in the English alphabet?",
+   "26",
+   [
+    "24",
+    "28",
+    "30"
+   ],
+   "The English alphabet has 26 letters."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the longest word in 'The quick brown fox...'?",
+   "'quick' or 'brown' (5 letters)",
+   [
+    "The",
+    "fox",
+    "jumps"
+   ],
+   "'quick' and 'brown' each have 5 letters, the longest in that pangram."
+  ],
+  [
+   "GK",
+   "e",
+   "What language has the most native speakers?",
+   "Mandarin Chinese",
+   [
+    "English",
+    "Spanish",
+    "Hindi"
+   ],
+   "Mandarin Chinese has the most native speakers worldwide."
+  ],
+  [
+   "GK",
+   "m",
+   "How many continents are there?",
+   "7",
+   [
+    "5",
+    "6",
+    "8"
+   ],
+   "There are 7 continents: Africa, Antarctica, Asia, Australia, Europe, North America, South America."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the tallest mountain in the world?",
+   "Mount Everest",
+   [
+    "K2",
+    "Kilimanjaro",
+    "Mont Blanc"
+   ],
+   "Mount Everest is about 8,849 m tall."
+  ],
+  [
+   "GK",
+   "h",
+   "Which element has the chemical symbol 'O'?",
+   "Oxygen",
+   [
+    "Osmium",
+    "Gold",
+    "Oxide"
+   ],
+   "O is the symbol for oxygen."
+  ],
+  [
+   "GK",
+   "e",
+   "What do we call a baby dog?",
+   "A puppy",
+   [
+    "A cub",
+    "A kitten",
+    "A foal"
+   ],
+   "A baby dog is called a puppy."
+  ],
+  [
+   "GK",
+   "m",
+   "How many hours are in a day?",
+   "24",
+   [
+    "12",
+    "36",
+    "48"
+   ],
+   "A day has 24 hours."
+  ],
+  [
+   "GK",
+   "m",
+   "What is the freezing point of water?",
+   "0 degrees Celsius",
+   [
+    "10 degrees Celsius",
+    "-10 degrees Celsius",
+    "32 degrees Celsius"
+   ],
+   "Water freezes at 0 °C (32 °F)."
+  ],
+  [
+   "GK",
+   "h",
+   "In Roman numerals, what is 'XL'?",
+   "40",
+   [
+    "60",
+    "90",
+    "20"
+   ],
+   "XL = 50 - 10 = 40."
+  ],
+  [
+   "GK",
+   "m",
+   "How many years are in a century?",
+   "100",
+   [
+    "50",
+    "1000",
+    "10"
+   ],
+   "A century is 100 years."
+  ],
+  [
+   "GK",
+   "e",
+   "Which shape has three sides?",
+   "Triangle",
+   [
+    "Square",
+    "Circle",
+    "Pentagon"
+   ],
+   "A triangle has three sides."
+  ],
+  [
+   "GK",
+   "m",
+   "What do we call a word that is the same backwards?",
+   "A palindrome",
+   [
+    "A synonym",
+    "An anagram",
+    "A homonym"
+   ],
+   "Examples: 'madam', 'racecar'."
+  ],
+  [
+   "GK",
+   "h",
+   "What is 2 to the power of 10?",
+   "1024",
+   [
+    "512",
+    "2048",
+    "100"
+   ],
+   "2^10 = 1024."
+  ]
+ ]
+}

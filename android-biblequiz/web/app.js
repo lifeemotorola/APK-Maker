@@ -38,6 +38,7 @@ const MODES = {
   marathon:{ name: 'Marathon',      icon: 'flag', count: 50, seconds: 20, strikes: 0, desc: '50 questions · 20s each' },
   daily:   { name: 'Daily Challenge', icon: 'sun', count: 10, seconds: 20, strikes: 0, desc: '10 questions · new every day' },
   death:   { name: 'Sudden Death',  icon: 'skull', count: 999, seconds: 15, strikes: 3, desc: '3 wrong answers and it is over' },
+  general: { name: 'General Knowledge', icon: 'bulb', count: 20, seconds: 20, strikes: 0, desc: '20 questions · world, science, history & more' },
 };
 
 /* --------------------------- quiz engine (pure) ------------------------- */
@@ -121,14 +122,14 @@ if (typeof module !== 'undefined') module.exports = BQ;
 /* ============================ UI (browser only) ========================= */
 if (typeof document === 'undefined') return;
 
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.3';
 const APP_AUTHOR = 'Emmanuel Suah';
 const LS_KEY = 'bq_state_v1';
 function defaultState() {
   return {
     xp: 0, answered: 0, correct: 0, streak: 0, bestStreak: 0,
     perCat: {}, saved: {}, wrongIds: {}, achievements: [], daysPlayed: 0,
-    versesRead: {}, settings: { sound: true, timer: true, theme: 'parchment', translation: 'kjv' },
+    versesRead: {}, settings: { sound: true, timer: true, theme: 'parchment', translation: 'kjv', music: true, track: 'dawn' },
     lastDaily: null, // {date, score, count}
   };
 }
@@ -138,6 +139,8 @@ function loadState() {
     if (raw) {
       const st = Object.assign(defaultState(), JSON.parse(raw));
       if (st.settings.theme === 'dark') st.settings.theme = 'midnight'; // v1.0 theme migration
+      if (st.settings.music === undefined) st.settings.music = true;
+      if (!st.settings.track) st.settings.track = 'dawn';
       return st;
     }
   } catch (e) { /* corrupted storage -> fresh */ }
@@ -156,6 +159,27 @@ function toast(msg, icon) {
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
 }
 toastEl.addEventListener('click', () => { clearTimeout(toastTimer); toastEl.classList.remove('show'); });
+
+/* --------------------------- background music --------------------------- */
+const MUSIC = { list: [], el: null };
+async function musicInit() {
+  try {
+    const r = await fetch('/music/manifest.json');
+    if (r.ok) MUSIC.list = await r.json();
+  } catch (e) { /* no music bundled */ }
+}
+function musicTrack() { return MUSIC.list.find(t => t.id === S.settings.track) || MUSIC.list[0]; }
+function musicPlay() {
+  if (!S.settings.music || !MUSIC.list.length) return;
+  const t = musicTrack(); if (!t) return;
+  if (!MUSIC.el) { MUSIC.el = new Audio(); MUSIC.el.loop = true; MUSIC.el.volume = 0.3; }
+  const src = '/music/' + t.file;
+  if (!MUSIC.el.src || MUSIC.el.src.indexOf(src) < 0) MUSIC.el.src = src;
+  const p = MUSIC.el.play();
+  if (p && p.catch) p.catch(function () {});
+}
+function musicStop() { if (MUSIC.el) MUSIC.el.pause(); }
+document.addEventListener('pointerdown', function () { musicPlay(); }, { once: true });
 
 /* ------------------------------ audio ---------------------------------- */
 let AC = null;
@@ -238,8 +262,29 @@ function loadManifest() {
 /* ------------------------------ screens --------------------------------- */
 let screen = { name: 'home' };
 let session = null;
+const navStack = [screen];
 
-function go(name, params) { screen = Object.assign({ name }, params || {}); render(); window.scrollTo(0, 0); }
+function go(name, params) {
+  screen = Object.assign({ name }, params || {});
+  navStack.push(screen);
+  if (navStack.length > 40) navStack.shift();
+  render(); window.scrollTo(0, 0);
+}
+function goTab(name) { // bottom-nav tabs start a fresh stack
+  screen = { name };
+  navStack.length = 0; navStack.push(screen);
+  render(); window.scrollTo(0, 0);
+}
+// called by MainActivity when the phone's hardware BACK button is pressed
+window.__back = function () {
+  if (navStack.length > 1) {
+    navStack.pop();
+    screen = navStack[navStack.length - 1];
+    render(); window.scrollTo(0, 0);
+    return true; // handled in-app; at the root screen MainActivity exits
+  }
+  return false;
+};
 
 function h(html) { dismissSplash(); app.innerHTML = html; }
 
@@ -252,7 +297,8 @@ function navBar(active) {
     `<button class="nav-btn ${n === active ? 'active' : ''}" data-nav="${n}">${I(ic, 'nav-ico')}<span>${lb}</span></button>`).join('') + '</nav>';
 }
 function bindNav() {
-  app.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { sfx.click(); go(b.dataset.nav); }));
+  app.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { sfx.click(); goTab(b.dataset.nav); }));
+  app.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => { sfx.click(); window.__back(); }));
 }
 
 /* ------------------------------ home ------------------------------------ */
@@ -315,7 +361,7 @@ function renderSetup() {
   const diff = screen.difficulty || 'any';
   h(`
   <section class="screen">
-    <button class="back" data-nav="home">${I('chevronLeft')} Back</button>
+    <button class="back" data-back>${I('chevronLeft')} Back</button>
     <h2 class="screen-title">${I(m.icon)} ${m.name}</h2>
     <p class="screen-sub">${m.desc}</p>
     <h3 class="group-label">Category</h3>
@@ -657,7 +703,7 @@ async function renderReader() {
   const man = await loadManifest();
   h(`
   <section class="screen">
-    <button class="back" data-nav="home">${I('chevronLeft')} Back</button>
+    <button class="back" data-back>${I('chevronLeft')} Back</button>
     <div class="card reader">
       <div class="reader-head">
         <input id="refInput" class="ref-input" value="${esc(ref)}" placeholder="e.g. John 3:16">
@@ -742,6 +788,8 @@ function renderSettings() {
       <label class="set-row">${I('volume')} Sound effects <input type="checkbox" id="sSound" ${st.sound ? 'checked' : ''}></label>
       <label class="set-row">${I('clock')} Question timer <input type="checkbox" id="sTimer" ${st.timer ? 'checked' : ''}></label>
       <label class="set-row">${I('moon')} Midnight theme <input type="checkbox" id="sTheme" ${st.theme === 'midnight' ? 'checked' : ''}></label>
+      <label class="set-row">${I('music')} Background music <input type="checkbox" id="sMusic" ${st.music ? 'checked' : ''}></label>
+      <div class="set-row"><span>${I('music')} Music track</span><select id="musicSel" class="trans-sel">${MUSIC.list.map(t => `<option value="${esc(t.id)}" ${t.id === st.track ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></div>
       <div class="set-row">${I('book')} Default translation
         <select id="sTrans" class="trans-sel"></select></div>
       <div class="set-row about"><span>${I('book')} Bible Quiz v${APP_VERSION}</span><b>by ${APP_AUTHOR}</b></div>
@@ -754,6 +802,16 @@ function renderSettings() {
   document.getElementById('sTheme').addEventListener('change', e => {
     S.settings.theme = e.target.checked ? 'midnight' : 'parchment'; save();
     document.documentElement.dataset.theme = S.settings.theme;
+  });
+  document.getElementById('sMusic').addEventListener('change', e => {
+    S.settings.music = e.target.checked; save();
+    if (e.target.checked) musicPlay(); else musicStop();
+    toast(e.target.checked ? 'Background music on' : 'Background music off', 'music');
+  });
+  const ms = document.getElementById('musicSel');
+  ms.addEventListener('change', e => {
+    S.settings.track = e.target.value; save(); musicPlay();
+    toast('Now playing: ' + e.target.selectedOptions[0].text, 'music');
   });
   const sel = document.getElementById('sTrans');
   loadManifest().then(man => {
@@ -802,6 +860,7 @@ function render() {
     default: renderHome();
   }
 }
+musicInit().then(() => {
 try {
   render();
 } catch (e) {
@@ -809,5 +868,6 @@ try {
   app.innerHTML = '<div class="card" style="margin:40px 16px"><h2 class="screen-title">Could not start</h2>' +
     '<pre style="white-space:pre-wrap;font-size:12px;color:var(--muted)">' + esc(String((e && e.stack) || e)) + '</pre></div>';
 }
+});
 
 })();

@@ -8,7 +8,15 @@ text, gold rules, Playfair Display serif, double-bordered cards) with a
 midnight theme toggle; launcher icon is an oxblood-and-gold open book. All
 icons are inline SVG (`web/icons.js`) — no emoji anywhere (build-enforced).
 
-v1.2 adds artwork and motion: a painted hero image (`web/img/hero.jpg`, slow
+v1.3: works like a normal Android app — the phone's **hardware BACK button**
+walks back through the in-app screen stack (MainActivity bridges to
+`window.__back()`) and exits at the root; **6 synthesized background music
+tracks** (`web/gen_music.py` -> `assets/www/music/*.wav`, looped, with a
+music toggle + track picker in Settings, starting after the first tap); and a
+**General Knowledge** game mode (109 extra questions from `web/gk.json`,
+bank now 2,698).
+
+v1.2 added artwork and motion: a painted hero image (`web/img/hero.jpg`, slow
 Ken Burns pan/zoom inside a double gold frame) on the home screen, an
 illuminated-manuscript banner (`web/img/manuscript.jpg`) in the Bible reader,
 an animated boot splash, staggered screen entrances, self-drawing gold

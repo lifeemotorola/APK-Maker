@@ -17,7 +17,7 @@
 # The WebView shell serves the app from a real loopback HTTP server
 # (LocalServer on http://127.0.0.1:<port>/) — see MainActivity.java.
 #
-# Output: android-biblequiz/app/build/Bible-Quiz-1.2.apk
+# Output: android-biblequiz/app/build/Bible-Quiz-1.3.apk
 #         (also copied to the repo root as Bible-Quiz.apk)
 #
 # The Java toolchain (d8.jar, ecj.jar, apksigner.jar, android.jar, aapt2,
@@ -77,8 +77,12 @@ for arc, name in WANT.items():
     print('  font:', name, os.path.getsize(os.path.join(out, name)), 'bytes')
 PY
 
-# generated question bank (2,500+ questions from bibles/kjv/kjv.js + curated.json)
+# generated question bank (Bible questions from bibles/kjv/kjv.js + curated.json,
+# plus the General Knowledge set from gk.json)
 node "$WEB/gen_questions.js" "$WWW"
+
+# synthesized background music: 6 seamless ambient tracks + manifest.json
+python3 "$WEB/gen_music.py" "$WWW/music"
 
 # the repo-level bibles/ folder (bibles/<id>/<id>.js, one JS file per translation)
 if [ -d "$ROOT/bibles" ]; then
@@ -148,7 +152,7 @@ rm -f "$BUILD/res.zip" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" "$BUILD"/Bible
     -I "$TOOLS/android.jar" \
     --manifest "$APP/src/main/AndroidManifest.xml" \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 3 --version-name 1.2 \
+    --version-code 4 --version-name 1.3 \
     "$BUILD/res.zip" \
     -A "$APP/src/main/assets"
 
@@ -161,17 +165,17 @@ echo "==> [6/6] Signing (apksigner, v1+v2, debug key)"
     --ks-key-alias androiddebugkey \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD/Bible-Quiz-1.2.apk" \
+    --out "$BUILD/Bible-Quiz-1.3.apk" \
     "$BUILD/aligned.apk"
 
 echo "==> Verifying signature"
-"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/Bible-Quiz-1.2.apk"
+"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/Bible-Quiz-1.3.apk"
 
 echo "==> APK badging"
-"$TOOLS/aapt2" dump badging "$BUILD/Bible-Quiz-1.2.apk" > "$BUILD/badging.txt" || true
+"$TOOLS/aapt2" dump badging "$BUILD/Bible-Quiz-1.3.apk" > "$BUILD/badging.txt" || true
 head -25 "$BUILD/badging.txt"
 
-cp "$BUILD/Bible-Quiz-1.2.apk" "$ROOT/Bible-Quiz.apk"
+cp "$BUILD/Bible-Quiz-1.3.apk" "$ROOT/Bible-Quiz.apk"
 echo
-echo "DONE: $BUILD/Bible-Quiz-1.2.apk"
+echo "DONE: $BUILD/Bible-Quiz-1.3.apk"
 echo "      (also copied to $ROOT/Bible-Quiz.apk)"

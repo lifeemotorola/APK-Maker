@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -67,6 +68,21 @@ public class MainActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setTextZoom(100);
 
+        // Hardware BACK button -> in-app back stack (window.__back in app.js).
+        // Returning false means "at the root screen", so the activity exits.
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void notifyBack() {
+                webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        webView.evaluateJavascript(
+                                "window.__back ? (window.__back() ? '1' : '0') : '0'", null);
+                    }
+                });
+            }
+        }, "AndroidBridge");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -111,8 +127,22 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
+        if (webView != null) {
+            // Let the web app walk its own screen stack first; only when it
+            // reports "not handled" (root screen) do we fall back to the
+            // WebView history and then exit the app like a normal APK.
+            webView.evaluateJavascript(
+                    "window.__back ? (window.__back() ? '1' : '0') : '0'",
+                    new android.webkit.ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String value) {
+                            boolean handled = "\"1\"".equals(value);
+                            if (!handled) {
+                                if (webView.canGoBack()) webView.goBack();
+                                else MainActivity.super.onBackPressed();
+                            }
+                        }
+                    });
         } else {
             super.onBackPressed();
         }
