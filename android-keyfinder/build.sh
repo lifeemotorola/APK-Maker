@@ -63,8 +63,9 @@ echo "==> [1/6] Validating web shell + staging web app & demos into APK assets"
 node "$WEB/test_web.mjs"
 
 rm -rf "$WWW"
-mkdir -p "$WWW/demos"
+mkdir -p "$WWW/demos" "$WWW/img"
 cp "$WEB/index.html" "$WEB/styles.css" "$WEB/app.js" "$WWW/"
+cp "$WEB/img/"*.png "$WWW/img/"
 (cd "$ROOT" && npx esbuild "$WEB/keyfinder.ts" --bundle --platform=browser --format=iife --outfile="$WWW/keyfinder.js")
 cp "$ROOT/demos/"*.wav "$ROOT/demos/manifest.json" "$WWW/demos/"
 
