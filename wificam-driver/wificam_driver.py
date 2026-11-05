@@ -33,6 +33,25 @@ import time
 import urllib.parse
 
 
+OBS_HELP = """OBS Studio setup with WiFi Cam (phone at {host}:{port}):
+
+Option A - Browser source (no driver needed):
+  OBS -> Sources -> + -> Browser
+  URL: http://{host}:{port}/stream   (MJPEG, OBS renders it live)
+  Width x Height: 1280 x 720
+
+Option B - real virtual webcam on Linux (v4l2loopback):
+  sudo modprobe v4l2loopback exclusive_caps=1
+  python3 wificam_driver.py --host {host} --virtual-cam /dev/video0
+  OBS -> Sources -> + -> Video Capture Device -> device /dev/video0
+
+Option C - driver viewer window, capture the window in OBS:
+  python3 wificam_driver.py --host {host} --view
+  OBS -> Sources -> + -> Window Capture -> window "WiFi Cam"
+
+The phone app shows this same URL on its screen while streaming."""
+
+
 def status(host, port, timeout=5):
     conn = http.client.HTTPConnection(host, port, timeout=timeout)
     conn.request("GET", "/status")
@@ -170,8 +189,13 @@ def main():
     ap.add_argument("--record", metavar="FILE", help="record the stream to a video file")
     ap.add_argument("--snapshot", metavar="FILE", help="save one JPEG frame")
     ap.add_argument("--list", action="store_true", help="print phone status and exit")
+    ap.add_argument("--obs", action="store_true",
+                    help="print OBS Studio setup instructions (Browser source / v4l2loopback) and exit")
     args = ap.parse_args()
 
+    if args.obs:
+        print(OBS_HELP.format(host=args.host, port=args.port))
+        return
     if args.list:
         print(json.dumps(status(args.host, args.port), indent=2))
         return
@@ -187,7 +211,8 @@ def main():
     if args.view:
         cmd_view(args.host, args.port)
         return
-    ap.error("choose one of --list / --view / --virtual-cam / --record / --snapshot")
+    print(OBS_HELP.format(host=args.host, port=args.port))
+    ap.error("choose one of --list / --obs / --view / --virtual-cam / --record / --snapshot")
 
 
 if __name__ == "__main__":

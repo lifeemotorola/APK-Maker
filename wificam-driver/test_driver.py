@@ -75,6 +75,10 @@ def main():
             print(f"ok: parsed {len(frames)} MJPEG frames in order with valid markers")
         finally:
             srv.shutdown()
+
+    src = Path(__file__).with_name("wificam_driver.py").read_text()
+    assert "--obs" in src and "v4l2loopback" in src and "Browser" in src and "/stream" in src
+    print("ok: driver ships OBS Studio instructions (--obs, Browser source, v4l2loopback virtual cam)")
     print("\nWIFICAM DRIVER TEST: ALL PASSED")
 
 
