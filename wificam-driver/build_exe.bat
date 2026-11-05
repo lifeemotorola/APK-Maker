@@ -11,6 +11,8 @@ rem
 rem  Use it:
 rem      dist\WificamDriver.exe                          (double-click: GUI, auto-find phone)
 rem      dist\WificamDriver.exe --obs                   (OBS Studio setup, console)
+rem      dist\WificamDriver.exe --diag 192.168.1.60       (connection diagnosis)
+rem      dist\WificamDriver.exe --adb --view             (USB fallback, no WiFi needed)
 rem      dist\WificamDriver.exe --host 192.168.1.50 --list
 rem      dist\WificamDriver.exe --host 192.168.1.50 --record out.mp4
 rem ==========================================================================

@@ -378,7 +378,7 @@ jobs:
           name: WiFiCam-APK
           path: |
             Wificam.apk
-            android-wificam/app/build/Wificam-1.2.apk
+            android-wificam/app/build/Wificam-1.3.apk
             android-wificam/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30

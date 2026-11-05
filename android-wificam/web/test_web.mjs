@@ -39,8 +39,12 @@ check(/TextureView/.test(main) && /SurfaceTextureListener/.test(main) && /onSurf
 check(!/addJavascriptInterface|WebView/.test(main), 'no WebView shell — phone UI is the native camera preview');
 check(/requestPermissions/.test(main) && /Manifest\.permission\.CAMERA/.test(main), 'MainActivity requests CAMERA at runtime');
 check(/CameraHolder\.ensureStarted/.test(main) && /wantStart = true/.test(main), 'camera auto-starts on open like a normal camera app');
-check(/LanServer/.test(main), 'MainActivity starts the LAN server');
+check(/WificamApp/.test(main), 'MainActivity uses the WificamApp Application server');
+const appCls = readRoot('android-wificam/app/src/main/java/com/wificam/app/WificamApp.java');
+check(/extends Application/.test(appCls) && /server\.start\(\)/.test(appCls), 'WificamApp starts the LAN server for the process lifetime');
+check(/android:name="\.WificamApp"/.test(manifest), 'manifest registers WificamApp');
 check(/--diag/.test(main), 'phone screen shows the PC-side --diag troubleshooting command');
+check(/lanIps/.test(main) && /all IPs/.test(main), 'phone screen lists all its IPs when several exist');
 
 check(/0\.0\.0\.0/.test(server) && /PORT = 8080/.test(server), 'LanServer binds 0.0.0.0:8080 (LAN reachable)');
 check(/\/stream/.test(server) && /multipart\/x-mixed-replace/.test(server) && /boundary=frame/.test(server), 'MJPEG /stream route with multipart boundary');
@@ -73,8 +77,8 @@ check(/copyBtn/.test(app), 'copy stream URL button');
 
 check(/ecj\.jar/.test(build) && /d8/.test(build) && /aapt2/.test(build) && /apksigner/.test(build), 'build.sh runs ecj/d8/aapt2/apksigner');
 check(/check_no_emoji\.py/.test(build) && /test_web\.mjs/.test(build), 'build.sh runs emoji gate + this test');
-check(/--version-code 3/.test(build) && /--version-name 1\.2/.test(build), 'versionCode 3 / versionName 1.2');
-check(/Wificam-1\.2\.apk/.test(build), 'artifact name Wificam-1.2.apk');
+check(/--version-code 4/.test(build) && /--version-name 1\.3/.test(build), 'versionCode 4 / versionName 1.3');
+check(/Wificam-1\.3\.apk/.test(build), 'artifact name Wificam-1.3.apk');
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!/\u{1F300}-\u{1FAFF}/u.test(css + html + app), 'no emoji-range glyphs in web sources');
 

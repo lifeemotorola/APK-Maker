@@ -11,6 +11,10 @@ record, torch, FPS/status bar, OBS Studio setup help and an About dialog.
 
 CLI (python wificam_driver.py ...):
   --auto            discover the phone on the LAN automatically, then --view
+  --adb             USB fallback: adb forward tcp:<port> tcp:<port>, use 127.0.0.1
+                    (works even when the router isolates WiFi clients)
+  --diag            step-by-step connection diagnosis (TCP, ping, /status,
+                    /stream, LAN scan, adb) with PASS/FAIL lines; exit 0 = OK
   --view            live viewer window (OpenCV if installed, else Pillow/tkinter)
   --virtual-cam DEV pipe the stream into a v4l2loopback virtual camera
                     (e.g. /dev/video0, Linux) via ffmpeg — then any app
@@ -57,7 +61,7 @@ except ImportError:  # e.g. Debian without python3-tk — CLI still works
     tk = None
     HAS_TK = False
 
-VERSION = "1.3"
+VERSION = "1.4"
 DEFAULT_PORT = 8080
 
 OBS_HELP = """OBS Studio setup with WiFi Cam (phone at {host}:{port}):
@@ -185,9 +189,67 @@ def discover_phone(port=DEFAULT_PORT, timeout=0.5):
     return phones[0] if phones else None
 
 
+def tcp_check(host, port, timeout=3):
+    """Raw TCP connect — distinguishes 'host unreachable/blocked' from 'port closed'."""
+    try:
+        s = socket.create_connection((host, port), timeout=timeout)
+        s.close()
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+
+def ping_check(host, timeout=2):
+    try:
+        flag = "-n" if os.name == "nt" else "-c"
+        w = "-w" if os.name == "nt" else "-W"
+        r = subprocess.run(["ping", flag, "1", w, str(int(timeout * 1000)), host],
+                           capture_output=True, timeout=timeout + 3)
+        return r.returncode == 0
+    except Exception:
+        return False
+
+
+def adb_info():
+    """(adb_path, device_count) — USB mode needs platform-tools + USB debugging."""
+    adb = shutil.which("adb")
+    if not adb:
+        return None, 0
+    try:
+        r = subprocess.run([adb, "devices"], capture_output=True, timeout=8)
+        lines = [l for l in r.stdout.decode("utf-8", "replace").splitlines()[1:] if l.strip()]
+        return adb, len(lines)
+    except Exception:
+        return adb, 0
+
+
+def adb_forward(port=DEFAULT_PORT):
+    """USB fallback: forward PC tcp:port -> phone tcp:port over adb."""
+    adb, n = adb_info()
+    if adb is None:
+        sys.exit("adb not found — install Android platform-tools and put it on PATH "
+                 "(developer.android.com/studio/releases/platform-tools)")
+    if n == 0:
+        sys.exit("no adb device — connect the phone by USB and enable USB debugging "
+                 "(Settings -> Developer options)")
+    subprocess.run([adb, "forward", f"tcp:{port}", f"tcp:{port}"], check=True)
+    print(f"adb forward tcp:{port} tcp:{port} active — using 127.0.0.1:{port}")
+    return "127.0.0.1"
+
+
 def diagnose(host, port=DEFAULT_PORT):
-    """Step-by-step connection check; returns a list of (ok, message) tuples."""
+    """Direct step-by-step connection checks; returns a list of (ok, message)."""
     steps = []
+    ok, err = tcp_check(host, port)
+    if ok:
+        steps.append((True, f"TCP connect to {host}:{port} succeeded"))
+    else:
+        steps.append((False, f"TCP connect to {host}:{port} failed ({err}) — the phone is not "
+                             "listening on that port, or traffic to it is blocked"))
+        steps.append((ping_check(host), f"ping {host}: " + ("replies" if ping_check(host) else "no reply")))
+        steps.append((False, "likely causes: WiFi Cam app not open on the phone, wrong/stale IP, "
+                             "router AP isolation (try the phone's hotspot), or use USB: --adb"))
+        return steps
     try:
         st = status(host, port, timeout=5)
         steps.append((True, f"phone server reachable at http://{host}:{port}/status"))
@@ -224,15 +286,40 @@ def diagnose(host, port=DEFAULT_PORT):
     return steps
 
 
+def diagnose_full(host, port=DEFAULT_PORT):
+    """Direct checks, plus (when they fail) a LAN scan for the phone, USB/adb
+    availability and a same-subnet check. Returns (steps, all_ok)."""
+    steps = diagnose(host, port)
+    if not all(ok for ok, _ in steps):
+        try:
+            phones = discover_phones(port)
+        except Exception:
+            phones = []
+        if phones:
+            steps.append((True, f"LAN scan found WiFi Cam server(s): {', '.join(phones)} — use one of these IPs"))
+        else:
+            steps.append((False, f"LAN scan found no WiFi Cam server on port {port} — is the WiFi Cam app open on the phone?"))
+        adb, n = adb_info()
+        if adb and n:
+            steps.append((True, f"adb found with {n} device(s) — USB fallback available: run with --adb"))
+        else:
+            steps.append((False, "no adb device — USB fallback needs Android platform-tools on the PC and USB debugging on the phone"))
+        same = [ip for ip in local_ipv4s()
+                if ".".join(ip.split(".")[:3]) == ".".join(host.split(".")[:3])]
+        steps.append((bool(same), "local IP on the phone's subnet: " + (", ".join(same) if same else "none — check the PC's WiFi")
+                      + "; last resort: connect the PC to the PHONE's hotspot"))
+    all_ok = all(ok for ok, _ in steps)
+    return steps, all_ok
+
+
 def print_diagnose(host, port):
     print(f"WiFi Cam driver {VERSION} — diagnosing {host}:{port}")
     print(f"this computer's IPs: {', '.join(local_ipv4s()) or '(none)'}")
-    all_ok = True
-    for ok, msg in diagnose(host, port):
+    steps, all_ok = diagnose_full(host, port)
+    for ok, msg in steps:
         print(("PASS " if ok else "FAIL ") + msg)
-        all_ok = all_ok and ok
     print("RESULT:", "OK — the phone is reachable and streaming" if all_ok else
-          "PROBLEMS FOUND — see FAIL lines above (same WiFi? right IP? phone hotspot fallback?)")
+          "PROBLEMS FOUND — see FAIL lines above (wrong/stale IP? app closed? AP isolation -> phone hotspot or --adb USB)")
     return all_ok
 
 
@@ -389,6 +476,8 @@ class WifiCamApp:
         ttk.Button(btns, text="Auto-find", command=self.auto_find).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(btns, text="Connect", command=self.connect).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(btns, text="Disconnect", command=self.disconnect).pack(side=tk.LEFT)
+        btns2 = ttk.Frame(side); btns2.pack(fill=tk.X, pady=(4, 8))
+        ttk.Button(btns2, text="Connect via USB (adb)", command=self.connect_adb).pack(side=tk.LEFT)
 
         ttk.Label(side, text="Stream URL (for OBS Browser source)", font=("Segoe UI", 10, "bold")).pack(anchor=tk.W, pady=(10, 2))
         urow = ttk.Frame(side); urow.pack(fill=tk.X)
@@ -438,6 +527,31 @@ class WifiCamApp:
             self.connect()
         else:
             self.set_status("no phone found — start WiFi Cam on the phone first, then Connect")
+
+    def connect_adb(self):
+        """USB fallback: adb forward PC:port -> phone:port, then connect to 127.0.0.1."""
+        port = self._port()
+
+        def work():
+            adb, n = adb_info()
+            if adb is None or n == 0:
+                self.root.after(0, lambda: self.set_status(
+                    "USB mode needs adb (platform-tools) + a phone with USB debugging — see Help -> Diagnose"))
+                return
+            try:
+                subprocess.run([adb, "forward", f"tcp:{port}", f"tcp:{port}"],
+                               check=True, capture_output=True)
+            except Exception as e:
+                self.root.after(0, lambda: self.set_status(f"adb forward failed — {e}"))
+                return
+
+            def go():
+                self.host_var.set("127.0.0.1")
+                self.set_status(f"adb forward tcp:{port} tcp:{port} active — connecting over USB")
+                self.connect()
+            self.root.after(0, go)
+
+        threading.Thread(target=work, daemon=True).start()
 
     def connect(self):
         host = self.host_var.get().strip()
@@ -602,7 +716,7 @@ class WifiCamApp:
         threading.Thread(target=lambda: self._show_diag(host, self._port()), daemon=True).start()
 
     def _show_diag(self, host, port):
-        steps = diagnose(host, port)
+        steps, _ = diagnose_full(host, port)
         lines = [f"WiFi Cam driver {VERSION} — diagnose {host}:{port}",
                  f"this computer IPs: {', '.join(local_ipv4s()) or '(none)'}"]
         for ok, msg in steps:
@@ -786,6 +900,8 @@ def main():
     ap.add_argument("--host", help="phone IP on the WiFi (shown on the phone screen); omit with --auto")
     ap.add_argument("--port", type=int, default=DEFAULT_PORT)
     ap.add_argument("--auto", action="store_true", help="auto-discover the phone on the LAN")
+    ap.add_argument("--adb", action="store_true",
+                    help="connect over USB: adb forward tcp:<port> tcp:<port>, then use 127.0.0.1 (works even when WiFi is isolated)")
     ap.add_argument("--gui", action="store_true", help="open the GUI window (default when no arguments)")
     ap.add_argument("--view", action="store_true", help="CLI live viewer window")
     ap.add_argument("--virtual-cam", metavar="DEV", help="pipe to a v4l2loopback device, e.g. /dev/video0 (Linux)")
@@ -797,13 +913,15 @@ def main():
     ap.add_argument("--version", action="version", version=f"WificamDriver {VERSION}")
     args = ap.parse_args()
 
-    no_input = not any([args.host, args.auto, args.gui, args.view, args.virtual_cam,
+    no_input = not any([args.host, args.auto, args.adb, args.gui, args.view, args.virtual_cam,
                         args.record, args.snapshot, args.list, args.obs, args.diag])
     if no_input or args.gui:
         launch_gui(auto=no_input or args.auto)
         return
 
-    if args.auto or not args.host:
+    if args.adb:
+        args.host = adb_forward(args.port)
+    elif args.auto or not args.host:
         host = args.host or discover_phone(args.port)
         if host is None:
             print(f"no WiFi Cam phone found on the LAN (port {args.port}, /status streaming=true)")

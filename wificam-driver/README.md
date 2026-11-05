@@ -79,6 +79,14 @@ camera streaming, does `/stream` answer with MJPEG. Common causes:
 4. **Wrong/stale IP** (DHCP changed) — press **Auto-find** in the GUI.
 5. Quick manual check from a PC browser: `http://<phone-ip>:8080/status` should
    print JSON, and `http://<phone-ip>:8080/stream` should show a moving image.
+6. **Timeout (not refused) to the phone's IP** usually means the app is closed on
+   the phone, the IP is stale, or the router drops device-to-device traffic.
+   `--diag` then runs a LAN scan and lists any WiFi Cam server it finds (use that
+   IP), and reports whether a USB fallback is available.
+7. **USB fallback that always works** (no WiFi needed): connect the phone by USB,
+   enable USB debugging, install platform-tools on the PC, then:
+   `WificamDriver.exe --adb` (or the **Connect via USB (adb)** button in the GUI)
+   — it runs `adb forward tcp:8080 tcp:8080` and talks to the phone via 127.0.0.1.
 
 ## Using the phone camera in OBS Studio
 

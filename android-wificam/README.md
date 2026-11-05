@@ -42,7 +42,11 @@ Turns an Android phone into a **webcam for your computer over WiFi**, ready for
 - From the PC browser, `http://<phone-ip>:8080/status` must print JSON and
   `http://<phone-ip>:8080/stream` must show the moving preview.
 - On the PC: `WificamDriver.exe --diag <phone-ip>` (or Help -> Diagnose...) runs
-  a step-by-step connection check.
+  a step-by-step connection check (TCP, ping, /status, /stream, LAN scan, adb).
+- If WiFi is isolated: USB fallback — phone by USB + USB debugging + platform-tools
+  on the PC, then `WificamDriver.exe --adb`.
+- The LAN server now runs in the Application class, so it stays up even if the
+  activity is destroyed (screen off with the foreground service).
 
 ## Layout
 
