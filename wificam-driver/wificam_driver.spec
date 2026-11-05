@@ -4,14 +4,17 @@
 # Output: dist/WificamDriver.exe   (Windows, via build_exe.bat)
 #         dist/WificamDriver      (Linux/macOS, via build_exe.sh — smoke test)
 #
-# One-file, console app (so --obs / --list / errors print visibly).
-# cv2/numpy are excluded on purpose: the bundled viewer falls back to
-# Pillow + tkinter, which keeps the .exe small and double-click friendly.
+# One-file app with a real window: embedded .ico icon (exe resource + window
+# icon), Windows version resource (Properties -> Details), console kept so
+# CLI flags (--obs/--list/...) still print when run from a terminal; the GUI
+# hides the console window itself on startup (hide_console()).
+# cv2/numpy are excluded on purpose: the bundled viewer uses Pillow + tkinter,
+# which keeps the .exe small and double-click friendly.
 a = Analysis(
     ['wificam_driver.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('app.ico', '.')],
     hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk'],
     hookspath=[],
     hooksconfig={},
@@ -32,4 +35,6 @@ exe = EXE(
     strip=False,
     upx=False,
     console=True,
+    icon='app.ico',
+    version='wificam_driver.version.txt',
 )

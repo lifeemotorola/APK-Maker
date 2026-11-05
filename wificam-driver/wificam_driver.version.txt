@@ -1,0 +1,35 @@
+# UTF-8
+#
+# Windows version resource for WificamDriver.exe (used by PyInstaller via
+# version='wificam_driver.version.txt' in wificam_driver.spec) — shows up in
+# the exe's Properties -> Details tab.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 2, 0, 0),
+    prodvers=(1, 2, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0),
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [
+          StringStruct('CompanyName', 'WiFi Cam'),
+          StringStruct('FileDescription', 'WiFi Cam computer driver - phone camera streamed over WiFi (MJPEG), viewer / recorder / OBS'),
+          StringStruct('FileVersion', '1.2.0.0'),
+          StringStruct('InternalName', 'WificamDriver'),
+          StringStruct('LegalCopyright', 'MIT'),
+          StringStruct('OriginalFilename', 'WificamDriver.exe'),
+          StringStruct('ProductName', 'WificamDriver'),
+          StringStruct('ProductVersion', '1.2.0.0'),
+        ]
+      )
+    ]),
+    VarFileInfo([VarStruct('Translation', [0x409, 1200])])
+  ]
+)
