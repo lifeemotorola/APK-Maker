@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""test_driver.py — stdlib-only test for the WiFi Cam computer driver.
+"""test_driver.py — stdlib-only tests for the WiFi Cam computer driver.
 
-Spins a local HTTP server that emits a synthetic multipart/x-mixed-replace
-MJPEG stream (fake JPEG payloads with valid SOI/EOI markers) and verifies that
-wificam_driver.iter_mjpeg_frames parses exactly the sent frames.
+1. Spins a local HTTP server that emits a synthetic multipart/x-mixed-replace
+   MJPEG stream (fake JPEG payloads with valid SOI/EOI markers) and verifies
+   that wificam_driver.iter_mjpeg_frames parses exactly the sent frames.
+2. Verifies LAN auto-discovery (discover_phone finds the test server).
+3. Verifies the standalone-exe packaging files exist and are consistent.
 
 Run: python3 test_driver.py   (also run in CI)
 """
@@ -16,7 +18,9 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from wificam_driver import iter_mjpeg_frames, status  # noqa: E402
+from wificam_driver import discover_phone, iter_mjpeg_frames, status  # noqa: E402
+
+HERE = Path(__file__).parent
 
 
 def fake_jpeg(i: int) -> bytes:
@@ -24,7 +28,6 @@ def fake_jpeg(i: int) -> bytes:
 
 
 N_FRAMES = 12
-BOUNDARY = b"frame"
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -73,12 +76,27 @@ def main():
                 assert f[:2] == b"\xff\xd8" and f[-2:] == b"\xff\xd9", "bad JPEG markers"
                 assert struct.unpack(">I", f[2:6])[0] == i, "frame order wrong"
             print(f"ok: parsed {len(frames)} MJPEG frames in order with valid markers")
+
+            found = discover_phone(port=port)
+            assert found == "127.0.0.1", f"discovery should find the test server, got {found!r}"
+            print("ok: --auto LAN discovery found the phone at", found)
         finally:
             srv.shutdown()
 
-    src = Path(__file__).with_name("wificam_driver.py").read_text()
+    src = (HERE / "wificam_driver.py").read_text()
     assert "--obs" in src and "v4l2loopback" in src and "Browser" in src and "/stream" in src
-    print("ok: driver ships OBS Studio instructions (--obs, Browser source, v4l2loopback virtual cam)")
+    assert "--auto" in src and "discover_phone" in src
+    assert "_view_tk" in src and "PIL" in src, "bundled Pillow/tkinter viewer must exist for the exe"
+    print("ok: driver ships OBS instructions (--obs), LAN auto-discovery (--auto), bundled viewer")
+
+    bat = (HERE / "build_exe.bat").read_text()
+    sh = (HERE / "build_exe.sh").read_text()
+    spec = (HERE / "wificam_driver.spec").read_text()
+    assert "PyInstaller" in bat and "wificam_driver.spec" in bat and "WificamDriver.exe" in bat
+    assert "PyInstaller" in sh and "wificam_driver.spec" in sh
+    assert "wificam_driver.py" in spec and "WificamDriver" in spec and "PIL.ImageTk" in spec
+    print("ok: standalone-exe packaging files present (build_exe.bat / build_exe.sh / wificam_driver.spec)")
+
     print("\nWIFICAM DRIVER TEST: ALL PASSED")
 
 
