@@ -1,5 +1,8 @@
-# Runtime deps for the live viewer (--view). The stream parser, --list,
-# --snapshot, --record and --virtual-cam modes only need the stdlib
-# (record/virtual-cam additionally need ffmpeg installed).
-opencv-python>=4.8
-numpy>=1.24
+# Runtime deps for the standalone WificamDriver.exe and the plain-Python CLI.
+# The bundled live viewer (--view) uses Pillow + tkinter (tkinter ships with
+# Windows/macOS Python and is bundled by PyInstaller automatically).
+# For the heavier OpenCV viewer instead, additionally install:
+#   opencv-python>=4.8
+#   numpy>=1.24
+# --record / --virtual-cam need ffmpeg installed separately (not a pip package).
+Pillow>=10.0
