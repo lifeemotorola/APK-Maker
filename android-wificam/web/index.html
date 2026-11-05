@@ -27,7 +27,8 @@
       <code id="streamUrl">http://…:8080/stream</code>
       <button id="copyBtn" class="btn">Copy</button>
     </div>
-    <div class="hint">On the computer, run the driver: <code id="driverCmd">python wificam_driver.py --host &lt;phone-ip&gt; --view</code></div>
+    <div class="hint">On the computer, run the driver: <code id="driverCmd">python3 wificam_driver.py --host &lt;phone-ip&gt; --view</code></div>
+    <div class="hint" id="obsHint">OBS Studio: add a <b>Browser</b> source with the stream URL above, or run the driver with <code>--virtual-cam /dev/video0</code> and add a <b>Video Capture Device</b> in OBS.</div>
   </section>
 
   <section class="card video-card">

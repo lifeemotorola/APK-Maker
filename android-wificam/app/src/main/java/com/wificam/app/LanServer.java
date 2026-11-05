@@ -1,6 +1,8 @@
 package com.wificam.app;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,6 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   / , /index.html, /app.js, /styles.css, /img/*  -> bundled web UI (assets/www)
  *   /stream   -> MJPEG stream (multipart/x-mixed-replace) fed by FrameBus
  *   /status   -> JSON status (ip, port, streaming, resolution, fps, clients)
+ *   /api/start?cam=back&w=1280&h=720&fps=15 -> start camera + stream (JSON)
+ *   /api/stop                              -> stop camera (JSON)
+ *   /api/torch?on=1                        -> torch on/off (JSON)
  */
 public class LanServer {
 
@@ -118,6 +123,39 @@ public class LanServer {
                 client.close();
                 return;
             }
+            if (path.startsWith("/api/start")) {
+                String cam = query(path, "cam", "back");
+                int w = clampInt(query(path, "w", "1280"), 1280, 320, 3840);
+                int h = clampInt(query(path, "h", "720"), 720, 240, 2160);
+                int fps = clampInt(query(path, "fps", "15"), 15, 1, 60);
+                boolean perm = context.checkSelfPermission(Manifest.permission.CAMERA)
+                        == PackageManager.PERMISSION_GRANTED;
+                boolean ok = false;
+                if (perm) {
+                    ok = CameraHolder.ensureStarted(context, cam, w, h, fps, null, null);
+                }
+                String body = "{\"ok\":" + (perm && ok)
+                        + ",\"permission\":" + perm
+                        + ",\"streaming\":" + (CameraHolder.controller != null && CameraHolder.controller.isRunning())
+                        + "}";
+                write(out, 200, "application/json", body.getBytes("UTF-8"));
+                client.close();
+                return;
+            }
+            if (path.startsWith("/api/stop")) {
+                CameraHolder.stopAll(context);
+                write(out, 200, "application/json", "{\"ok\":true}".getBytes("UTF-8"));
+                client.close();
+                return;
+            }
+            if (path.startsWith("/api/torch")) {
+                String v = query(path, "on", "0");
+                boolean on = "1".equals(v) || "true".equals(v);
+                if (CameraHolder.controller != null) CameraHolder.controller.setTorch(on);
+                write(out, 200, "application/json", ("{\"ok\":true,\"torch\":" + on + "}").getBytes("UTF-8"));
+                client.close();
+                return;
+            }
             if (path.startsWith("/status")) {
                 String body = "{"
                         + "\"ip\":\"" + lanIp() + "\""
@@ -186,6 +224,35 @@ public class LanServer {
             // client disconnected
         } finally {
             streamClients.decrementAndGet();
+        }
+    }
+
+    private static String query(String path, String key, String def) {
+        int q = path.indexOf('?');
+        if (q < 0) return def;
+        String qs = path.substring(q + 1);
+        String[] pairs = qs.split("&");
+        for (int i = 0; i < pairs.length; i++) {
+            int eq = pairs[i].indexOf('=');
+            if (eq > 0 && pairs[i].substring(0, eq).equals(key)) {
+                try {
+                    return java.net.URLDecoder.decode(pairs[i].substring(eq + 1), "UTF-8");
+                } catch (Exception e) {
+                    return pairs[i].substring(eq + 1);
+                }
+            }
+        }
+        return def;
+    }
+
+    private static int clampInt(String s, int def, int lo, int hi) {
+        try {
+            int v = Integer.parseInt(s.trim());
+            if (v < lo) return lo;
+            if (v > hi) return hi;
+            return v;
+        } catch (Exception e) {
+            return def;
         }
     }
 

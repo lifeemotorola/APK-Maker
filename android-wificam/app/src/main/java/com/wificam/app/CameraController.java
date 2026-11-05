@@ -18,13 +18,15 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Camera2 JPEG capture loop. Opens the requested camera, grabs JPEG frames
- * from an ImageReader at the requested resolution, and pushes them into
- * {@link FrameBus} for the MJPEG stream.
+ * Camera2 capture loop. Opens the requested camera, renders a live preview on
+ * the given Surface (like a normal camera app) and grabs JPEG frames from an
+ * ImageReader at the requested resolution, pushing them into {@link FrameBus}
+ * for the MJPEG stream.
  */
 public class CameraController {
 
@@ -48,6 +50,7 @@ public class CameraController {
     private int height = 480;
     private int fps = 15;
     private String cameraId;
+    private Surface previewSurface;
 
     public CameraController(Context context, StateListener listener) {
         this.context = context.getApplicationContext();
@@ -55,8 +58,12 @@ public class CameraController {
         this.manager = (CameraManager) this.context.getSystemService(Context.CAMERA_SERVICE);
     }
 
-    public synchronized boolean start(String which, int w, int h, int f) {
-        if (running) return true;
+    public synchronized boolean start(String which, int w, int h, int f, Surface preview) {
+        if (running) {
+            if (preview != null) attachPreview(preview);
+            return true;
+        }
+        previewSurface = preview;
         try {
             String want = "0"; // back
             if ("front".equals(which)) {
@@ -129,11 +136,16 @@ public class CameraController {
                         cameraDevice = camera;
                         final CaptureRequest.Builder req = camera.createCaptureRequest(
                                 CameraDevice.TEMPLATE_RECORD);
-                        req.addTarget(surface);
+                        addTargets(req);
                         req.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
                                 new android.util.Range<Integer>(fps, fps));
+                        final List<Surface> outputs = new ArrayList<Surface>();
+                        outputs.add(surface);
+                        if (previewSurface != null && previewSurface.isValid()) {
+                            outputs.add(previewSurface);
+                        }
                         camera.createCaptureSession(
-                                Collections.singletonList(surface),
+                                outputs,
                                 new CameraCaptureSession.StateCallback() {
                                     @Override
                                     public void onConfigured(CameraCaptureSession s) {
@@ -196,7 +208,7 @@ public class CameraController {
         if (session != null && cameraDevice != null) {
             try {
                 CaptureRequest.Builder req = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-                req.addTarget(reader.getSurface());
+                addTargets(req);
                 req.set(CaptureRequest.FLASH_MODE,
                         on ? CaptureRequest.FLASH_MODE_TORCH : CaptureRequest.FLASH_MODE_OFF);
                 session.setRepeatingRequest(req.build(), null, handler);
@@ -204,6 +216,48 @@ public class CameraController {
                 Log.e(MainActivity.TAG, "torch failed", e);
             }
         }
+    }
+
+    /** Attach (or replace) the on-phone preview surface while streaming. */
+    public synchronized void attachPreview(final Surface s) {
+        previewSurface = s;
+        if (!running || cameraDevice == null || reader == null) return;
+        try {
+            if (session != null) {
+                session.close();
+                session = null;
+            }
+            final List<Surface> outputs = new ArrayList<Surface>();
+            outputs.add(reader.getSurface());
+            if (s != null && s.isValid()) outputs.add(s);
+            final CaptureRequest.Builder req = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+            addTargets(req);
+            req.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, new android.util.Range<Integer>(fps, fps));
+            if (torch) req.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
+            cameraDevice.createCaptureSession(outputs, new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(CameraCaptureSession sess) {
+                    session = sess;
+                    try {
+                        sess.setRepeatingRequest(req.build(), null, handler);
+                    } catch (CameraAccessException e) {
+                        fail("re-attach repeating failed: " + e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onConfigureFailed(CameraCaptureSession sess) {
+                    fail("re-attach configure failed");
+                }
+            }, handler);
+        } catch (Exception e) {
+            fail("attach preview failed: " + e.getMessage());
+        }
+    }
+
+    private void addTargets(CaptureRequest.Builder req) {
+        if (reader != null) req.addTarget(reader.getSurface());
+        if (previewSurface != null && previewSurface.isValid()) req.addTarget(previewSurface);
     }
 
     public synchronized void stop() {
@@ -223,6 +277,7 @@ public class CameraController {
         session = null;
         cameraDevice = null;
         reader = null;
+        previewSurface = null;
         FrameBus.clear();
         if (thread != null) {
             thread.quitSafely();
