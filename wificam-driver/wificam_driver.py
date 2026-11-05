@@ -57,7 +57,7 @@ except ImportError:  # e.g. Debian without python3-tk — CLI still works
     tk = None
     HAS_TK = False
 
-VERSION = "1.2"
+VERSION = "1.3"
 DEFAULT_PORT = 8080
 
 OBS_HELP = """OBS Studio setup with WiFi Cam (phone at {host}:{port}):
@@ -117,37 +117,123 @@ def api_torch(host, port, on, timeout=5):
     return json.loads(body.decode("utf-8"))
 
 
-def discover_phone(port=DEFAULT_PORT, timeout=0.6):
-    """Probe the local subnet(s) for a WiFi Cam phone (port /status)."""
-    candidates = {"127.0.0.1"}
+def local_ipv4s():
+    """All non-loopback IPv4 addresses of this computer (all interfaces)."""
+    ips = []
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            s.connect(("8.8.8.8", 80))  # no traffic is sent; just picks the interface
-            ip = s.getsockname()[0]
-        finally:
-            s.close()
-        base = ".".join(ip.split(".")[:3])
-        candidates.update(f"{base}.{i}" for i in range(1, 255))
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if ip not in ips and not ip.startswith("127."):
+                ips.append(ip)
     except Exception:
         pass
-    for base in ("192.168.1", "192.168.0", "10.0.0"):
-        candidates.update(f"{base}.{i}" for i in range(1, 255))
-
-    def probe(h):
+    if not ips:
         try:
-            st = status(h, port, timeout=timeout)
-            if st.get("streaming"):
-                return h
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                s.connect(("8.8.8.8", 80))  # no traffic is sent; just picks the interface
+                ips.append(s.getsockname()[0])
+            finally:
+                s.close()
         except Exception:
-            return None
-        return None
+            pass
+    return ips
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=64) as ex:
-        for r in ex.map(probe, sorted(candidates)):
-            if r:
-                return r
+
+def candidate_hosts():
+    """Hosts to probe: every /24 of every local interface + common hotspot
+    subnets (192.168.43.x phone hotspot, 172.20.10.x, ...)."""
+    candidates = {"127.0.0.1"}
+    for ip in local_ipv4s():
+        base = ".".join(ip.split(".")[:3])
+        candidates.update(f"{base}.{i}" for i in range(1, 255))
+    for base in ("192.168.0", "192.168.1", "192.168.43", "10.0.0", "10.42.0", "172.16.0", "172.20.10"):
+        candidates.update(f"{base}.{i}" for i in range(1, 255))
+    return sorted(candidates)
+
+
+def _probe_server(h, port, timeout):
+    """Return (score, host) if h runs the WiFi Cam server on port, else None.
+
+    Accepts only JSON that looks like ours (/status with ip, port, streaming)
+    so random services on port 8080 are not mistaken for the phone.
+    """
+    try:
+        st = status(h, port, timeout=timeout)
+        if (isinstance(st, dict) and "streaming" in st and "ip" in st
+                and st.get("port") == port):
+            return (1 if st.get("streaming") else 0, h)
+    except Exception:
+        return None
     return None
+
+
+def discover_phones(port=DEFAULT_PORT, timeout=0.5):
+    """All WiFi Cam phones found on the LAN, streaming ones first."""
+    found = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=96) as ex:
+        for r in ex.map(lambda h: _probe_server(h, port, timeout), candidate_hosts()):
+            if r:
+                found.append(r)
+    found.sort(reverse=True)
+    return [h for _, h in found]
+
+
+def discover_phone(port=DEFAULT_PORT, timeout=0.5):
+    """Best WiFi Cam phone on the LAN (streaming preferred), or None."""
+    phones = discover_phones(port, timeout)
+    return phones[0] if phones else None
+
+
+def diagnose(host, port=DEFAULT_PORT):
+    """Step-by-step connection check; returns a list of (ok, message) tuples."""
+    steps = []
+    try:
+        st = status(host, port, timeout=5)
+        steps.append((True, f"phone server reachable at http://{host}:{port}/status"))
+        steps.append((True, f"phone reports: ip={st.get('ip')} port={st.get('port')} "
+                            f"streaming={st.get('streaming')} info={st.get('info')} clients={st.get('clients')}"))
+        if st.get("streaming"):
+            steps.append((True, "camera is streaming on the phone"))
+        else:
+            steps.append((False, "camera NOT streaming on the phone — open the WiFi Cam app and grant the camera permission"))
+        if st.get("ips"):
+            steps.append((True, f"phone IPv4 addresses: {', '.join(st['ips'])} (use the one on your WiFi)"))
+    except Exception as e:
+        steps.append((False, f"cannot reach http://{host}:{port}/status — {e}"))
+        steps.append((False, "checks: same WiFi network? correct IP (shown on the phone screen)? "
+                             "try opening http://%s:%d/status in a PC browser; "
+                             "if the router blocks device-to-device traffic, connect the PC to the PHONE's hotspot instead" % (host, port)))
+        return steps
+    try:
+        conn = http.client.HTTPConnection(host, port, timeout=10)
+        conn.request("GET", "/stream")
+        resp = conn.getresponse()
+        ctype = resp.headers.get("Content-Type", "")
+        first = resp.read(4096)
+        conn.close()
+        ok = resp.status == 200 and "multipart" in ctype
+        steps.append((ok, f"/stream responds HTTP {resp.status}, Content-Type: {ctype}"))
+        if ok:
+            steps.append((b"--frame" in first or b"\xff\xd8" in first,
+                          "MJPEG frames/pings are arriving from the phone"))
+        else:
+            steps.append((False, "phone answered /stream but not with MJPEG — wrong app or old APK?"))
+    except Exception as e:
+        steps.append((False, f"/stream failed — {e}"))
+    return steps
+
+
+def print_diagnose(host, port):
+    print(f"WiFi Cam driver {VERSION} — diagnosing {host}:{port}")
+    print(f"this computer's IPs: {', '.join(local_ipv4s()) or '(none)'}")
+    all_ok = True
+    for ok, msg in diagnose(host, port):
+        print(("PASS " if ok else "FAIL ") + msg)
+        all_ok = all_ok and ok
+    print("RESULT:", "OK — the phone is reachable and streaming" if all_ok else
+          "PROBLEMS FOUND — see FAIL lines above (same WiFi? right IP? phone hotspot fallback?)")
+    return all_ok
 
 
 def iter_mjpeg_frames(host, port, path="/stream", timeout=30):
@@ -271,6 +357,7 @@ class WifiCamApp:
 
         m_help = tk.Menu(menubar, tearoff=0)
         m_help.add_command(label="OBS Studio setup...", command=self.show_obs_help)
+        m_help.add_command(label="Diagnose connection...", command=self.diagnose_gui)
         m_help.add_command(label="About WiFi Cam Driver...", command=self.about)
         menubar.add_cascade(label="Help", menu=m_help)
 
@@ -366,7 +453,10 @@ class WifiCamApp:
         try:
             st = status(host, port, timeout=5)
         except Exception as e:
-            self.root.after(0, lambda: self.set_status(f"cannot reach {host}:{port} — {e}"))
+            def fail():
+                self.set_status(f"cannot reach {host}:{port} — {e}")
+                self._show_diag(host, port)
+            self.root.after(0, fail)
             return
         self.root.after(0, lambda: self._connect_ok(host, port, st))
 
@@ -502,6 +592,38 @@ class WifiCamApp:
             self.record_proc = None
 
     # ---------- help ----------
+
+    def diagnose_gui(self):
+        host = self.host_var.get().strip()
+        if not host:
+            self.set_status("enter the phone IP first (or press Auto-find)")
+            return
+        self.set_status(f"diagnosing {host}:{self._port()} ...")
+        threading.Thread(target=lambda: self._show_diag(host, self._port()), daemon=True).start()
+
+    def _show_diag(self, host, port):
+        steps = diagnose(host, port)
+        lines = [f"WiFi Cam driver {VERSION} — diagnose {host}:{port}",
+                 f"this computer IPs: {', '.join(local_ipv4s()) or '(none)'}"]
+        for ok, msg in steps:
+            lines.append(("PASS  " if ok else "FAIL  ") + msg)
+        text = "\n".join(lines)
+        self.root.after(0, lambda: self._diag_window(text))
+        self.root.after(0, lambda: self.set_status("diagnosis done — see the dialog"))
+
+    def _diag_window(self, text):
+        win = tk.Toplevel(self.root)
+        win.title("Connection diagnosis — WiFi Cam Driver")
+        win.geometry("720x400")
+        try:
+            win.iconbitmap(resource_path("app.ico"))
+        except Exception:
+            pass
+        txt = tk.Text(win, wrap=tk.WORD, padx=10, pady=10)
+        txt.pack(fill=tk.BOTH, expand=True)
+        txt.insert("1.0", text)
+        txt.config(state=tk.DISABLED)
+        ttk.Button(win, text="Close", command=win.destroy).pack(pady=6)
 
     def show_obs_help(self):
         host = self.host_var.get().strip() or "<phone-ip>"
@@ -671,11 +793,12 @@ def main():
     ap.add_argument("--snapshot", metavar="FILE", help="save one JPEG frame")
     ap.add_argument("--list", action="store_true", help="print phone status and exit")
     ap.add_argument("--obs", action="store_true", help="print OBS Studio setup instructions and exit")
+    ap.add_argument("--diag", action="store_true", help="run connection diagnostics against --host and exit")
     ap.add_argument("--version", action="version", version=f"WificamDriver {VERSION}")
     args = ap.parse_args()
 
     no_input = not any([args.host, args.auto, args.gui, args.view, args.virtual_cam,
-                        args.record, args.snapshot, args.list, args.obs])
+                        args.record, args.snapshot, args.list, args.obs, args.diag])
     if no_input or args.gui:
         launch_gui(auto=no_input or args.auto)
         return
@@ -689,6 +812,11 @@ def main():
         args.host = host
         print("phone found at", args.host)
 
+    if args.diag:
+        if not args.host:
+            ap.error("--diag needs --host <phone-ip> (or --auto)")
+        ok = print_diagnose(args.host, args.port)
+        sys.exit(0 if ok else 1)
     if args.obs:
         print(OBS_HELP.format(host=args.host, port=args.port))
         return

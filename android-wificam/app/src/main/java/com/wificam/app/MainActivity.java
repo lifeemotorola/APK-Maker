@@ -126,6 +126,13 @@ public class MainActivity extends Activity
                 + "wificam_driver.py --host <phone-ip> --virtual-cam /dev/video0 and add a Video Capture Device");
         bottom.addView(hint, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        TextView hint2 = new TextView(this);
+        hint2.setTextColor(0xFF8FB0BF);
+        hint2.setTextSize(10);
+        hint2.setText("If the PC cannot connect: both must be on the same WiFi (or join this phone's hotspot). "
+                + "On the PC run: WificamDriver.exe --diag <phone-ip>   ·   check http://<phone-ip>:8080/status in a PC browser");
+        bottom.addView(hint2, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);

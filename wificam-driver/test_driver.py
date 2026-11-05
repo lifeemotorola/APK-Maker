@@ -19,7 +19,8 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from wificam_driver import VERSION, discover_phone, iter_mjpeg_frames, status  # noqa: E402
+from wificam_driver import (VERSION, diagnose, discover_phone, discover_phones,  # noqa: E402
+                         iter_mjpeg_frames, local_ipv4s, status)
 
 HERE = Path(__file__).parent
 
@@ -37,7 +38,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/status"):
-            body = b'{"ip":"10.0.0.5","port":8080,"streaming":true,"info":"640x480@15","clients":1}'
+            body = ('{"ip":"10.0.0.5","port":%d,"streaming":true,"info":"640x480@15","clients":1}' % self.server.server_address[1]).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
@@ -68,7 +69,7 @@ def main():
         t.start()
         try:
             st = status("127.0.0.1", port)
-            assert st["streaming"] is True and st["port"] == 8080, st
+            assert st["streaming"] is True and st["port"] == port, st
             print("ok: /status parsed:", st)
 
             frames = list(iter_mjpeg_frames("127.0.0.1", port))
@@ -78,21 +79,32 @@ def main():
                 assert struct.unpack(">I", f[2:6])[0] == i, "frame order wrong"
             print(f"ok: parsed {len(frames)} MJPEG frames in order with valid markers")
 
-            found = discover_phone(port=port)
-            assert found == "127.0.0.1", f"discovery should find the test server, got {found!r}"
-            print("ok: --auto LAN discovery found the phone at", found)
+            phones = discover_phones(port=port)
+            assert "127.0.0.1" in phones, f"discovery should find the test server, got {phones!r}"
+            assert discover_phone(port=port) is not None
+            print("ok: --auto LAN discovery found the phone(s):", phones)
+
+            steps = diagnose("127.0.0.1", port)
+            assert steps and steps[0][0] is True, steps
+            assert any("streaming" in m for _, m in steps), steps
+            assert any("/stream" in m for _, m in steps), steps
+            print("ok: --diag diagnose() reports reachable /status + streaming + /stream:", len(steps), "steps")
+
+            assert isinstance(local_ipv4s(), list)
+            print("ok: local_ipv4s() enumerates this computer's interfaces:", local_ipv4s())
         finally:
             srv.shutdown()
 
     src = (HERE / "wificam_driver.py").read_text()
     assert "--obs" in src and "v4l2loopback" in src and "Browser" in src and "/stream" in src
-    assert "--auto" in src and "discover_phone" in src
+    assert "--auto" in src and "discover_phone" in src and "--diag" in src and "def diagnose" in src
+    assert "192.168.43" in src and "local_ipv4s" in src and "discover_phones" in src, "discovery must cover hotspot/other subnets"
     assert "_view_tk" in src and "PIL" in src, "bundled Pillow/tkinter viewer must exist for the exe"
     assert "class WifiCamApp" in src, "GUI window class missing"
     assert "--gui" in src and "hide_console" in src, "GUI launch + console hiding missing"
     for menu in ('"File"', '"Camera"', '"Help"'):
         assert menu in src, f"menu {menu} missing"
-    assert "OBS Studio setup" in src and "About WiFi Cam Driver" in src, "help dialogs missing"
+    assert "OBS Studio setup" in src and "About WiFi Cam Driver" in src and "Diagnose connection" in src, "help dialogs missing"
     assert "iconbitmap" in src and "app.ico" in src, "window icon not wired"
     assert f'VERSION = "{VERSION}"' in src
     print("ok: driver ships GUI window (menus File/Camera/Help, OBS help, About, icon), --obs, --auto, bundled viewer")

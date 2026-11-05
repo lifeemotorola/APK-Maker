@@ -56,6 +56,30 @@ The phone IP is shown on the phone's screen (bottom bar) while the app runs.
 Both devices must be on the same WiFi network. `--auto` scans the LAN for a
 device answering on port 8080.
 
+## Not connecting? (troubleshooting)
+
+Run the built-in diagnosis first:
+
+```
+WificamDriver.exe --diag 192.168.1.50        (or: Help -> Diagnose connection... in the GUI)
+```
+
+It checks, step by step: is `http://<phone-ip>:8080/status` reachable, is the
+camera streaming, does `/stream` answer with MJPEG. Common causes:
+
+1. **Different networks** — phone and PC must be on the same WiFi. The IP to
+   use is the one shown on the phone screen (the app prefers the WiFi IP;
+   `/status` also returns all phone IPs in `"ips"`).
+2. **Router "AP isolation" / guest WiFi** blocks device-to-device traffic.
+   Fix: enable the **phone's hotspot** and connect the PC to it (then the phone
+   is usually 192.168.43.1 — auto-discovery covers that subnet), or use a
+   normal home WiFi.
+3. **Camera permission not granted on the phone** — `/status` answers but
+   `streaming:false`. Open the WiFi Cam app and allow the camera.
+4. **Wrong/stale IP** (DHCP changed) — press **Auto-find** in the GUI.
+5. Quick manual check from a PC browser: `http://<phone-ip>:8080/status` should
+   print JSON, and `http://<phone-ip>:8080/stream` should show a moving image.
+
 ## Using the phone camera in OBS Studio
 
 The phone app opens like a normal camera (live preview on the phone) and
