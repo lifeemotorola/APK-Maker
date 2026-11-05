@@ -47,7 +47,6 @@ public class MainActivity extends Activity
     private Button startStopBtn;
     private Button flipBtn;
     private Button torchBtn;
-    private LanServer server;
 
     private String camWhich = "back";
     private int camW = 1280;
@@ -61,12 +60,16 @@ public class MainActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        server = new LanServer(this);
-        try {
-            server.start();
-            Log.d(TAG, "LAN server on 0.0.0.0:" + LanServer.PORT + " ip=" + LanServer.lanIp());
-        } catch (IOException e) {
-            Log.e(TAG, "LAN server failed to start", e);
+        // The LAN server is started by WificamApp (Application) for the whole
+        // process lifetime; here we only make sure it is up.
+        if (((WificamApp) getApplication()).server == null) {
+            try {
+                ((WificamApp) getApplication()).server = new LanServer(this);
+                ((WificamApp) getApplication()).server.start();
+                Log.d(TAG, "LAN server on 0.0.0.0:" + LanServer.PORT + " ip=" + LanServer.lanIp());
+            } catch (IOException e) {
+                Log.e(TAG, "LAN server failed to start", e);
+            }
         }
 
         buildUi();
@@ -258,7 +261,10 @@ public class MainActivity extends Activity
         startStopBtn.setText(on ? "Stop" : "Start");
         torchBtn.setText("Torch: " + (torchOn ? "on" : "off"));
         String ip = LanServer.lanIp();
-        urlView.setText("http://" + ip + ":" + LanServer.PORT + "/stream   (cam: " + camWhich + ")");
+        java.util.List<String> allIps = LanServer.lanIps();
+        String ipNote = allIps.size() > 1
+                ? "   [all IPs: " + android.text.TextUtils.join(", ", allIps) + "]" : "";
+        urlView.setText("http://" + ip + ":" + LanServer.PORT + "/stream   (cam: " + camWhich + ")" + ipNote);
         if (on) {
             String info = CameraHolder.controller != null ? CameraHolder.controller.getInfo() : "";
             setStatus("streaming " + info, false);
@@ -329,10 +335,9 @@ public class MainActivity extends Activity
     protected void onDestroy() {
         wantStart = false;
         CameraHolder.stopAll(this);
-        if (server != null) {
-            server.stop();
-            server = null;
-        }
+        // NOTE: the LAN server is owned by WificamApp and keeps running while
+        // the process lives (e.g. screen off with the foreground service), so
+        // the computer driver can still reach /status and /stream.
         if (previewSurface != null) {
             previewSurface.release();
             previewSurface = null;

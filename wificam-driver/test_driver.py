@@ -19,8 +19,8 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from wificam_driver import (VERSION, diagnose, discover_phone, discover_phones,  # noqa: E402
-                         iter_mjpeg_frames, local_ipv4s, status)
+from wificam_driver import (VERSION, adb_info, diagnose, diagnose_full, discover_phone,  # noqa: E402
+                         discover_phones, iter_mjpeg_frames, local_ipv4s, status, tcp_check)
 
 HERE = Path(__file__).parent
 
@@ -88,7 +88,22 @@ def main():
             assert steps and steps[0][0] is True, steps
             assert any("streaming" in m for _, m in steps), steps
             assert any("/stream" in m for _, m in steps), steps
-            print("ok: --diag diagnose() reports reachable /status + streaming + /stream:", len(steps), "steps")
+            print("ok: --diag diagnose() reports TCP + /status + streaming + /stream:", len(steps), "steps")
+
+            ok, err = tcp_check("127.0.0.1", port)
+            assert ok, err
+            ok2, err2 = tcp_check("127.0.0.1", 1, timeout=1)
+            assert not ok2
+            print("ok: tcp_check distinguishes open vs closed port")
+
+            steps_full, all_ok = diagnose_full("127.0.0.1", port)
+            assert all_ok, steps_full
+            print("ok: diagnose_full() all-PASS against the phone-sim:", len(steps_full), "steps")
+
+            steps_bad, ok_bad = diagnose_full("127.0.0.1", 1)
+            assert not ok_bad
+            assert any("LAN scan" in m or "adb" in m for _, m in steps_bad), steps_bad
+            print("ok: diagnose_full() on a dead port adds LAN-scan/adb fallback hints")
 
             assert isinstance(local_ipv4s(), list)
             print("ok: local_ipv4s() enumerates this computer's interfaces:", local_ipv4s())
@@ -99,6 +114,8 @@ def main():
     assert "--obs" in src and "v4l2loopback" in src and "Browser" in src and "/stream" in src
     assert "--auto" in src and "discover_phone" in src and "--diag" in src and "def diagnose" in src
     assert "192.168.43" in src and "local_ipv4s" in src and "discover_phones" in src, "discovery must cover hotspot/other subnets"
+    assert "--adb" in src and "adb_forward" in src and "adb forward" in src and "tcp_check" in src and "diagnose_full" in src, "USB fallback + richer --diag missing"
+    assert "Connect via USB (adb)" in src, "GUI USB button missing"
     assert "_view_tk" in src and "PIL" in src, "bundled Pillow/tkinter viewer must exist for the exe"
     assert "class WifiCamApp" in src, "GUI window class missing"
     assert "--gui" in src and "hide_console" in src, "GUI launch + console hiding missing"

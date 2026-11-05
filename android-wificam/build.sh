@@ -15,7 +15,7 @@
 #   5. python pack_apk.py: align + add classes.dex
 #   6. apksigner: v1+v2 sign with the debug keystore
 #
-# Output: android-wificam/app/build/Wificam-1.2.apk
+# Output: android-wificam/app/build/Wificam-1.3.apk
 #         (also copied to the repo root as Wificam.apk)
 #
 # The Java toolchain is SHARED with the other APK projects in ../android/tools
@@ -87,7 +87,7 @@ rm -f "$BUILD/res.zip" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" "$BUILD"/Wific
     -I "$TOOLS/android.jar" \
     --manifest "$APP/src/main/AndroidManifest.xml" \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 3 --version-name 1.2 \
+    --version-code 4 --version-name 1.3 \
     "$BUILD/res.zip" \
     -A "$APP/src/main/assets"
 
@@ -100,17 +100,17 @@ echo "==> [6/6] Signing (apksigner, v1+v2, debug key)"
     --ks-key-alias androiddebugkey \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD/Wificam-1.2.apk" \
+    --out "$BUILD/Wificam-1.3.apk" \
     "$BUILD/aligned.apk"
 
 echo "==> Verifying signature"
-"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/Wificam-1.2.apk"
+"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/Wificam-1.3.apk"
 
 echo "==> APK badging"
-"$TOOLS/aapt2" dump badging "$BUILD/Wificam-1.2.apk" > "$BUILD/badging.txt" || true
+"$TOOLS/aapt2" dump badging "$BUILD/Wificam-1.3.apk" > "$BUILD/badging.txt" || true
 head -25 "$BUILD/badging.txt"
 
-cp "$BUILD/Wificam-1.2.apk" "$ROOT/Wificam.apk"
+cp "$BUILD/Wificam-1.3.apk" "$ROOT/Wificam.apk"
 echo
-echo "DONE: $BUILD/Wificam-1.2.apk"
+echo "DONE: $BUILD/Wificam-1.3.apk"
 echo "      (also copied to $ROOT/Wificam.apk)"
