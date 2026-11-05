@@ -32,6 +32,18 @@ Turns an Android phone into a **webcam for your computer over WiFi**, ready for
      and capture the "WiFi Cam" window.
    `python3 wificam_driver.py --host 192.168.1.50 --obs` prints these steps.
 
+## Not connecting from the PC?
+
+- Both devices must be on the **same WiFi**; if the router blocks
+  device-to-device traffic (guest WiFi / AP isolation), connect the PC to the
+  **phone's hotspot** instead.
+- The URL shown on the phone uses the phone's **WiFi IP** (not the hotspot IP);
+  `http://<phone-ip>:8080/status` returns all phone IPs in `"ips"`.
+- From the PC browser, `http://<phone-ip>:8080/status` must print JSON and
+  `http://<phone-ip>:8080/stream` must show the moving preview.
+- On the PC: `WificamDriver.exe --diag <phone-ip>` (or Help -> Diagnose...) runs
+  a step-by-step connection check.
+
 ## Layout
 
 ```

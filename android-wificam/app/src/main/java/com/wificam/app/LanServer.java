@@ -79,12 +79,43 @@ public class LanServer {
         if (pool != null) pool.shutdownNow();
     }
 
-    public static String lanIp() {
+    /** All non-loopback IPv4 addresses of this phone (every interface). */
+    public static java.util.List<String> lanIps() {
+        java.util.List<String> out = new java.util.ArrayList<String>();
         try {
             Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
             while (nis != null && nis.hasMoreElements()) {
                 NetworkInterface ni = nis.nextElement();
                 if (!ni.isUp() || ni.isLoopback()) continue;
+                Enumeration<InetAddress> addrs = ni.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    InetAddress a = addrs.nextElement();
+                    if (!a.isLoopbackAddress() && a.getAddress().length == 4) {
+                        String ip = a.getHostAddress();
+                        if (!out.contains(ip)) out.add(ip);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
+    /**
+     * Best IPv4 to show in the stream URL: prefer real WiFi/Ethernet
+     * interfaces (wlan*, eth*) over e.g. the phone's own hotspot interface,
+     * so the URL matches the network the computer is on.
+     */
+    public static String lanIp() {
+        java.util.List<String> all = lanIps();
+        String fallback = all.isEmpty() ? "127.0.0.1" : all.get(0);
+        try {
+            Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+            while (nis != null && nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                if (!ni.isUp() || ni.isLoopback()) continue;
+                String name = ni.getName().toLowerCase(Locale.US);
+                if (!name.contains("wlan") && !name.contains("wifi") && !name.contains("eth")) continue;
                 Enumeration<InetAddress> addrs = ni.getInetAddresses();
                 while (addrs.hasMoreElements()) {
                     InetAddress a = addrs.nextElement();
@@ -95,7 +126,7 @@ public class LanServer {
             }
         } catch (Exception ignored) {
         }
-        return "127.0.0.1";
+        return fallback;
     }
 
     private void handle(Socket client) {
@@ -157,8 +188,15 @@ public class LanServer {
                 return;
             }
             if (path.startsWith("/status")) {
+                StringBuilder ips = new StringBuilder();
+                java.util.List<String> all = lanIps();
+                for (int i = 0; i < all.size(); i++) {
+                    if (i > 0) ips.append(",");
+                    ips.append("\"").append(all.get(i)).append("\"");
+                }
                 String body = "{"
                         + "\"ip\":\"" + lanIp() + "\""
+                        + ",\"ips\":[" + ips + "]"
                         + ",\"port\":" + PORT
                         + ",\"streaming\":" + (CameraHolder.controller != null && CameraHolder.controller.isRunning())
                         + ",\"info\":\"" + (CameraHolder.controller != null ? CameraHolder.controller.getInfo().replace("\"", "'") : "") + "\""
