@@ -37,7 +37,7 @@
       els.stopBtn.disabled = !on;
       els.previewOff.classList.toggle('hidden', on);
       if (on && !els.preview.src) {
-        els.preview.src = streamUrl() + '?t=' + Date.now();
+        els.preview.src = '/stream?t=' + Date.now(); // relative: same-origin (phone or preview proxy)
       } else if (!on && els.preview.src) {
         els.preview.removeAttribute('src');
       }
@@ -58,7 +58,7 @@
       .then(function (j) {
         if (j.ok) {
           setStatus('streaming', 'ok');
-          els.preview.src = streamUrl() + '?t=' + Date.now();
+          els.preview.src = '/stream?t=' + Date.now();
         } else if (j.permission === false) {
           setStatus('camera permission not granted on the phone', 'err');
         } else {
