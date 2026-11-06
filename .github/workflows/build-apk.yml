@@ -21,6 +21,11 @@ name: Build Android APK
 #                                  webcam over WiFi (MJPEG/LAN) + computer
 #                                  driver in wificam-driver/
 #                                  via android-wificam/build.sh
+#   - job build-pastoral-apk   -> Pastoral (com.pastoral.app): offline
+#                                  sermon studio for pastors — sermon
+#                                  editor with outline builder, bundled
+#                                  KJV scripture browser, series, backup
+#                                  via android-pastoral/build.sh
 #   - job build-wificam-driver-exe -> WiFi Cam computer driver as a standalone
 #                                  Windows WificamDriver.exe (PyInstaller,
 #                                  windows-latest runner, uploaded artifact)
@@ -327,6 +332,49 @@ jobs:
             MusicDownloader.apk
             android-musicdl/app/build/MusicDownloader-1.0.apk
             android-musicdl/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  build-pastoral-apk:
+    name: Build Pastoral APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (web shell test)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate the Pastoral web shell
+        run: node android-pastoral/web/test_web.mjs
+
+      - name: Build the APK (android-pastoral/build.sh)
+        run: ./android-pastoral/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-pastoral/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: |
+          java -jar android/tools/apksigner.jar verify -v Pastoral.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Pastoral-APK
+          path: |
+            Pastoral.apk
+            android-pastoral/app/build/Pastoral-1.0.apk
+            android-pastoral/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
 
