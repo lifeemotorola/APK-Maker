@@ -24,6 +24,8 @@ name: Build Android APK
 #   - job build-wificam-driver-exe -> WiFi Cam computer driver as a standalone
 #                                  Windows WificamDriver.exe (PyInstaller,
 #                                  windows-latest runner, uploaded artifact)
+#   - job build-fingerlock-apk   -> FingerLock (com.fingerlock.app): fingerprint
+#                                  lock-screen APK via android-fingerlock/build.sh
 #   - job build-jsmaster-apk    -> JS Mastery (com.jsmaster.app, interactive
 #                                  JavaScript course: 50 topics, 350
 #                                  practices, in-app book guide, quizzes,
@@ -419,6 +421,48 @@ jobs:
         with:
           name: WificamDriver-exe
           path: wificam-driver/dist/WificamDriver.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  build-fingerlock-apk:
+    name: Build FingerLock APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 (web shell test)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up JDK 21 (for d8 / ecj / apksigner)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate the FingerLock web shell
+        run: node android-fingerlock/web/test_web.mjs
+
+      - name: Build the APK (android-fingerlock/build.sh)
+        run: ./android-fingerlock/build.sh
+
+      - name: Show APK badging
+        run: head -30 android-fingerlock/app/build/badging.txt
+
+      - name: Verify APK signature
+        run: java -jar android/tools/apksigner.jar verify -v FingerLock.apk | head -8
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: FingerLock-APK
+          path: |
+            FingerLock.apk
+            android-fingerlock/app/build/FingerLock-1.0.apk
+            android-fingerlock/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
 

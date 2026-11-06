@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>FingerLock</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app">
+
+  <section id="lockPane" class="pane lock-pane">
+    <div class="lock-hero">
+      <img class="lock-icon" src="img/icon.png" alt="FingerLock" />
+      <h1>FingerLock</h1>
+      <div class="pill locked" id="statePill">LOCKED</div>
+    </div>
+    <p class="hint" id="enrollHint">No fingerprint enrolled on this device — set one up in Settings &gt; Security first.</p>
+    <button id="unlockBtn" class="btn primary big">Unlock with fingerprint</button>
+    <p class="sub">or use your device PIN / pattern</p>
+    <div class="attempts" id="attempts"></div>
+    <div id="msg" class="msg"></div>
+  </section>
+
+  <section id="homePane" class="pane home-pane hidden">
+    <div class="lock-hero">
+      <img class="lock-icon" src="img/icon.png" alt="FingerLock" />
+      <h1>Unlocked</h1>
+      <div class="pill open">UNLOCKED</div>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="date" id="date"></div>
+    <div class="card secret">
+      <div class="label">Protected content</div>
+      <p>This area is only visible after a successful fingerprint authentication. FingerLock keeps the screen locked every time the app opens.</p>
+    </div>
+    <button id="lockBtn" class="btn">Lock again</button>
+  </section>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>
