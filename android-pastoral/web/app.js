@@ -1,11 +1,13 @@
 /* Pastoral — sermon studio. State lives in the native app via window.Pastoral
  * (falls back to localStorage when opened in a plain browser, e.g. previews).
- * The KJV Bible is bundled as bibles/kjv.js -> global var bible_data. */
+ * The KJV Bible is bundled as bibles/kjv.js -> global var bible_data.
+ * Whole-sermon auto-generation lives in generate.js -> window.PastoralGen. */
 (function () {
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
   var N = window.Pastoral || null;
+  var Gen = window.PastoralGen || null;
 
   // ---------------- state ----------------
   var state = { sermons: [], settings: { theme: 'dark' }, draft: null };
@@ -92,7 +94,7 @@
     rl.innerHTML = sorted.slice(0, 3).map(function (s) {
       return '<div class="item" data-id="' + s.id + '"><div class="t">' + esc(s.title || 'Untitled') + '</div>' +
         '<div class="s">' + esc(s.ref || '') + (s.series ? ' · ' + esc(s.series) : '') + ' · ' + esc(s.date || '') + '</div></div>';
-    }).join('') || '<div class="item"><div class="s">No sermons yet — create your first one.</div></div>';
+    }).join('') || '<div class="item"><div class="s">No sermons yet — create or auto-generate one.</div></div>';
     rl.querySelectorAll('.item[data-id]').forEach(function (el) {
       el.addEventListener('click', function () { openEditor(el.getAttribute('data-id')); });
     });
@@ -181,6 +183,7 @@
     $('fConclusion').value = state.draft.conclusion || '';
     $('fDuration').value = state.draft.duration || 30;
     $('fDelivery').value = state.draft.delivery || '';
+    $('fTopic').value = '';
     $('editorMsg').textContent = '';
     // series datalist
     $('seriesList').innerHTML = allSeries().map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
@@ -240,6 +243,55 @@
     d.delivery = $('fDelivery').value;
     return d;
   }
+
+  // ---------------- auto-generate ----------------
+  function applyGenerated(g) {
+    if (!state.draft) state.draft = emptySermon();
+    var d = state.draft;
+    d.title = g.title;
+    d.ref = g.ref;
+    d.keyVerse = g.keyVerse;
+    d.theme = g.theme;
+    d.intro = g.intro;
+    d.points = g.points || [];
+    d.illustration = g.illustration;
+    d.application = g.application;
+    d.conclusion = g.conclusion;
+    d.delivery = g.delivery;
+    if (g.duration) d.duration = g.duration;
+    $('fTitle').value = d.title;
+    $('fRef').value = d.ref;
+    $('fKeyVerse').value = d.keyVerse;
+    $('fTheme').value = d.theme;
+    $('fIntro').value = d.intro;
+    $('fIllustration').value = d.illustration;
+    $('fApplication').value = d.application;
+    $('fConclusion').value = d.conclusion;
+    $('fDelivery').value = d.delivery;
+    $('fDuration').value = d.duration;
+    renderPoints();
+    toast('whole sermon generated — review, edit, then save');
+  }
+
+  function generateNow() {
+    if (!Gen) { toast('generator missing'); return; }
+    if (state.editingId && state.draft && (state.draft.title || state.draft.intro)) {
+      if (!confirm('Auto-generate will replace the current editor content. Continue?')) return;
+    }
+    if (!state.draft) openEditor(null);
+    var g = Gen.generateSermon({
+      ref: $('fRef').value,
+      topic: $('fTopic').value,
+      duration: parseInt($('fDuration').value, 10) || 30,
+      bible: window.bible_data || [],
+    });
+    applyGenerated(g);
+    show('editor');
+  }
+
+  $('genBtn').addEventListener('click', generateNow);
+  $('genQuickBtn').addEventListener('click', function () { openEditor(null); $('fTopic').focus(); });
+  $('genQuickBtn2').addEventListener('click', function () { openEditor(null); $('fTopic').focus(); });
 
   $('saveSermonBtn').addEventListener('click', function () {
     var d = collectDraft();
@@ -335,6 +387,7 @@
   }
 
   var pickMode = false;
+  var lastAri = null;
   function renderScripture() {
     var bs = $('bookSel');
     if (!bs.options.length) {
@@ -351,6 +404,10 @@
     var bi = parseInt($('bookSel').value || '0', 10);
     var ch = parseInt($('chapterSel').value || '1', 10);
     var vs = versesOf(bi, ch);
+    renderVerseItems(vs);
+  }
+
+  function renderVerseItems(vs) {
     var box = $('verseList');
     box.innerHTML = vs.map(function (v) {
       return '<div class="item" data-ari="' + esc(v.ari) + '">' +
@@ -366,32 +423,25 @@
 
   $('verseSearchBtn').addEventListener('click', function () {
     var q = ($('verseSearch').value || '').trim().toLowerCase();
-    var box = $('verseList');
     if (!q) { renderVerses(); return; }
     var hits = (window.bible_data || []).filter(function (v) {
       return (v.verse || '').toLowerCase().indexOf(q) >= 0;
     }).slice(0, 60);
-    box.innerHTML = hits.map(function (v) {
-      return '<div class="item" data-ari="' + esc(v.ari) + '"><div class="ref">' + esc(v.name) + '</div><div class="txt">' + esc(v.verse) + '</div></div>';
-    }).join('') || '<div class="item"><div class="s">No matches.</div></div>';
-    box.querySelectorAll('.item[data-ari]').forEach(function (el) {
-      el.addEventListener('click', function () { pickVerse(el.getAttribute('data-ari')); });
-    });
+    renderVerseItems(hits);
   });
 
   function pickVerse(ari) {
+    lastAri = ari;
     var v = (window.bible_data || []).filter(function (x) { return x.ari === ari; })[0];
     if (!v) return;
     if (pickMode && state.draft) {
-      state.draft.ref = v.name.replace(/:(\d+)$/, ':$1'); // keep full ref e.g. Psalm 23:1
-      var ref = v.name;
-      state.draft.ref = ref;
+      state.draft.ref = v.name;
       state.draft.keyVerse = v.verse;
-      $('fRef').value = ref;
+      $('fRef').value = v.name;
       $('fKeyVerse').value = v.verse;
       pickMode = false;
       show('editor');
-      toast('inserted ' + ref);
+      toast('inserted ' + v.name);
     } else {
       toast(v.name + ' — ' + String(v.verse).slice(0, 60) + '...');
     }
@@ -400,6 +450,16 @@
   $('pickRefBtn').addEventListener('click', function () {
     pickMode = true;
     show('scripture');
+  });
+
+  $('genFromVerseBtn').addEventListener('click', function () {
+    if (!Gen) { toast('generator missing'); return; }
+    if (!lastAri) { toast('tap a verse first, then auto-generate'); return; }
+    var v = (window.bible_data || []).filter(function (x) { return x.ari === lastAri; })[0];
+    openEditor(null);
+    var g = Gen.generateSermon({ ref: v.name, topic: '', duration: 30, bible: window.bible_data || [] });
+    applyGenerated(g);
+    show('editor');
   });
 
   // ---------------- series ----------------

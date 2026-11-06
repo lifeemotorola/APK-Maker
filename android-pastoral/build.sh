@@ -56,7 +56,7 @@ fi
 
 rm -rf "$WWW"
 mkdir -p "$WWW/img" "$WWW/bibles"
-cp "$WEB/index.html" "$WEB/styles.css" "$WEB/app.js" "$WWW/"
+cp "$WEB/index.html" "$WEB/styles.css" "$WEB/app.js" "$WEB/generate.js" "$WWW/"
 cp "$WEB/img/"*.png "$WWW/img/"
 cp "$ROOT/bibles/kjv/kjv.js" "$WWW/bibles/kjv.js"
 

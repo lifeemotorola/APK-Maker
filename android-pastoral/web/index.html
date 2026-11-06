@@ -30,6 +30,7 @@
     <div class="stats" id="stats"></div>
     <div class="row">
       <button id="newSermonBtn" class="btn primary">+ New sermon</button>
+      <button id="genQuickBtn" class="btn">Auto-generate</button>
       <button id="browseScriptureBtn" class="btn">Browse Scripture</button>
     </div>
     <h2 class="sect">Recent sermons</h2>
@@ -50,6 +51,7 @@
     </div>
     <div class="row">
       <button id="newSermonBtn2" class="btn primary">+ New sermon</button>
+      <button id="genQuickBtn2" class="btn">Auto-generate</button>
     </div>
     <div id="sermonList" class="list"></div>
   </section>
@@ -57,6 +59,15 @@
   <!-- SERMON EDITOR -->
   <section id="view-editor" class="view hidden">
     <h2 class="sect" id="editorTitle">New sermon</h2>
+    <div class="genbox">
+      <div class="row">
+        <input id="fTopic" class="input grow" placeholder="topic or keywords (e.g. hope, forgiveness, shepherd)" />
+      </div>
+      <div class="row">
+        <button id="genBtn" class="btn primary">Auto-generate whole sermon</button>
+        <span class="hint">uses the scripture ref below + topic; everything stays editable</span>
+      </div>
+    </div>
     <label class="fld">Title<input id="fTitle" class="input" placeholder="e.g. The Shepherd's Voice" /></label>
     <div class="row">
       <label class="fld grow">Series<input id="fSeries" class="input" list="seriesList" placeholder="e.g. Psalms series" /><datalist id="seriesList"></datalist></label>
@@ -98,6 +109,9 @@
       <input id="verseSearch" class="input grow" placeholder="search all verses (e.g. shepherd, love)..." />
       <button id="verseSearchBtn" class="btn">Search</button>
     </div>
+    <div class="row">
+      <button id="genFromVerseBtn" class="btn primary">Auto-generate sermon from selected verse</button>
+    </div>
     <div id="pickHint" class="hint hidden">Pick a verse to insert into the sermon editor</div>
     <div id="verseList" class="list verses"></div>
   </section>
@@ -111,6 +125,7 @@
 </main>
 
 <script src="bibles/kjv.js"></script>
+<script src="generate.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
