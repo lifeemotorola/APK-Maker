@@ -17,6 +17,15 @@ offline, no permissions, no network.
   (repo `bibles/kjv/kjv.js`, ~31k verses): pick book + chapter, or
   keyword-search the whole Bible; tap a verse to **insert it into the
   sermon editor** (fills the scripture reference + key verse).
+- **Auto-generate the whole sermon** — one tap in the editor (or from any
+  verse in the Scripture view) and `web/generate.js` writes a complete,
+  editable draft offline: title, scripture ref + key verse, theme,
+  introduction, a 3-point outline whose notes quote the actual KJV verses,
+  an illustration, application questions, a conclusion, and timed delivery
+  notes. Give it a reference (e.g. `Psalm 23`) and/or topic keywords
+  (e.g. `hope, shepherd`) — with only a topic it searches the whole Bible
+  for the best-matching verses. Everything it writes stays fully editable
+  before you save.
 - **Home dashboard** — sermon count, sermons this month, series count,
   latest sermon, recent list.
 - **Series** — every series with its sermon count, tap to filter the list.

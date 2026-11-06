@@ -66,6 +66,8 @@ textarea.input { resize: vertical; font-family: inherit; }
 .point textarea { margin-top: 6px; }
 .mini { padding: 6px 8px; font-size: 11px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
 .hint { color: var(--accent); font-size: 12px; margin: 6px 0; }
+.genbox { background: var(--accent-dim); border: 1px dashed var(--accent); border-radius: 12px; padding: 4px 10px 8px; margin-bottom: 10px; }
+.genbox .hint { margin: 0; align-self: center; }
 .msg { color: var(--err); font-size: 12px; min-height: 16px; margin-top: 8px; }
 .msg.ok { color: var(--ok); }
 .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--card); border: 1px solid var(--accent); color: var(--text); padding: 9px 16px; border-radius: 99px; font-size: 12.5px; z-index: 9; }
