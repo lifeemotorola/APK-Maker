@@ -50,11 +50,6 @@ JS-Master.apk
 wificam-driver/dist/
 wificam-driver/build/
 
-# FingerLock APK build outputs
-android-fingerlock/app/build/
-android-fingerlock/app/src/main/assets/www/
-FingerLock.apk
-
 # Python bytecode caches
 __pycache__/
 *.pyc
