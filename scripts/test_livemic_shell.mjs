@@ -54,6 +54,16 @@ check(/subscribeNativeMic/.test(modal), 'LiveMicModal feeds native PCM into the 
 check(/createBufferSource/.test(modal), 'native PCM played through BufferSource into analyser');
 check(/disabled=\{!streamRef\.current\}/.test(modal), 'record button disabled in native-capture mode');
 
+// Chord Tracker (Yamaha Chord Tracker-style progression tracking)
+check(/appendLiveChord/.test(modal), 'LiveMicModal tracks a timed live progression log (appendLiveChord)');
+check(/Live Progression Track/.test(modal), 'Live Progression Track UI present in LiveMicModal');
+check(/buildLiveLogText/.test(modal) && /exportTrackLog/.test(modal), 'live progression exportable as a text chart');
+const appSrc = fs.readFileSync('src/App.tsx', 'utf8');
+const trackerSrc = fs.readFileSync('src/components/ChordTracker.tsx', 'utf8');
+check(/ChordTracker/.test(appSrc) && /setBottomTab\('tracker'\)/.test(appSrc), 'App adds the Chord Tracker tab');
+check(/buildProgressionTrack/.test(trackerSrc) && /findActiveEntry/.test(trackerSrc), 'ChordTracker builds the timed progression track');
+check(/buildChartText/.test(trackerSrc) && /downloadBytes/.test(trackerSrc), 'ChordTracker exports the chart text');
+
 if (failures) {
   console.error(`LIVEMIC SHELL TEST: ${failures} FAILED`);
   process.exit(1);

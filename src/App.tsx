@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Download,
   FileAudio,
+  ListMusic,
   Loader2,
   Mic,
   Music,
@@ -40,6 +41,7 @@ import { apiFetch } from './lib/api';
 import { isAndroidNative, subscribeNativeMidi } from './lib/nativeBridge';
 import { buildMidiFromAnalysis, downloadBytes } from './lib/midiExport';
 import { WaveformTimeline } from './components/WaveformTimeline';
+import { ChordTracker } from './components/ChordTracker';
 import { StudioPiano } from './components/StudioPiano';
 import { ChordDictionaryGrid } from './components/ChordDictionaryGrid';
 import { KeyHarmonyPanel } from './components/KeyHarmonyPanel';
@@ -75,7 +77,7 @@ export const App: React.FC = () => {
   const [voicingMode, setVoicingMode] = useState<VoicingMode>('smooth');
   const [synthTone, setSynthTone] = useState<SynthTone>('grand');
   const [playAlongVolume, setPlayAlongVolume] = useState<number>(0.25);
-  const [bottomTab, setBottomTab] = useState<'chords' | 'harmony'>('chords');
+  const [bottomTab, setBottomTab] = useState<'chords' | 'harmony' | 'tracker'>('chords');
 
   // Live Mic Modal
   const [micOpen, setMicOpen] = useState<boolean>(false);
@@ -1056,6 +1058,16 @@ export const App: React.FC = () => {
                 >
                   Key Scale, Pitch Profile &amp; Number System
                 </button>
+                <button
+                  onClick={() => setBottomTab('tracker')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                    bottomTab === 'tracker'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Chord Tracker
+                </button>
               </div>
 
               {bottomTab === 'chords' ? (
@@ -1070,11 +1082,25 @@ export const App: React.FC = () => {
                   activeChordId={activeChord?.id ?? null}
                   onSelectChord={handleSelectChord}
                 />
-              ) : (
+              ) : bottomTab === 'harmony' ? (
                 <KeyHarmonyPanel
                   keyInfo={analysis.key}
                   transpose={transpose}
                   tuningHz={analysis.tuningHz}
+                />
+              ) : (
+                <ChordTracker
+                  analysis={analysis}
+                  title={demos.find((d) => d.id === activeDemoId)?.title || analysis.filename}
+                  keyName={shiftedKey.name}
+                  currentTime={currentTime}
+                  isPlaying={isPlaying}
+                  activeChordId={activeChord?.id ?? null}
+                  transpose={transpose}
+                  useFlats={useFlats}
+                  notation={notation}
+                  onSeek={handleSeek}
+                  onSelectChord={handleSelectChord}
                 />
               )}
             </div>
