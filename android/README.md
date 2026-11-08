@@ -28,6 +28,19 @@ server in the repo root) into a **self-contained Android APK** that adds
   `backend/dsp_engine.py::build_midi_from_analysis` and runs in JS.
 - **Live Mic** chord detection still works (microphone permission is passed
   through to the WebView).
+- **Chord Tracker** (Yamaha Chord Tracker-style progression tracking): a new
+  bottom tab shows the song's **chord progression with full timing** — a big
+  NOW chord synced to playback, an auto-scrolling progression strip (tap a
+  chord to jump to it), a timed chord chart (#, chord, start–end, duration,
+  beats, roman numeral, confidence) computed from the detected BPM, and a
+  one-tap **text chart export** (saved to Downloads via the native bridge).
+  Pure logic lives in `src/lib/chordTracker.ts` (unit-tested by
+  `scripts/test_chord_tracker.ts` in build step 1).
+- **Live Progression Track** in the Live Mic modal: every chord you play is
+  appended to a timed progression log (auto-scrolling chips with timestamps,
+  live elapsed clock), with flicker pruning, clear, and **text export** —
+  so a live performance is tracked by progression and timing exactly like a
+  Yamaha Chord Tracker session.
 - **Song upload works fully offline in the APK**: the file picker is wired
   through `WebChromeClient.onShowFileChooser` (previously the upload button
   did nothing), the picked file is readable (`allowContentAccess`), and
@@ -99,7 +112,7 @@ toolchain is fetched from npm/PyPI by `fetch-tools.sh`.
 
 ```bash
 ./android/build.sh
-# -> android/app/build/KeySense-Studio-1.0.1.apk  (copied to ./KeySense-Studio.apk)
+# -> android/app/build/KeySense-Studio-1.1.0.apk  (copied to ./KeySense-Studio.apk)
 ```
 
 The build needs only `node`, `npm`, `python3` and network access to the

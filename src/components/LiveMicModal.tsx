@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Mic, MicOff, Radio, Square, Wand2, X } from 'lucide-react';
-import { classifyLiveChroma, midiToNoteName } from '../lib/musicTheory';
+import { Download, ListMusic, Mic, MicOff, Radio, Square, Trash2, Wand2, X } from 'lucide-react';
+import { classifyLiveChroma, formatTime, midiToNoteName } from '../lib/musicTheory';
 import {
   isAndroidNative,
   requestMicPermissionNative,
@@ -8,6 +8,8 @@ import {
   stopNativeMic,
   subscribeNativeMic,
 } from '../lib/nativeBridge';
+import { LiveLogEntry, appendLiveChord, buildLiveLogText, pruneLiveLog } from '../lib/chordTracker';
+import { downloadBytes } from '../lib/midiExport';
 
 interface LiveMicModalProps {
   isOpen: boolean;
@@ -33,6 +35,8 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
   } | null>(null);
   const [liveKeyNames, setLiveKeyNames] = useState<string[]>([]);
   const [inputLevel, setInputLevel] = useState(0);
+  const [trackLog, setTrackLog] = useState<LiveLogEntry[]>([]);
+  const [elapsed, setElapsed] = useState(0);
 
   const streamRef = useRef<MediaStream | null>(null);
   const nativeMicRef = useRef(false);
@@ -42,6 +46,11 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<number | null>(null);
+  const startPerfRef = useRef(0);
+  const logRef = useRef<LiveLogEntry[]>([]);
+  const lastSymbolRef = useRef<string | null>(null);
+  const frameRef = useRef(0);
+  const stripRef = useRef<HTMLDivElement | null>(null);
 
   const stopMic = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -72,6 +81,11 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
     setRecording(false);
     setInputLevel(0);
     onLiveNotesUpdate([]);
+    logRef.current = [];
+    lastSymbolRef.current = null;
+    frameRef.current = 0;
+    setTrackLog([]);
+    setElapsed(0);
   };
 
   useEffect(() => {
@@ -151,6 +165,12 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
       const smoothChroma = new Array<number>(12).fill(0);
 
       setListening(true);
+      startPerfRef.current = performance.now();
+      logRef.current = [];
+      lastSymbolRef.current = null;
+      frameRef.current = 0;
+      setTrackLog([]);
+      setElapsed(0);
 
       const tick = () => {
         analyser.getFloatFrequencyData(freqData);
@@ -196,10 +216,23 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
               notes: detected.notes,
               confidence: detected.confidence,
             });
+            // track the live progression with timing (Yamaha Chord Tracker style)
+            const now = (performance.now() - startPerfRef.current) / 1000;
+            logRef.current = appendLiveChord(logRef.current, detected.symbol, detected.notes, now);
+            if (detected.symbol !== lastSymbolRef.current) {
+              lastSymbolRef.current = detected.symbol;
+              setTrackLog(logRef.current.map((e) => ({ ...e })));
+            }
           }
         } else {
           onLiveNotesUpdate([]);
           setLiveKeyNames([]);
+        }
+
+        frameRef.current += 1;
+        if (frameRef.current % 20 === 0) {
+          setElapsed((performance.now() - startPerfRef.current) / 1000);
+          if (logRef.current.length) setTrackLog(logRef.current.map((e) => ({ ...e })));
         }
 
         rafRef.current = requestAnimationFrame(tick);
@@ -243,6 +276,30 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
       setRecordSec((s) => s + 1);
     }, 1000);
   };
+
+  const clearTrackLog = () => {
+    logRef.current = [];
+    lastSymbolRef.current = null;
+    setTrackLog([]);
+  };
+
+  const exportTrackLog = () => {
+    const pruned = pruneLiveLog(logRef.current, 0.35);
+    logRef.current = pruned;
+    setTrackLog(pruned.map((e) => ({ ...e })));
+    const text = buildLiveLogText(pruned, `Live mic · ${formatTime(elapsed)}`);
+    downloadBytes(
+      `LiveProgression_${new Date().toISOString().slice(11, 19).replace(/:/g, '-')}.txt`,
+      new TextEncoder().encode(text),
+      'text/plain'
+    );
+  };
+
+  // keep the live progression strip scrolled to the newest chord
+  useEffect(() => {
+    const el = stripRef.current;
+    if (el) el.scrollTo({ left: el.scrollWidth });
+  }, [trackLog.length]);
 
   if (!isOpen) return null;
 
@@ -354,6 +411,62 @@ export const LiveMicModal: React.FC<LiveMicModalProps> = ({
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Live Progression Track — chords tracked with timing as you play */}
+              <div className="rounded-xl bg-[#080C15] border border-slate-800 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <ListMusic className="w-3.5 h-3.5 text-sky-400" />
+                    Live Progression Track · {formatTime(elapsed)}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <button
+                      onClick={exportTrackLog}
+                      disabled={!trackLog.length}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-sky-500/15 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 disabled:opacity-40 cursor-pointer"
+                      title="Export the tracked progression with timestamps as a text file"
+                    >
+                      <Download className="w-3 h-3" />
+                      Chart
+                    </button>
+                    <button
+                      onClick={clearTrackLog}
+                      disabled={!trackLog.length}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 disabled:opacity-40 cursor-pointer"
+                      title="Clear the tracked progression"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Clear
+                    </button>
+                  </span>
+                </div>
+                <div ref={stripRef} className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+                  {trackLog.length === 0 ? (
+                    <span className="text-xs text-slate-500">
+                      Chords you play will be tracked here with timing...
+                    </span>
+                  ) : (
+                    trackLog.map((e, i) => (
+                      <span
+                        key={i}
+                        className={`shrink-0 px-2 py-1 rounded-lg border font-mono text-xs ${
+                          i === trackLog.length - 1
+                            ? 'bg-sky-500/20 border-sky-400/60 text-sky-200'
+                            : 'bg-slate-800/70 border-slate-700 text-slate-300'
+                        }`}
+                        title={`${e.symbol} (${e.notes.join(' ')}) · ${formatTime(e.start)}–${formatTime(e.end)}`}
+                      >
+                        {formatTime(e.start)} {e.symbol}
+                      </span>
+                    ))
+                  )}
+                </div>
+                {trackLog.length > 0 && (
+                  <div className="mt-1.5 text-[11px] text-slate-500 font-mono truncate">
+                    Progression: {trackLog.map((e) => e.symbol).join(' - ')}
+                  </div>
+                )}
               </div>
 
               {/* Capture Clip for Full Timeline Analysis */}
