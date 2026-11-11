@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f9fc">
+  <meta name="description" content="Discover and download Android apps from APK-Maker. Direct APK downloads, app details and installation help in one place.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+  <title>APK-Maker — A little app for everything.</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#collection">Skip to apps</a>
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17l-6-4-6 4Z"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2.5"/><ellipse cx="17" cy="16" rx="3" ry="2.5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6c-3-3-6-3-10-2v15c4-1 7-1 10 2 3-3 6-3 10-2V4c-4-1-7-1-10 2Zm0 0v15"/></symbol>
+    <symbol id="i-tools" viewBox="0 0 24 24"><path d="m14 6 4-4a6 6 0 0 1-7 8l-7 9a2 2 0 0 0 3 3l9-9a6 6 0 0 0 6-8l-4 4Z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="m7 6-6 6 6 6m10-12 6 6-6 6M14 3l-4 18"/></symbol>
+    <symbol id="i-community" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M2 21v-3a7 7 0 0 1 14 0v3m1-17a3 3 0 0 1 0 6m2 4a6 6 0 0 1 3 5v2"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v7m0-11v1"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14m0-10H4v16h16v-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 21v-4c-4 1-4-2-6-2m12 6v-4c0-1-.3-2-1-2 4-.5 6-2 6-5a4 4 0 0 0-1-3c.3-1 .3-2 0-3-2 0-3 1-4 1a11 11 0 0 0-6 0C8 5 7 4 5 4c-.3 1-.3 2 0 3a4 4 0 0 0-1 3c0 3 2 4.5 6 5-.7.5-1 1-1 2"/></symbol>
+    <symbol id="i-android" viewBox="0 0 24 24"><path d="m7 5-2-3m12 3 2-3M3 13a9 9 0 0 1 18 0Zm0 0v7h18v-7M7 20v3m10-3v3M1 13v6m22-6v6"/><path d="M8 9h.01M16 9h.01"/></symbol>
+  </defs></svg>
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" href="./" aria-label="APK-Maker home"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 3 13 7-13 7L3 10Z"/><path d="m3 17 13 7 13-7M3 23l13 7 13-7"/></svg></span><span>APK<span class="brand-light">-Maker</span><small>THE APP COLLECTION</small></span></a>
+    <p class="nav-label">YOUR LIBRARY</p>
+    <nav class="library-nav"><button class="nav-item active" id="nav-all" aria-current="page"><svg><use href="#i-grid"/></svg>Discover apps<span id="nav-count">10</span></button><button class="nav-item" id="nav-saved"><svg><use href="#i-bookmark"/></svg>Saved apps<span id="saved-count">0</span></button><button class="nav-item" id="nav-latest"><svg><use href="#i-clock"/></svg>Latest updates</button></nav>
+    <p class="nav-label categories-label">EXPLORE CATEGORIES</p><nav id="side-categories" class="category-nav" aria-label="App categories"></nav>
+    <div class="sidebar-bottom"><div class="android-tile"><svg><use href="#i-android"/></svg></div><strong>Made for Android.</strong><p>Small tools.<br>A world of possibilities.</p><a href="#install">New to APKs? <svg><use href="#i-arrow"/></svg></a></div>
+    <a class="sidebar-source" href="https://github.com/lifeemotorola/APK-Maker" target="_blank" rel="noopener noreferrer"><svg><use href="#i-github"/></svg>Built in the open<svg class="external"><use href="#i-external"/></svg></a>
+  </aside>
+  <div class="main-shell">
+    <header class="topbar"><div class="breadcrumb">The collection <span>/</span> <strong>Discover</strong></div><div class="topbar-right"><span class="android-label"><span class="green-dot"></span>Android apps</span><a class="source-link" href="https://github.com/lifeemotorola/APK-Maker" target="_blank" rel="noopener noreferrer"><svg><use href="#i-github"/></svg>Source code<svg><use href="#i-external"/></svg></a></div></header>
+    <main>
+      <section class="hero" aria-labelledby="hero-heading"><div class="hero-copy"><div class="eyebrow"><span></span> LITTLE APPS. BIG POSSIBILITIES.</div><h1 id="hero-heading">A little app<br>for <span>everything.</span></h1><p>Make music. Learn something. Create your next thing.<br class="desktop-break"> Find your next everyday app, one download away.</p><a class="primary hero-button" href="#collection">Explore the collection<svg><use href="#i-arrow"/></svg></a><div class="hero-footnote"><svg><use href="#i-check"/></svg>Free downloads<span></span>No account needed</div></div>
+      <div class="hero-art" aria-label="Featured Choir Tune Finder illustration"><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="floating-note"><svg><use href="#i-music"/></svg></div><div class="floating-code"><svg><use href="#i-code"/></svg></div><div class="feature-card"><div class="feature-top"><span class="featured-label"><span></span> IN THE SPOTLIGHT</span><span class="feature-dots">•••</span></div><div class="feature-app"><div class="feature-icon" id="featured-icon"></div><div><h2>Choir Tune Finder</h2><p>Find your voice. Find the harmony.</p></div></div><div class="audio-illustration" aria-hidden="true"><div class="audio-track"><span class="track-label">VOCAL EXPLORER</span><span class="track-live">ON DEVICE</span></div><div class="waveform" id="hero-wave"></div><div class="voice-pills"><span>Soprano</span><span>Alto</span><span>Tenor</span><span>Bass</span></div></div><div class="feature-footer"><span>Music &amp; audio<small>Estimated SATB practice guides</small></span><button class="featured-details" data-detail="choirtune" aria-label="View Choir Tune Finder details"><svg><use href="#i-arrow"/></svg></button></div></div><div class="art-caption"><svg><use href="#i-android"/></svg> Thoughtfully made. Ready to explore.</div></div></section>
+      <section class="benefits" aria-label="About these downloads"><div><span class="benefit-icon"><svg><use href="#i-grid"/></svg></span><p><strong id="collection-total">10 purposeful apps</strong><span>A growing personal collection</span></p></div><div><span class="benefit-icon"><svg><use href="#i-download"/></svg></span><p><strong>Just the APK</strong><span>Direct files, not ZIP archives</span></p></div><div><span class="benefit-icon"><svg><use href="#i-github"/></svg></span><p><strong>Source available</strong><span>See exactly what you're installing</span></p></div></section>
+      <section class="collection" id="collection" aria-labelledby="collection-heading"><div class="section-heading"><div><div class="eyebrow muted">FIND YOUR NEXT FAVORITE</div><h2 id="collection-heading">The app collection <span id="heading-count">10</span></h2></div><label class="sort-label">Sort by <select id="sort" aria-label="Sort apps"><option value="featured">Featured</option><option value="updated">Latest published</option><option value="name">Name: A to Z</option><option value="size">Download size</option></select></label></div>
+      <div class="discovery-tools"><label class="search-box"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="Search apps, ideas, possibilities..." autocomplete="off" aria-label="Search apps"><kbd>/</kbd></label><span class="search-hint" id="result-count" role="status" aria-live="polite">Loading collection...</span></div>
+      <div id="filters" class="filters" role="group" aria-label="Filter by category"></div>
+      <div class="release-status" id="release-status" role="status"><span class="status-dot"></span><span id="release-message">Checking for published APKs...</span><button id="retry" class="text-button" hidden>Try again</button></div>
+      <div class="app-grid" id="app-grid" aria-busy="true"></div><div class="empty-state" id="empty-state" hidden><svg><use href="#i-search"/></svg><h3>No apps found. A fresh start?</h3><p>Try another search or explore the whole collection.</p><button id="reset" class="primary">Show all apps</button></div>
+      <noscript><p class="notice">Enable JavaScript to browse this collection, or <a href="https://github.com/lifeemotorola/APK-Maker/releases/tag/apk-downloads">open the public APK release</a>.</p></noscript>
+      </section>
+      <section class="install-guide" id="install" aria-labelledby="install-heading"><div class="install-intro"><span class="eyebrow muted">A QUICK START</span><h2 id="install-heading">From click to<br>home screen.</h2><p>Installing an APK is simple. Here's how.</p><a href="https://github.com/lifeemotorola/APK-Maker#apk-download-website" target="_blank" rel="noopener noreferrer">View the project guide <svg><use href="#i-external"/></svg></a></div><ol class="install-steps"><li><span>01</span><div><h3>Pick an app. Download it.</h3><p>Tap Download APK on your Android phone. The file comes directly from this repository's GitHub release.</p></div></li><li><span>02</span><div><h3>Allow your browser to install.</h3><p>Open the downloaded file. If Android asks, allow “Install unknown apps” for your browser or file manager.</p></div></li><li><span>03</span><div><h3>Install, open, make it yours.</h3><p>Review the app's permissions and tap Install. You can turn off install permission again afterwards.</p></div></li></ol></section>
+      <div class="safety-note"><svg><use href="#i-info"/></svg><p>These are repository-signed developer builds, not Google Play releases. Only install apps you trust. Android may show a security prompt; keep Play Protect enabled. Updates need a compatible signing key.</p></div>
+    </main>
+    <footer><a class="footer-brand" href="./">APK-Maker<span>A little app for everything.</span></a><div><a href="https://github.com/lifeemotorola/APK-Maker" target="_blank" rel="noopener noreferrer">GitHub repository<svg><use href="#i-external"/></svg></a><a href="https://github.com/lifeemotorola/APK-Maker/releases" target="_blank" rel="noopener noreferrer">Public releases</a><a href="#install">Installation help</a><span>Made to be useful.</span></div></footer>
+  </div>
+  <dialog id="app-dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div><button class="dialog-close icon-button" id="close-dialog" aria-label="Close app details"><svg><use href="#i-close"/></svg></button></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

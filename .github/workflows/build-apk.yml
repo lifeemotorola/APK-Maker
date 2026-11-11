@@ -598,3 +598,58 @@ jobs:
         run: python -m unittest discover -s choir-server -p 'test_*.py' -v
       - name: Check source text
         run: python scripts/check_no_emoji.py choir-server
+
+  test-apk-download-site:
+    name: Test APK download website
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Test catalog, release matching and download publishing
+        run: |
+          node --test scripts/apk-store/tests/catalog.test.mjs
+          python3 -m unittest discover -s scripts/apk-store/tests -p 'test_*.py' -v
+          python3 scripts/check_no_emoji.py downloads scripts/apk-store
+
+  publish-apk-downloads:
+    name: Publish public APK download files
+    needs:
+      - build-apk
+      - build-newsdesk-apk
+      - build-biblequiz-apk
+      - build-marketplace-apk
+      - build-keyfinder-apk
+      - build-musicdl-apk
+      - build-pastoral-apk
+      - build-wificam-apk
+      - build-jsmaster-apk
+      - build-choirtune-apk
+      - test-apk-download-site
+    if: >-
+      always() && github.repository == 'lifeemotorola/APK-Maker' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.test-apk-download-site.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+    concurrency:
+      group: public-apk-download-release
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Publish successful APK artifacts, preserving other apps
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RESULTS: ${{ toJSON(needs) }}
+        run: python3 scripts/apk-store/publish.py
