@@ -70,17 +70,26 @@ const sandbox = {
 sandbox.window = sandbox;
 vm.createContext(sandbox);
 vm.runInContext(read('melody.js'), sandbox);
+vm.runInContext(read('satb.js'), sandbox);
 vm.runInContext(read('app.js'), sandbox);
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function upload(name) {
   $('fileInput').files = [{ name, size: 100, arrayBuffer: async () => new ArrayBuffer(10) }];
   await $('fileInput').dispatch('change');
-  await delay(40);
+  for (let tries = 0; tries < 100; tries++) {
+    if (!$('results').classList.contains('hidden') || $('status').textContent.includes('Could not analyze')) break;
+    await delay(10);
+  }
 }
 $('stopTuneBtn').click(); // stopping before the first upload must not draw null tune
 await upload('Solo.wav');
 assert(!$('results').classList.contains('hidden'));
 assert($('sheetBody').innerHTML.includes('A4'));
+assert($('partSummary').textContent.includes('Soprano: 1'));
+$('partSel').value = 'soprano'; $('partSel').dispatch('change');
+assert($('sheetBody').innerHTML.includes('A4'));
+const pitchCell = $('sheetBody').innerHTML.match(/<\/td><td>([0-9]+\.[0-9])<\/td>/);
+assert(pitchCell && Math.abs(Number(pitchCell[1]) - 440) < 1);
 $('playTuneBtn').click(); assert(playCount > 0);
 $('stopTuneBtn').click();
 $('playOrigBtn').click(); await delay(1); assert(!paused);
@@ -92,14 +101,28 @@ const midi = Buffer.from(exported.data, 'base64');
 assert.equal(midi.toString('ascii', 0, 4), 'MThd');
 assert.equal(midi.readUInt32BE(18), midi.length - 22);
 assert(midi.includes(Buffer.from([0x90, 71, 100])));
-$('exportTxtBtn').click(); assert(shared.includes('B4'));
+$('exportTxtBtn').click(); assert(shared.includes('B4') && shared.includes('Soprano'));
+$('sharePartsBtn').click(); assert(shared.includes('Soprano') && shared.includes('Alto') && shared.includes('Tenor') && shared.includes('Bass'));
+$('partSel').value = 'bass'; $('partSel').dispatch('change');
+assert($('sheetBody').innerHTML.includes('no stable pitches'));
+$('partSel').value = 'soprano'; $('partSel').dispatch('change');
 $('saveBtn').click(); assert.equal(JSON.parse(saved).tunes.length, 1);
+assert(JSON.parse(saved).tunes[0].parts.soprano.notes.length > 0);
 let row = $('library').rows[0];
 row.querySelector('.act-load').click();
 assert($('playOrigBtn').disabled); assert(revoked > 0);
 assert($('sheetBody').innerHTML.includes('B4'));
+assert.equal($('partSel').value, 'soprano');
 row.querySelector('.act-share').click(); assert(shared.includes('B4'));
 row.querySelector('.act-del').click(); assert.equal(JSON.parse(saved).tunes.length, 0);
+// Older version 1.0 saves remain usable, but do not pretend to contain SATB.
+saved = JSON.stringify({ tunes: [{ id: 'legacy', title: 'Old tune', tune: { notes: [{ midi: 60, start: 0, end: 1, dur: 1 }], key: { rootPc: 0, mode: 'major', name: 'C Major' }, bpm: 120, duration: 1 } }] });
+vm.runInContext(read('app.js'), sandbox);
+$('library').rows[0].querySelector('.act-load').click();
+assert($('sharePartsBtn').disabled);
+$('partSel').value = 'alto'; $('partSel').dispatch('change');
+assert.equal($('partSel').value, 'main');
+assert($('sheetBody').innerHTML.includes('C4'));
 decodeFail = true;
 await upload('broken.mp3');
 assert($('status').textContent.includes('Could not analyze'));

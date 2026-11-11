@@ -2,11 +2,11 @@
 # ============================================================================
 # Choir Tune Finder — Android APK build (offline toolchain).
 #
-# Upload any song (mp3/wav/m4a/ogg/flac/webm) and the app extracts the lead
-# melody — "the choir's tune" — fully on-device: piano roll + timed tune
-# sheet, detected key & BPM, synth playback of the tune, transpose, save to
+# Upload a song and estimate its main melody plus SATB pitches on-device:
+# piano roll + timed sheet with measured Hz, estimated key/BPM, synth
+# playback of each part, transpose, save all parts to
 # a library, share as text, export as .mid (Downloads/ChoirTune).
-# Package com.choirtune.app, versionName 1.0 / versionCode 1.
+# Package com.choirtune.app, versionName 1.1 / versionCode 2.
 #
 # Pipeline (same as the other APKs in this repo):
 #   1. Validate the web shell (node web/test_web.mjs — incl. a functional
@@ -18,7 +18,7 @@
 #   5. python pack_apk.py: align + add classes.dex
 #   6. apksigner: v1+v2 sign with the debug keystore
 #
-# Output: android-choirtune/app/build/ChoirTune-1.0.apk
+# Output: android-choirtune/app/build/ChoirTune-1.1.apk
 #         (also copied to the repo root as ChoirTune.apk)
 # ============================================================================
 set -euo pipefail
@@ -50,10 +50,11 @@ fi
 echo "==> [1/6] Validating web shell (incl. DSP extraction test) + staging web app into APK assets"
 node "$WEB/test_web.mjs"
 node "$WEB/test_app.mjs"
+node "$WEB/test_satb.mjs"
 
 rm -rf "$WWW"
 mkdir -p "$WWW/img"
-cp "$WEB/index.html" "$WEB/styles.css" "$WEB/app.js" "$WEB/melody.js" "$WWW/"
+cp "$WEB/index.html" "$WEB/styles.css" "$WEB/app.js" "$WEB/melody.js" "$WEB/satb.js" "$WWW/"
 cp "$WEB/img/"*.png "$WWW/img/"
 
 python3 "$ROOT/scripts/check_no_emoji.py" "$WEB" "$APP/src/main"
@@ -85,7 +86,7 @@ rm -f "$BUILD/res.zip" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" "$BUILD"/Choir
     -I "$TOOLS/android.jar" \
     --manifest "$APP/src/main/AndroidManifest.xml" \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 1 --version-name 1.0 \
+    --version-code 2 --version-name 1.1 \
     "$BUILD/res.zip" \
     -A "$APP/src/main/assets"
 
@@ -98,17 +99,17 @@ echo "==> [6/6] Signing (apksigner, v1+v2, debug key)"
     --ks-key-alias androiddebugkey \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD/ChoirTune-1.0.apk" \
+    --out "$BUILD/ChoirTune-1.1.apk" \
     "$BUILD/aligned.apk"
 
 echo "==> Verifying signature"
-"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/ChoirTune-1.0.apk"
+"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/ChoirTune-1.1.apk"
 
 echo "==> APK badging"
-"$TOOLS/aapt2" dump badging "$BUILD/ChoirTune-1.0.apk" > "$BUILD/badging.txt" || true
+"$TOOLS/aapt2" dump badging "$BUILD/ChoirTune-1.1.apk" > "$BUILD/badging.txt" || true
 head -25 "$BUILD/badging.txt"
 
-cp "$BUILD/ChoirTune-1.0.apk" "$ROOT/ChoirTune.apk"
+cp "$BUILD/ChoirTune-1.1.apk" "$ROOT/ChoirTune.apk"
 echo
-echo "DONE: $BUILD/ChoirTune-1.0.apk"
+echo "DONE: $BUILD/ChoirTune-1.1.apk"
 echo "      (also copied to $ROOT/ChoirTune.apk)"

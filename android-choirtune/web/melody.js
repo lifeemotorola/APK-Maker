@@ -254,7 +254,8 @@
         var end = Math.min(duration, ((cur.lastFrame + 1) * HOP + FRAME / 2) / TARGET_SR);
         var dur = end - start;
         if (dur >= MIN_NOTE_SEC) {
-          notes.push({ midi: cur.midi, start: +start.toFixed(3), end: +end.toFixed(3), dur: +dur.toFixed(3) });
+          var measured = cur.count ? cur.hzSum / cur.count : 440 * Math.pow(2, (cur.midi - 69) / 12);
+          notes.push({ midi: cur.midi, start: +start.toFixed(3), end: +end.toFixed(3), dur: +dur.toFixed(3), frequencyHz: +measured.toFixed(2) });
         }
         cur = null;
       }
@@ -269,9 +270,11 @@
       gap = 0;
       if (cur && cur.midi === m) {
         cur.lastFrame = f4;
+        if (f0[f4] > 0 && Math.abs(69 + 12 * Math.log2(f0[f4] / 440) - m) < 0.6) { cur.hzSum += f0[f4]; cur.count++; }
       } else {
         closeNote();
-        cur = { midi: m, startFrame: f4, lastFrame: f4 };
+        var validHz = f0[f4] > 0 && Math.abs(69 + 12 * Math.log2(f0[f4] / 440) - m) < 0.6;
+        cur = { midi: m, startFrame: f4, lastFrame: f4, hzSum: validHz ? f0[f4] : 0, count: validHz ? 1 : 0 };
       }
     }
     closeNote();
@@ -307,6 +310,10 @@
     return result.value;
   }
 
+  function noteFrequency(note, transpose) {
+    return (note.frequencyHz || 440 * Math.pow(2, (note.midi - 69) / 12)) * Math.pow(2, (transpose || 0) / 12);
+  }
+
   function formatTime(sec) {
     if (!isFinite(sec) || sec < 0) return '0:00';
     var m = Math.floor(sec / 60);
@@ -323,15 +330,15 @@
     var keyName = names[((tune.key.rootPc + transpose) % 12 + 12) % 12] + (tune.key.mode === 'minor' ? ' Minor' : ' Major');
     L.push('Estimated key: ' + keyName + '   Tempo: ' + tune.bpm + ' BPM   Length: ' + formatTime(tune.duration) + '   Notes: ' + tune.notes.length);
     if (transpose) L.push('Transposed ' + transpose + ' semitones from source key ' + tune.key.name + '.');
-    L.push('Single-melody estimate, not separate SATB parts. Check against the recording.');
+    L.push(tune.voice ? 'Estimated ' + tune.voice + ' pitches (range-guided, not isolated audio).' : 'Single-melody estimate. Check against the recording.');
     L.push('');
-    L.push('#   Note   Start    Dur     Beats');
+    L.push('#   Note   Pitch Hz   Start seconds   Dur     Beats');
     var beat = 60 / (tune.bpm || 120);
     tune.notes.forEach(function (n, i) {
       var name = midiToName(n.midi + transpose, useFlats);
       L.push(
         String(i + 1).padStart(2) + '  ' + name.padEnd(4) +
-        '  ' + formatTime(n.start) + '  ' + n.dur.toFixed(2) + 's  ' + (n.dur / beat).toFixed(1)
+        '  ' + noteFrequency(n, transpose).toFixed(1) + '  ' + n.start.toFixed(3) + '  ' + n.dur.toFixed(2) + 's  ' + (n.dur / beat).toFixed(1)
       );
     });
     L.push('');
@@ -399,10 +406,12 @@
   }
 
   return {
+    dsp: { resample: resample, fft: fft, hannWindow: hannWindow },
     extractTune: extractTune,
     extractTuneAsync: extractTuneAsync,
     estimateKey: estimateKey,
     midiToName: midiToName,
+    noteFrequency: noteFrequency,
     tuneToText: tuneToText,
     tuneToMidiBytes: tuneToMidiBytes,
     bytesToBase64: bytesToBase64,

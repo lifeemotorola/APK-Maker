@@ -9,6 +9,10 @@
   var $ = function (id) { return document.getElementById(id); };
   var N = window.ChoirTune || null;
   var M = window.ChoirTuneMelody;
+  var S = window.ChoirTuneSATB;
+  var selectedPart = 'main';
+  function activeTune() { return selectedPart !== 'main' && current.parts && current.parts[selectedPart] ? current.parts[selectedPart] : current.tune; }
+  function partTitle() { return current.title + ' - ' + (activeTune().voice || 'Main melody'); }
 
   // ---------------- state ----------------
   var state = { tunes: [] };
@@ -94,17 +98,23 @@
         for (var i = 0; i < pcm.length; i++) pcm[i] += d[i] / audioBuf.numberOfChannels;
       }
       var tune = await M.extractTuneAsync(pcm, audioBuf.sampleRate, function (fraction) {
-        if (job === analysisId) setStatus('Finding the main melody: ' + Math.round(fraction * 100) + '%');
+        if (job === analysisId) setStatus('Finding main melody: ' + Math.round(fraction * 35) + '%');
       }, function () { return job !== analysisId; });
       if (job !== analysisId) return;
+      var parts = await S.extractSATBAsync(pcm, audioBuf.sampleRate, tune, function (fraction) {
+        if (job === analysisId) setStatus('Estimating SATB pitches: ' + Math.round(35 + fraction * 65) + '%');
+      }, function () { return job !== analysisId; });
+      if (job !== analysisId) return;
+      selectedPart = 'main';
+      $('partSel').value = 'main';
       transpose = 0;
       $('transposeSel').value = '0';
       origAudio = new Audio();
       origAudio.src = URL.createObjectURL(file);
       origAudio.onended = function () { $('playOrigBtn').textContent = 'Play original'; };
-      current = { title: file.name.replace(/\.[^.]+$/, ''), tune: tune };
+      current = { title: file.name.replace(/\.[^.]+$/, ''), tune: tune, parts: parts };
       renderResults();
-      setStatus(tune.notes.length ? 'Estimated main melody. Check it against the recording.' : 'No clear melody found. Try a clearer vocal recording.');
+      setStatus('Choose a part to inspect pitches in Hz and hear its estimated notes. Check voice assignments against the recording.');
     } catch (err) {
       if (ctx) ctx.close().catch(function () {});
       if (job === analysisId) setStatus('Could not analyze song: ' + (err && err.message ? err.message : 'unsupported or damaged audio file'));
@@ -114,8 +124,12 @@
   // ---------------- render results ----------------
   function renderResults() {
     if (!current) return;
-    var t = current.tune;
+    var t = activeTune();
     $('playOrigBtn').disabled = !origAudio;
+    $('sharePartsBtn').disabled = !current.parts;
+    $('partSummary').textContent = current.parts ? S.VOICES.slice().reverse().map(function (v) {
+      return v.name + ': ' + current.parts[v.id].notes.length + ' estimated notes (' + M.midiToName(v.min) + '-' + M.midiToName(v.max) + ')';
+    }).join(' / ') : 'Older saved tune: SATB data unavailable. Choose the song again to analyze its parts.';
     $('results').classList.remove('hidden');
     $('songInfo').innerHTML =
       '<div class="stat"><div class="n">' + esc(current.title) + '</div><div class="l">song</div></div>' +
@@ -129,18 +143,18 @@
   }
 
   function renderSheet() {
-    var t = current.tune;
+    var t = activeTune();
     var beat = 60 / (t.bpm || 120);
     $('sheetBody').innerHTML = t.notes.map(function (n, i) {
       return '<tr><td>' + (i + 1) + '</td><td class="note">' + esc(M.midiToName(n.midi + transpose)) +
-        '</td><td>' + M.formatTime(n.start) + '</td><td>' + n.dur.toFixed(2) + 's</td><td>' +
+        '</td><td>' + M.noteFrequency(n, transpose).toFixed(1) + '</td><td>' + n.start.toFixed(3) + '</td><td>' + n.dur.toFixed(2) + 's</td><td>' +
         (n.dur / beat).toFixed(1) + '</td></tr>';
-    }).join('') || '<tr><td colspan="5" class="dim">no melody detected — try a song with a clear lead vocal/instrument</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="dim">no stable pitches estimated for this part; try a clearer vocal recording</td></tr>';
   }
 
   function drawRoll(playheadSec) {
     var canvas = $('roll');
-    var t = current.tune;
+    var t = activeTune();
     var dpr = window.devicePixelRatio || 1;
     var w = canvas.clientWidth || 600;
     var h = 190;
@@ -171,7 +185,7 @@
     t.notes.forEach(function (n) {
       var x0 = xOf(n.start), x1 = Math.max(x0 + 2, xOf(n.end));
       var y = yOf(n.midi + transpose);
-      ctx.fillStyle = 'rgba(56,189,248,0.85)';
+      ctx.fillStyle = (S.VOICES.filter(function (v) { return v.id === selectedPart; })[0] || { color: '#38bdf8' }).color;
       ctx.strokeStyle = 'rgba(186,230,253,0.9)';
       var bh = Math.max(4, (h - 12) / span - 2);
       ctx.beginPath();
@@ -215,12 +229,11 @@
     var AC = window.AudioContext || window.webkitAudioContext;
     var ctx = new AC();
     if (ctx.state === 'suspended') ctx.resume().catch(function () {});
-    var t = current.tune;
+    var t = activeTune();
     var t0 = ctx.currentTime + 0.05;
     var oscs = [];
     t.notes.forEach(function (n) {
-      var midi = n.midi + transpose;
-      var freq = 440 * Math.pow(2, (midi - 69) / 12);
+      var freq = M.noteFrequency(n, transpose);
       var osc = ctx.createOscillator();
       osc.type = 'triangle';
       osc.frequency.value = freq;
@@ -264,6 +277,24 @@
     if (current) { renderSheet(); drawRoll(0); }
   });
 
+  $('partSel').addEventListener('change', function () {
+    if (!current) return;
+    stopTune();
+    selectedPart = $('partSel').value;
+    if (selectedPart !== 'main' && (!current.parts || !current.parts[selectedPart])) {
+      selectedPart = 'main'; $('partSel').value = 'main';
+      toast('Re-upload this older saved song to estimate SATB pitches.');
+    }
+    renderResults();
+    if (!activeTune().notes.length) toast('No stable pitches estimated for this part.');
+  });
+  $('sharePartsBtn').addEventListener('click', function () {
+    if (!current || !current.parts) return;
+    var text = S.partsToText(current.parts, current.title, transpose);
+    if (N) N.shareText('Estimated SATB pitches - ' + current.title, text);
+    else downloadText(text, current.title + '_SATB');
+  });
+
   // ---------------- save / export ----------------
   $('saveBtn').addEventListener('click', function () {
     if (!current) return;
@@ -273,6 +304,8 @@
       savedAt: new Date().toISOString(),
       transpose: transpose,
       tune: current.tune,
+      parts: current.parts || null,
+      selectedPart: selectedPart,
     };
     state.tunes.unshift(entry);
     state.tunes = state.tunes.slice(0, 50);
@@ -283,16 +316,16 @@
 
   $('exportTxtBtn').addEventListener('click', function () {
     if (!current) return;
-    var text = M.tuneToText(current.tune, current.title, transpose);
+    var text = M.tuneToText(activeTune(), partTitle(), transpose);
     if (N) N.shareText('Choir tune — ' + current.title, text);
     else downloadText(text, current.title);
   });
 
   $('exportMidBtn').addEventListener('click', function () {
     if (!current) return;
-    var bytes = M.tuneToMidiBytes(current.tune, current.tune.bpm, transpose);
+    var bytes = M.tuneToMidiBytes(activeTune(), activeTune().bpm, transpose);
     var b64 = M.bytesToBase64(bytes);
-    var name = current.title.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_tune.mid';
+    var name = partTitle().replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_tune.mid';
     if (N) {
       var path = N.saveFile(name, b64, 'audio/midi');
       toast(path === 'pending-permission' ? 'grant storage permission to save'
@@ -341,13 +374,15 @@
         stopTune();
         clearOriginal();
         setStatus('Saved tune opened. Original audio is not stored.');
-        current = { title: entry.title, tune: entry.tune };
+        current = { title: entry.title, tune: entry.tune, parts: entry.parts || null };
+        selectedPart = entry.selectedPart && entry.parts ? entry.selectedPart : 'main';
+        $('partSel').value = selectedPart;
         transpose = entry.transpose || 0;
         $('transposeSel').value = String(transpose);
         renderResults();
       });
       row.querySelector('.act-share').addEventListener('click', function () {
-        var text = M.tuneToText(entry.tune, entry.title, entry.transpose || 0);
+        var text = entry.parts ? S.partsToText(entry.parts, entry.title, entry.transpose || 0) : M.tuneToText(entry.tune, entry.title, entry.transpose || 0);
         if (N) N.shareText('Choir tune — ' + entry.title, text);
         else downloadText(text, entry.title);
       });

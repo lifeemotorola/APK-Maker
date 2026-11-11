@@ -14,7 +14,7 @@
       <img src="img/icon.png" alt="Choir Tune Finder" class="brand-icon" />
       <div>
         <h1>Choir Tune Finder</h1>
-        <div class="tagline">find the main melody for choir practice</div>
+        <div class="tagline">main melody and estimated SATB pitches for choir practice</div>
       </div>
     </div>
   </header>
@@ -28,18 +28,27 @@
       <button id="pickBtn" class="btn primary">Choose song</button>
       <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac" class="hidden" />
     </div>
-    <p class="dim help">Estimates one main melody, not separate soprano, alto, tenor or bass parts.
-      Best with a clear solo voice or melody instrument. Accompaniment and overlapping voices can confuse detection.
-      Key and tempo are estimates, not verified sheet music.</p>
+    <p class="dim help">Estimates pitches for Soprano (C4-C6), Alto (G3-D5), Tenor (C3-A4), and Bass (E2-E4).
+      These are overlapping guide ranges, not rules about a singer's gender or voice type.
+      SATB labels are inferred from pitch and continuity, not isolated voices. Instruments, unison and crossing parts can mislead.
+      Best with clear unaccompanied singing. Empty tracks mean no reliable pitch estimate, not that a voice is absent.</p>
     <div id="status" role="status" aria-live="polite" class="status"></div>
   </section>
 
   <!-- RESULTS -->
   <section id="results" class="card hidden">
-    <h2 class="sect">2 · Estimated main melody</h2>
+    <h2 class="sect">2 · Estimated choir pitches</h2>
     <div class="songinfo" id="songInfo"></div>
+    <label class="fld">Part to view, play and export
+      <select id="partSel" class="input">
+        <option value="main">Main melody</option>
+        <option value="soprano">Soprano</option><option value="alto">Alto</option>
+        <option value="tenor">Tenor</option><option value="bass">Bass</option>
+      </select>
+    </label>
+    <div id="partSummary" class="dim help" aria-live="polite"></div>
     <div class="row">
-      <button id="playTuneBtn" class="btn primary">Play tune</button>
+      <button id="playTuneBtn" class="btn primary">Play estimated part</button>
       <button id="stopTuneBtn" class="btn">Stop</button>
       <button id="playOrigBtn" class="btn">Play original</button>
       <label class="fld inline">Transpose
@@ -55,12 +64,13 @@
     <div class="row">
       <button id="saveBtn" class="btn">Save to library</button>
       <button id="exportTxtBtn" class="btn">Share tune sheet</button>
-      <button id="exportMidBtn" class="btn">Export .mid</button>
+      <button id="exportMidBtn" class="btn">Export part .mid</button>
+      <button id="sharePartsBtn" class="btn">Share all SATB pitches</button>
     </div>
     <canvas id="roll" class="roll" aria-label="Estimated melody piano roll"></canvas>
     <div class="tablewrap">
       <table class="sheet">
-        <thead><tr><th>#</th><th>Note</th><th>Start</th><th>Dur</th><th>Beats</th></tr></thead>
+        <thead><tr><th>#</th><th>Note</th><th>Pitch Hz</th><th>Start (s)</th><th>Dur</th><th>Beats</th></tr></thead>
         <tbody id="sheetBody"></tbody>
       </table>
     </div>
@@ -76,6 +86,7 @@
 </main>
 
 <script src="melody.js"></script>
+<script src="satb.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
