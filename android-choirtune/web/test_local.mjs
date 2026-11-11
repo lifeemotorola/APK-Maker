@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 const source = readFileSync(new URL('local.js', import.meta.url), 'utf8');
-function harness({ available = true, failBegin = '', failAppend = '', phases = ['loading', 'processing', 'done'], pending = false, badOutput = false, duration = 0.25, clockStep = 0 } = {}) {
+function harness({ available = true, failBegin = '', failAppend = '', phases = ['loading', 'processing', 'done'], nativeError = 'Test native failure', pending = false, badOutput = false, duration = 0.25, clockStep = 0 } = {}) {
   const elements = {}, calls = [], timers = [];
   let statusIndex = 0;
   const element = (id) => elements[id] ||= {
@@ -23,7 +23,7 @@ function harness({ available = true, failBegin = '', failAppend = '', phases = [
     demucsStart() { calls.push(['start']); return ''; },
     demucsStatus() {
       const phase = pending ? 'processing' : phases[Math.min(statusIndex++, phases.length - 1)];
-      return JSON.stringify({ phase, progress: pending ? 0.5 : Math.min(0.9, statusIndex * 0.2), error: phase === 'error' ? 'Test native failure' : '' });
+      return JSON.stringify({ phase, progress: pending ? 0.5 : Math.min(0.9, statusIndex * 0.2), error: phase === 'error' ? nativeError : '' });
     },
     demucsCancel() { calls.push(['cancel']); },
     demucsExport() { calls.push(['export']); }
@@ -83,7 +83,7 @@ const browser = harness({ available: false });
 assert.equal(browser.api.enabled(), false);
 assert.equal(browser.elements.useDemucs.disabled, true);
 await assert.rejects(browser.api.isolate(audio, () => {}), /not available/);
-for (const options of [{ failBegin: 'Not enough memory' }, { failAppend: 'Invalid size' }, { phases: ['error'] }, { badOutput: true }]) {
+for (const options of [{ failBegin: 'Could not prepare private audio storage' }, { failAppend: 'Invalid size' }, { phases: ['error'] }, { badOutput: true }]) {
   const test = harness(options);
   await assert.rejects(test.api.isolate(audio, () => {}));
   assert.equal(test.api.busy(), false);
@@ -91,6 +91,14 @@ for (const options of [{ failBegin: 'Not enough memory' }, { failAppend: 'Invali
   if (!options.failBegin) assert.ok(test.calls.some(([kind]) => kind === 'cancel'));
   else assert.equal(test.calls.some(([kind]) => kind === 'start'), false);
 }
+// Inference is attempted even without a RAM eligibility check. A REAL native
+// allocation failure must still be surfaced and cleaned up, never hidden.
+const oom = harness({ phases: ['processing', 'error'], nativeError: 'Demucs ran out of working memory on this device. No preset RAM limit was applied.' });
+await assert.rejects(oom.api.isolate(audio, () => {}), /No preset RAM limit was applied/);
+assert.ok(oom.calls.some(([kind]) => kind === 'start'));
+assert.ok(oom.calls.some(([kind]) => kind === 'cancel'));
+assert.equal(oom.calls.some(([kind]) => kind === 'fetch'), false);
+assert.equal(oom.api.busy(), false);
 const cancel = harness({ pending: true });
 const operation = cancel.api.isolate(audio, () => {});
 await new Promise((resolve) => setImmediate(resolve));
@@ -121,4 +129,4 @@ const slow = harness({ clockStep: 15 * 60 * 1000 });
 await slow.api.isolate(audio, () => {}); // progress continues beyond old 20-minute cutoff
 const stalled = harness({ clockStep: 31 * 60 * 1000 });
 await assert.rejects(stalled.api.isolate(audio, () => {}), /no progress/);
-console.log('CHOIRTUNE LOCAL TEST: stereo transport, native errors, memory rejection, 15-minute bounds, bounded resampling, long transport and stall watchdog, cancellation, stale jobs, offline output and export PASSED');
+console.log('CHOIRTUNE LOCAL TEST: stereo transport, native errors, storage startup errors, 15-minute bounds, bounded resampling, long transport and stall watchdog, cancellation, stale jobs, offline output and export PASSED');

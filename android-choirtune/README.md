@@ -1,4 +1,4 @@
-# Choir Tune Finder 1.5 - Android APK
+# Choir Tune Finder 1.5.1 - Android APK
 
 Upload a song to estimate its **main melody and Soprano, Alto, Tenor, and Bass
 pitches** on-device, with an optional, explicitly consented server-assisted
@@ -7,9 +7,9 @@ ARM64 C++ runtime for offline blended-vocal isolation. Offline analysis and the 
 without an account or server.
 
 - Package: `com.choirtune.app`, label **Choir Tune Finder**
-- Version **1.5** / versionCode **6** (updates earlier versions with the same signing key)
+- Version **1.5.1** / versionCode **7** (updates earlier versions with the same signing key)
 - minSdk 23 / targetSdk 34; a recent Android System WebView is required
-- Artifact: `android-choirtune/app/build/ChoirTune-1.5.apk`
+- Artifact: `android-choirtune/app/build/ChoirTune-1.5.1.apk`
 - Root download copy: `ChoirTune.apk` (gitignored)
 
 ## Bundled offline Demucs (1.5 full-song processing)
@@ -63,9 +63,13 @@ full by WebAudio**, so this is bounded neural inference, not a constant-memory
 end-to-end audio decoder. File format, sample rate, channels, WebView heap and
 Android memory pressure still affect whether a device can complete a long job.
 
-**Memory and time:** approximately 6 GB device RAM is recommended; at least
-2.5 GB currently available RAM is checked after decoding. Devices below about
-4 GB physical RAM are refused. Free disk space is checked for the input PCM,
+**Memory and time:** version 1.5.1 removes the preset RAM eligibility check.
+No reported free-RAM, total-RAM or Android low-memory flag prevents a user
+from attempting inference. This does **not** reduce the model's actual working
+memory or guarantee that a low-memory phone can run it. Actual Java/native
+allocation failures remain visible; Android can also kill the process before
+an error can be shown. There is no automatic fallback to ordinary estimates.
+Free disk space is still checked for the input PCM,
 WAV, mono analysis, model and a safety margin; allow roughly **500 MB internal
 storage for 15 minutes**. A one-second real-model host test uses roughly 1.7 GB
 RSS; it is not a phone-speed benchmark. **Full-song isolation may take hours**,
@@ -324,7 +328,7 @@ The native smoke test loads all 533 actual checkpoint tensors, performs learned
 inference, checks a non-passthrough stereo 44.1 kHz WAV of the exact duration,
 and rejects malformed/oversized/silent input. Synthetic tones do **not** assess
 choir separation quality. The local JS harness covers PCM stereo interleaving,
-15-minute limits, bounded resampling and multi-chunk transfer, memory rejection,
+15-minute limits, bounded resampling and multi-chunk transfer, native startup/allocation errors,
 polling/stall watchdog, cancellation, stale work, mono analysis retrieval and
 native streaming export. App tests verify that the **vocal output**, not original
 PCM, feeds pitch extraction and that native failures never silently fall back.

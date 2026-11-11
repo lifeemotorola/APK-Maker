@@ -27,6 +27,10 @@ def verify(path):
         assert '15 minutes / 250 MB' in apk.read('assets/www/index.html').decode()
         assert 'SATB estimates' in apk.read('assets/www/app.js').decode()
         assert 'synthesized pitch guides' in apk.read('assets/www/index.html').decode()
+        assert 'no preset minimum-RAM check' in apk.read('assets/www/index.html').decode()
+        dex = apk.read('classes.dex')
+        assert b'Demucs needs at least 2.5 GB currently available RAM' not in dex, 'Obsolete RAM gate shipped in APK'
+        assert b'No preset RAM limit was applied.' in dex, 'Missing real allocation-failure explanation'
         elf = apk.read('lib/arm64-v8a/libchoirdemucs.so')
         assert elf[:6] == b'\x7fELF\x02\x01', 'Need little-endian ELF64'
         assert struct.unpack_from('<H', elf, 18)[0] == 183, 'Need AArch64'
