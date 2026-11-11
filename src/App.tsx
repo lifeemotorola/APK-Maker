@@ -1,6 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
-  Bluetooth,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -12,12 +17,25 @@ import {
   Pause,
   Play,
   Repeat,
-  RotateCcw,
-  Sparkles,
   Upload,
   Volume2,
   VolumeX,
-} from 'lucide-react';
+  MoreHorizontal,
+  Star,
+  Piano,
+  Guitar,
+  SlidersHorizontal,
+  Maximize,
+  Minimize,
+  FastForward,
+  Rewind,
+  AudioLines,
+  Settings,
+  FolderOpen,
+  Home,
+  Check,
+  X,
+} from "lucide-react";
 import {
   ChordBlock,
   DemoTrack,
@@ -25,36 +43,46 @@ import {
   SongAnalysis,
   SynthTone,
   VoicingMode,
-} from './types';
+} from "./types";
 import {
   chordIsInKey,
   formatPrimaryChordLabel,
   getActiveChordMidiNotes,
-  getSongProgression,
   midiToNoteName,
   mod12,
   transposeChordSymbol,
   transposeKeyInfo,
-} from './lib/musicTheory';
-import { pianoSynth, transcodeFileToMonoWav } from './lib/pianoSynth';
-import { apiFetch } from './lib/api';
-import { isAndroidNative, subscribeNativeMidi } from './lib/nativeBridge';
-import { buildMidiFromAnalysis, downloadBytes } from './lib/midiExport';
-import { WaveformTimeline } from './components/WaveformTimeline';
-import { ChordTracker } from './components/ChordTracker';
-import { StudioPiano } from './components/StudioPiano';
-import { ChordDictionaryGrid } from './components/ChordDictionaryGrid';
-import { KeyHarmonyPanel } from './components/KeyHarmonyPanel';
-import { LiveMicModal } from './components/LiveMicModal';
-import { MidiPanel } from './components/MidiPanel';
+  formatTime,
+} from "./lib/musicTheory";
+import { pianoSynth, transcodeFileToMonoWav } from "./lib/pianoSynth";
+import { apiFetch } from "./lib/api";
+import { isAndroidNative, subscribeNativeMidi } from "./lib/nativeBridge";
+import { buildMidiFromAnalysis, downloadBytes } from "./lib/midiExport";
+import { WaveformTimeline } from "./components/WaveformTimeline";
+import { ChordTracker } from "./components/ChordTracker";
+import { StudioPiano } from "./components/StudioPiano";
+import { ChordDictionaryGrid } from "./components/ChordDictionaryGrid";
+import { KeyHarmonyPanel } from "./components/KeyHarmonyPanel";
+import { LiveMicModal } from "./components/LiveMicModal";
+import { PracticeBoard } from "./components/PracticeBoard";
+import {
+  PracticeKeyboard,
+  ChordStaff,
+  GuitarDiagram,
+} from "./components/InstrumentViews";
+import { AdvancedTool } from "./components/AdvancedTool";
+import { StudioDialog } from "./components/StudioDialog";
+import { MidiPanel } from "./components/MidiPanel";
 
 export const App: React.FC = () => {
   const [demos, setDemos] = useState<DemoTrack[]>([]);
-  const [activeDemoId, setActiveDemoId] = useState<string>('gospel-sunrise');
+  const [activeDemoId, setActiveDemoId] = useState<string>("gospel-sunrise");
   const [analysis, setAnalysis] = useState<SongAnalysis | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>('');
+  const [audioUrl, setAudioUrl] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(true);
-  const [analyzeStatus, setAnalyzeStatus] = useState<string>('Loading studio session...');
+  const [analyzeStatus, setAnalyzeStatus] = useState<string>(
+    "Loading studio session...",
+  );
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [isDraggingFile, setIsDraggingFile] = useState<boolean>(false);
 
@@ -73,11 +101,31 @@ export const App: React.FC = () => {
 
   // Harmony, Piano & Transpose Controls
   const [transpose, setTranspose] = useState<number>(0);
-  const [notation, setNotation] = useState<NotationMode>('chord');
-  const [voicingMode, setVoicingMode] = useState<VoicingMode>('smooth');
-  const [synthTone, setSynthTone] = useState<SynthTone>('grand');
+  const [notation, setNotation] = useState<NotationMode>("chord");
+  const [voicingMode, setVoicingMode] = useState<VoicingMode>("smooth");
+  const [synthTone, setSynthTone] = useState<SynthTone>("grand");
   const [playAlongVolume, setPlayAlongVolume] = useState<number>(0.25);
-  const [bottomTab, setBottomTab] = useState<'chords' | 'harmony' | 'tracker'>('chords');
+  const [bottomTab, setBottomTab] = useState<
+    "staff" | "keyboard" | "guitar" | "settings"
+  >("keyboard");
+  const [homePage, setHomePage] = useState<
+    "home" | "demos" | "favorites" | "user" | null
+  >(null);
+  const [focusMode, setFocusMode] = useState(false);
+  const [dialog, setDialog] = useState<"more" | "chord" | null>(null);
+  const [sections, setSections] = useState<Record<number, string>>({});
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("keysense.favorites") || "[]",
+      );
+      return Array.isArray(saved)
+        ? saved.filter((id) => typeof id === "string")
+        : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Live Mic Modal
   const [micOpen, setMicOpen] = useState<boolean>(false);
@@ -108,7 +156,7 @@ export const App: React.FC = () => {
     const el = audioRef.current;
     if (!el) return;
     el.playbackRate = playbackRate;
-    if ('preservesPitch' in el) {
+    if ("preservesPitch" in el) {
       el.preservesPitch = true;
     }
   }, [playbackRate, audioUrl]);
@@ -117,15 +165,15 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (!isAndroidNative()) return;
     const unsub = subscribeNativeMidi((ev) => {
-      if (ev.type === 'noteOn') {
+      if (ev.type === "noteOn") {
         pianoSynth.noteOn(ev.note, Math.max(0.15, (ev.vel || 100) / 127), 3.2);
         nativeMidiNotesRef.current.add(ev.note);
         setLiveMicMidi([...nativeMidiNotesRef.current].sort((a, b) => a - b));
-      } else if (ev.type === 'noteOff') {
+      } else if (ev.type === "noteOff") {
         pianoSynth.noteOff(ev.note);
         nativeMidiNotesRef.current.delete(ev.note);
         setLiveMicMidi([...nativeMidiNotesRef.current].sort((a, b) => a - b));
-      } else if (ev.type === 'deviceDisconnected') {
+      } else if (ev.type === "deviceDisconnected") {
         pianoSynth.stopAll();
         nativeMidiNotesRef.current.clear();
         setLiveMicMidi([]);
@@ -135,47 +183,60 @@ export const App: React.FC = () => {
   }, []);
 
   // Load Demo Tracks Manifest & Initial Demo on Mount
-  const loadDemoTrack = useCallback(async (demoId: string, trackList?: DemoTrack[]) => {
-    setErrorBanner(null);
-    setIsAnalyzing(true);
-    setAnalyzeStatus('Loading studio piano analysis...');
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setTranspose(0);
-    setLoopRange(null);
-    lastAutoPlayedChordRef.current = null;
+  const loadDemoTrack = useCallback(
+    async (demoId: string, trackList?: DemoTrack[]) => {
+      setErrorBanner(null);
+      audioRef.current?.pause();
+      pianoSynth.stopAll();
+      setIsAnalyzing(true);
+      setAnalyzeStatus("Loading studio piano analysis...");
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setTranspose(0);
+      setLoopRange(null);
+      setSections({});
+      lastAutoPlayedChordRef.current = null;
 
-    try {
-      const res = await apiFetch(`/api/demos/${encodeURIComponent(demoId)}`);
-      if (!res.ok) throw new Error(`Failed to load demo track (${res.status})`);
-      const data: SongAnalysis = await res.json();
-      setAnalysis(data);
-      setActiveDemoId(demoId);
+      try {
+        const res = await apiFetch(`/api/demos/${encodeURIComponent(demoId)}`);
+        if (!res.ok)
+          throw new Error(`Failed to load demo track (${res.status})`);
+        const data: SongAnalysis = await res.json();
+        setAnalysis(data);
+        setActiveDemoId(demoId);
 
-      const list = trackList || demos;
-      const found = list.find((d) => d.id === demoId);
-      setAudioUrl(found ? found.audioUrl : `/demos/${demoId}.wav`);
-    } catch (err) {
-      setErrorBanner(err instanceof Error ? err.message : 'Failed to load demo song.');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, [demos]);
+        const list = trackList || demos;
+        const found = list.find((d) => d.id === demoId);
+        setAudioUrl(found ? found.audioUrl : `/demos/${demoId}.wav`);
+      } catch (err) {
+        setErrorBanner(
+          err instanceof Error ? err.message : "Failed to load demo song.",
+        );
+      } finally {
+        setIsAnalyzing(false);
+      }
+    },
+    [demos],
+  );
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch('/api/demos');
+        const res = await apiFetch("/api/demos");
         const json = await res.json();
         if (cancelled) return;
         const list: DemoTrack[] = json.demos || [];
         setDemos(list);
-        const initialId = list[0]?.id || 'gospel-sunrise';
+        const initialId = list[0]?.id || "gospel-sunrise";
         await loadDemoTrack(initialId, list);
       } catch (err) {
         if (!cancelled) {
-          setErrorBanner(err instanceof Error ? err.message : 'Unable to connect to DSP server.');
+          setErrorBanner(
+            err instanceof Error
+              ? err.message
+              : "Unable to connect to DSP server.",
+          );
           setIsAnalyzing(false);
         }
       }
@@ -216,19 +277,11 @@ export const App: React.FC = () => {
 
   // "Relevant progression only": show just the in-key chord progression of the song (default ON)
   const [onlyInKey, setOnlyInKey] = useState<boolean>(true);
-  const progression = useMemo(
-    () => (analysis ? getSongProgression(analysis) : []),
-    [analysis]
-  );
   const visibleChords = useMemo(() => {
     if (!analysis) return [];
     if (!onlyInKey) return analysis.chords;
     return analysis.chords.filter((c) => chordIsInKey(c, analysis.key));
   }, [analysis, onlyInKey]);
-  const visibleAnalysis = useMemo(
-    () => (analysis ? { ...analysis, chords: visibleChords } : null),
-    [analysis, visibleChords]
-  );
 
   // Current & Next Chord Lookup
   const { activeChord, nextChord, activeChordIndex } = useMemo(() => {
@@ -236,7 +289,7 @@ export const App: React.FC = () => {
       return { activeChord: null, nextChord: null, activeChordIndex: -1 };
     }
     let idx = analysis.chords.findIndex(
-      (c) => currentTime >= c.start && currentTime < c.end
+      (c) => currentTime >= c.start && currentTime < c.end,
     );
     if (idx === -1) {
       idx = currentTime >= analysis.duration ? analysis.chords.length - 1 : 0;
@@ -255,37 +308,51 @@ export const App: React.FC = () => {
     lastAutoPlayedChordRef.current = activeChord.id;
 
     const notes = getActiveChordMidiNotes(activeChord, voicingMode, transpose);
-    const dur = Math.min(2.2, Math.max(0.45, activeChord.duration / playbackRate));
+    const dur = Math.min(
+      2.2,
+      Math.max(0.45, activeChord.duration / playbackRate),
+    );
     pianoSynth.auditionChord(notes.lh, notes.rh, dur, playAlongVolume * 0.85);
-  }, [activeChord, isPlaying, playAlongVolume, playbackRate, transpose, voicingMode]);
+  }, [
+    activeChord,
+    isPlaying,
+    playAlongVolume,
+    playbackRate,
+    transpose,
+    voicingMode,
+  ]);
 
   // Upload & Transcode Any Song File
-  const handleAnalyzeAudioBlob = async (fileOrBlob: File | Blob, displayFilename: string) => {
+  const handleAnalyzeAudioBlob = async (
+    fileOrBlob: File | Blob,
+    displayFilename: string,
+  ) => {
     setErrorBanner(null);
     setIsPlaying(false);
+    pianoSynth.stopAll();
     if (audioRef.current) {
       audioRef.current.pause();
     }
     setIsAnalyzing(true);
     setAnalyzeStatus(`Decoding "${displayFilename}"...`);
 
+    let pendingUrl: string | null = null;
     try {
-      // Create crisp browser playback URL from original high-quality file
-      if (customBlobUrlRef.current) {
-        URL.revokeObjectURL(customBlobUrlRef.current);
-      }
+      // Retain the current song until the replacement has analyzed successfully.
       const localPlayUrl = URL.createObjectURL(fileOrBlob);
-      customBlobUrlRef.current = localPlayUrl;
+      pendingUrl = localPlayUrl;
 
       // Transcode in-memory to 22,050Hz 16-bit mono WAV so ANY format (.m4a, .mp4, .mp3, .webm, .wav, .ogg, .flac) analyzes cleanly!
       const wavBlob = await transcodeFileToMonoWav(fileOrBlob);
-      setAnalyzeStatus('Extracting piano keys, chords, basslines & key signature...');
+      setAnalyzeStatus(
+        "Extracting piano keys, chords, basslines & key signature...",
+      );
 
-      const res = await apiFetch('/api/analyze', {
-        method: 'POST',
+      const res = await apiFetch("/api/analyze", {
+        method: "POST",
         headers: {
-          'Content-Type': 'audio/wav',
-          'X-Filename': encodeURIComponent(displayFilename),
+          "Content-Type": "audio/wav",
+          "X-Filename": encodeURIComponent(displayFilename),
         },
         body: wavBlob,
       });
@@ -295,18 +362,25 @@ export const App: React.FC = () => {
         throw new Error(payload.error || `Analysis failed (${res.status})`);
       }
 
+      if (customBlobUrlRef.current)
+        URL.revokeObjectURL(customBlobUrlRef.current);
+      customBlobUrlRef.current = localPlayUrl;
+      pendingUrl = null;
       setAnalysis(payload);
       setAudioUrl(localPlayUrl);
-      setActiveDemoId('custom');
+      setActiveDemoId("custom");
       setCurrentTime(0);
       setTranspose(0);
       setLoopRange(null);
+      setSections({});
+      setHomePage(null);
       lastAutoPlayedChordRef.current = null;
     } catch (err) {
+      if (pendingUrl) URL.revokeObjectURL(pendingUrl);
       setErrorBanner(
         err instanceof Error
           ? err.message
-          : 'Could not decode or analyze this file. Please upload a valid audio/video song file.'
+          : "Could not decode or analyze this file. Please upload a valid audio/video song file.",
       );
     } finally {
       setIsAnalyzing(false);
@@ -318,7 +392,7 @@ export const App: React.FC = () => {
     if (file) {
       handleAnalyzeAudioBlob(file, file.name);
     }
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const togglePlay = useCallback(() => {
@@ -334,15 +408,18 @@ export const App: React.FC = () => {
     }
   }, [audioUrl]);
 
-  const handleSeek = useCallback((sec: number) => {
-    const el = audioRef.current;
-    const clamped = Math.max(0, Math.min(analysis?.duration ?? sec, sec));
-    if (el) {
-      el.currentTime = clamped;
-    }
-    lastAutoPlayedChordRef.current = null;
-    setCurrentTime(clamped);
-  }, [analysis?.duration]);
+  const handleSeek = useCallback(
+    (sec: number) => {
+      const el = audioRef.current;
+      const clamped = Math.max(0, Math.min(analysis?.duration ?? sec, sec));
+      if (el) {
+        el.currentTime = clamped;
+      }
+      lastAutoPlayedChordRef.current = null;
+      setCurrentTime(clamped);
+    },
+    [analysis?.duration],
+  );
 
   const handleSelectChord = useCallback(
     (chord: ChordBlock) => {
@@ -353,12 +430,17 @@ export const App: React.FC = () => {
         pianoSynth.auditionChord(notes.lh, notes.rh, 1.35);
       }
     },
-    [handleSeek, transpose, voicingMode]
+    [handleSeek, transpose, voicingMode],
   );
 
   const handleToggleLoopChord = useCallback(
     (chord: ChordBlock) => {
-      const { primary } = formatPrimaryChordLabel(chord, transpose, useFlats, notation);
+      const { primary } = formatPrimaryChordLabel(
+        chord,
+        transpose,
+        useFlats,
+        notation,
+      );
       setLoopRange((prev) => {
         if (
           prev &&
@@ -371,7 +453,7 @@ export const App: React.FC = () => {
         return { start: chord.start, end: chord.end, label: primary };
       });
     },
-    [handleSeek, notation, transpose, useFlats]
+    [handleSeek, notation, transpose, useFlats],
   );
 
   const stepChord = useCallback(
@@ -379,36 +461,56 @@ export const App: React.FC = () => {
       if (!analysis || !analysis.chords.length) return;
       const nextIdx = Math.max(
         0,
-        Math.min(analysis.chords.length - 1, activeChordIndex + delta)
+        Math.min(analysis.chords.length - 1, activeChordIndex + delta),
       );
       handleSelectChord(analysis.chords[nextIdx]);
     },
-    [activeChordIndex, analysis, handleSelectChord]
+    [activeChordIndex, analysis, handleSelectChord],
   );
 
   // Global Studio Transport Shortcuts (Space = Play/Pause, Arrows = Prev/Next Chord)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
-      if (e.code === 'Space') {
+      if (
+        e.key === "Escape" &&
+        focusMode &&
+        !document.querySelector("dialog[open]")
+      ) {
+        setFocusMode(false);
+        return;
+      }
+      if (
+        homePage ||
+        micOpen ||
+        midiOpen ||
+        document.querySelector("dialog[open]")
+      )
+        return;
+      if (
+        ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A"].includes(
+          (e.target as HTMLElement)?.tagName,
+        )
+      )
+        return;
+      if (e.code === "Space") {
         e.preventDefault();
         togglePlay();
-      } else if (e.code === 'ArrowLeft') {
+      } else if (e.code === "ArrowLeft") {
         e.preventDefault();
         stepChord(-1);
-      } else if (e.code === 'ArrowRight') {
+      } else if (e.code === "ArrowRight") {
         e.preventDefault();
         stepChord(1);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [stepChord, togglePlay]);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stepChord, togglePlay, homePage, micOpen, midiOpen, focusMode]);
 
   // Transpose straight to C Major / A Minor (White Keys helper!)
   const handleTransposeToC = () => {
     if (!analysis) return;
-    const targetRoot = analysis.key.mode === 'major' ? 0 : 9; // C Major (0) or A Minor (9)
+    const targetRoot = analysis.key.mode === "major" ? 0 : 9; // C Major (0) or A Minor (9)
     let diff = mod12(targetRoot - analysis.key.rootPc);
     if (diff > 6) diff -= 12;
     setTranspose(diff);
@@ -422,37 +524,39 @@ export const App: React.FC = () => {
       if (isAndroidNative()) {
         const bytes = buildMidiFromAnalysis(
           analysis,
-          voicingMode === 'detected' ? 'smooth' : voicingMode,
-          transpose
+          voicingMode === "detected" ? "smooth" : voicingMode,
+          transpose,
         );
-        const cleanName = analysis.filename.replace(/\.[^.]+$/, '');
-        const fileName = `${cleanName}_${shiftedKey?.name.replace(/\s+/g, '') || 'KeySense'}.mid`;
-        const savedPath = downloadBytes(fileName, bytes, 'audio/midi');
+        const cleanName = analysis.filename.replace(/\.[^.]+$/, "");
+        const fileName = `${cleanName}_${shiftedKey?.name.replace(/\s+/g, "") || "KeySense"}.mid`;
+        const savedPath = downloadBytes(fileName, bytes, "audio/midi");
         if (savedPath) setAnalyzeStatus(`MIDI exported to ${savedPath}`);
         return;
       }
-      const res = await apiFetch('/api/export-midi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await apiFetch("/api/export-midi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           analysis,
-          voicingMode: voicingMode === 'detected' ? 'smooth' : voicingMode,
+          voicingMode: voicingMode === "detected" ? "smooth" : voicingMode,
           transpose,
         }),
       });
-      if (!res.ok) throw new Error('MIDI export failed');
+      if (!res.ok) throw new Error("MIDI export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const cleanName = analysis.filename.replace(/\.[^.]+$/, '');
+      const a = document.createElement("a");
+      const cleanName = analysis.filename.replace(/\.[^.]+$/, "");
       a.href = url;
-      a.download = `${cleanName}_${shiftedKey?.name.replace(/\s+/g, '') || 'KeySense'}.mid`;
+      a.download = `${cleanName}_${shiftedKey?.name.replace(/\s+/g, "") || "KeySense"}.mid`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setErrorBanner(err instanceof Error ? err.message : 'Failed to export MIDI.');
+      setErrorBanner(
+        err instanceof Error ? err.message : "Failed to export MIDI.",
+      );
     } finally {
       setExportingMidi(false);
     }
@@ -460,9 +564,18 @@ export const App: React.FC = () => {
 
   const activeChordDisplay = useMemo(() => {
     if (!activeChord) return null;
-    const labels = formatPrimaryChordLabel(activeChord, transpose, useFlats, notation);
+    const labels = formatPrimaryChordLabel(
+      activeChord,
+      transpose,
+      useFlats,
+      notation,
+    );
     const details = transposeChordSymbol(activeChord, transpose, useFlats);
-    const midiVoicing = getActiveChordMidiNotes(activeChord, voicingMode, transpose);
+    const midiVoicing = getActiveChordMidiNotes(
+      activeChord,
+      voicingMode,
+      transpose,
+    );
     return {
       ...labels,
       ...details,
@@ -477,15 +590,41 @@ export const App: React.FC = () => {
     return formatPrimaryChordLabel(nextChord, transpose, useFlats, notation);
   }, [nextChord, notation, transpose, useFlats]);
 
-  const chordProgressPct = useMemo(() => {
-    if (!activeChord) return 0;
-    const span = Math.max(0.05, activeChord.end - activeChord.start);
-    return Math.max(0, Math.min(100, ((currentTime - activeChord.start) / span) * 100));
-  }, [activeChord, currentTime]);
+  const title =
+    demos.find((d) => d.id === activeDemoId)?.title ||
+    analysis?.filename ||
+    "Choose a song";
+  const artist =
+    demos.find((d) => d.id === activeDemoId)?.artist ||
+    "Your uploaded recording";
+  const selectedBar = Math.floor(
+    currentTime / ((4 * 60) / (analysis?.bpm || 120)),
+  );
+  const isFavorite = favoriteIds.includes(activeDemoId);
+  const toggleFavorite = () => {
+    if (activeDemoId === "custom") return;
+    const next = isFavorite
+      ? favoriteIds.filter((id) => id !== activeDemoId)
+      : [...favoriteIds, activeDemoId];
+    try {
+      localStorage.setItem("keysense.favorites", JSON.stringify(next));
+      setFavoriteIds(next);
+    } catch {
+      setErrorBanner("Could not save favorites. Check browser/app storage.");
+    }
+  };
+  const returnHome = () => {
+    audioRef.current?.pause();
+    pianoSynth.stopAll();
+    setHomePage("home");
+    setFocusMode(false);
+  };
 
   return (
     <div
-      className="min-h-screen bg-[#080B12] text-slate-100 flex flex-col"
+      className={
+        "keysense-app view-" + bottomTab + (focusMode ? " focus-mode" : "")
+      }
       onDragOver={(e) => {
         e.preventDefault();
         setIsDraggingFile(true);
@@ -500,7 +639,6 @@ export const App: React.FC = () => {
         if (file) handleAnalyzeAudioBlob(file, file.name);
       }}
     >
-      {/* Hidden Audio Element */}
       <audio
         ref={audioRef}
         src={audioUrl || undefined}
@@ -509,614 +647,835 @@ export const App: React.FC = () => {
         onEnded={() => {
           if (loopRange && audioRef.current) {
             audioRef.current.currentTime = loopRange.start;
-            audioRef.current.play().catch(() => {});
-          } else {
-            setIsPlaying(false);
-          }
+            audioRef.current.play().catch(() => setIsPlaying(false));
+          } else setIsPlaying(false);
         }}
       />
-
-      {/* Hidden File Input */}
       <input
         ref={fileInputRef}
         type="file"
+        aria-label="Upload song"
         accept="audio/*,video/mp4,video/webm,.mp3,.wav,.m4a,.ogg,.flac,.aac,.mp4,.webm"
         onChange={handleFileChange}
-        className="hidden"
+        hidden
       />
-
-      {/* Full-Window Drag-and-Drop Overlay */}
       {isDraggingFile && (
-        <div className="fixed inset-0 z-50 bg-sky-950/80 backdrop-blur-md border-4 border-dashed border-sky-400 flex flex-col items-center justify-center p-6 pointer-events-none">
-          <Upload className="w-14 h-14 text-sky-300 mb-3 animate-bounce" />
-          <h2 className="text-2xl font-bold text-white">Drop Any Song to Find Piano Keys &amp; Chords</h2>
-          <p className="text-sm text-sky-200 mt-1">
-            Supports MP3, WAV, M4A, MP4, FLAC, OGG &amp; WebM
-          </p>
+        <div className="song-drop-overlay">
+          <Upload size={44} />
+          <h2>Drop your song here</h2>
+          <p>MP3, WAV, M4A, FLAC and other device-supported formats</p>
         </div>
       )}
 
-      {/* Top Studio Header Bar */}
-      <header className="sticky top-0 z-30 border-b border-slate-800/90 bg-[#0A0E18]/95 backdrop-blur-md">
-        <div className="max-w-[1440px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-          {/* Brand + Active Track Selector */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 via-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-sky-500/20">
-                <div className="w-full h-full rounded-[10px] bg-[#0A0E18] flex items-center justify-center">
-                  <Music className="w-4 h-4 text-sky-400" />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold tracking-tight text-base text-white">
-                    KeySense
-                  </span>
-                  <span className="text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                    Studio
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-none mt-0.5">
-                  Song Piano Key &amp; Chord Intelligence
-                </p>
-              </div>
-            </div>
-
-            <div className="h-6 w-px bg-slate-800 hidden sm:block" />
-
-            {/* Demo Song Selector */}
-            <div className="flex items-center gap-2">
-              <FileAudio className="w-4 h-4 text-amber-400 hidden md:block" />
-              <select
-                value={activeDemoId}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val !== 'custom') loadDemoTrack(val);
-                }}
-                className="rounded-xl bg-[#111827] border border-slate-700/90 text-xs sm:text-sm font-medium text-slate-100 px-3 py-1.5 focus:outline-none focus:border-sky-400 cursor-pointer max-w-[260px] sm:max-w-[320px] truncate"
-              >
-                {activeDemoId === 'custom' && analysis && (
-                  <option value="custom">Uploaded: {analysis.filename}</option>
-                )}
-                <optgroup label="Built-in Studio Demo Songs">
-                  {demos.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.title} ({d.keyName})
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-          </div>
-
-          {/* Primary Actions: Upload Song, Live Mic, Export MIDI */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs sm:text-sm shadow-lg shadow-sky-500/20 transition cursor-pointer"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Song
-            </button>
-
-            <button
-              onClick={() => {
-                if (isPlaying) togglePlay();
-                setMicOpen(true);
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/35 font-medium text-xs sm:text-sm transition cursor-pointer"
-            >
-              <Mic className="w-4 h-4" />
-              Live Mic
-            </button>
-
-            <button
-              onClick={() => setMidiOpen(true)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border font-medium text-xs sm:text-sm transition cursor-pointer ${
-                isAndroidNative()
-                  ? 'bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border-indigo-500/35'
-                  : 'bg-slate-800/90 hover:bg-slate-700 text-slate-400 border-slate-700'
-              }`}
-              title="USB MIDI & Bluetooth (BLE) MIDI controllers — Android APK"
-            >
-              <Bluetooth className="w-4 h-4" />
-              MIDI / BT
-            </button>
-
-            <button
-              onClick={handleExportMidi}
-              disabled={!analysis || exportingMidi}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium text-xs sm:text-sm transition disabled:opacity-40 cursor-pointer"
-              title="Download Multi-Track MIDI (.mid) with Piano Chords + Detected Song Notes"
-            >
-              <Download className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">
-                {exportingMidi ? 'Exporting...' : 'Export MIDI'}
-              </span>
-            </button>
-          </div>
+      <header className="studio-topbar">
+        <button
+          className="icon-button"
+          aria-label={homePage ? "Back to player" : "Open home"}
+          onClick={() => (homePage ? setHomePage(null) : returnHome())}
+        >
+          <ChevronLeft />
+        </button>
+        <div className="studio-wordmark">
+          KeySense <span>STUDIO</span>
         </div>
+        <button
+          className="icon-button more-button"
+          aria-label="Song menu"
+          aria-haspopup="dialog"
+          onClick={() => setDialog("more")}
+        >
+          <MoreHorizontal />
+        </button>
       </header>
 
-      {/* Main Studio Content */}
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 py-4 space-y-4">
-        {errorBanner && (
-          <div className="rounded-xl bg-rose-500/15 border border-rose-500/40 px-4 py-3 text-sm text-rose-200 flex items-center justify-between">
-            <span>{errorBanner}</span>
-            <button
-              onClick={() => setErrorBanner(null)}
-              className="text-xs underline ml-4 cursor-pointer"
-            >
-              Dismiss
-            </button>
+      {errorBanner && (
+        <div className="studio-error" role="alert">
+          <span>{errorBanner}</span>
+          <button
+            className="icon-button"
+            aria-label="Dismiss error"
+            onClick={() => setErrorBanner(null)}
+          >
+            <X />
+          </button>
+        </div>
+      )}
+      {isAnalyzing && (
+        <div className="studio-loading" role="status">
+          <Loader2 className="animate-spin" />
+          <div>
+            <strong>{analyzeStatus}</strong>
+            <p>Estimating the key, timing and chords. Keep this screen open.</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {isAnalyzing && (
-          <div className="rounded-2xl border border-sky-500/30 bg-[#0D1424] p-8 text-center space-y-3">
-            <Loader2 className="w-9 h-9 text-sky-400 animate-spin mx-auto" />
-            <div className="text-base font-semibold text-white">{analyzeStatus}</div>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
-              Running 24-BPO Constant-Q Transform, Harmonic-Percussive separation, key profile matching, and voice-led piano chord transcription...
-            </p>
+      {homePage ? (
+        <main className="studio-home">
+          <div className="home-heading">
+            <p className="eyebrow">YOUR MUSIC, IN PRACTICE</p>
+            <h1>
+              {homePage === "home"
+                ? "Home"
+                : homePage === "demos"
+                  ? "Demo Songs"
+                  : homePage === "favorites"
+                    ? "Favorites"
+                    : "User Songs"}
+            </h1>
+            <p>Listen. Find the harmony. Play along.</p>
           </div>
-        )}
-
-        {!isAnalyzing && analysis && shiftedKey && (
-          <>
-            {/* Transport, Speed, KeyTranspose & Notation Control Bar */}
-            <div className="rounded-2xl border border-slate-800/90 bg-[#0D1320] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-              {/* Left: Transport Play/Pause + Prev/Next Chord + Song Audio Volume + Speed */}
-              <div className="flex flex-wrap items-center gap-2.5">
+          {homePage === "home" ? (
+            <>
+              <div className="home-group-label">Music</div>
+              {[
+                {
+                  label: "Music",
+                  hint: "Open a recording from your device",
+                  icon: Music,
+                  action: () => fileInputRef.current?.click(),
+                },
+                {
+                  label: "Demo Songs",
+                  hint: `${demos.length} bundled practice sessions`,
+                  icon: ListMusic,
+                  action: () => setHomePage("demos"),
+                },
+                {
+                  label: "Favorites",
+                  hint: "Your bookmarked demo songs",
+                  icon: Star,
+                  action: () => setHomePage("favorites"),
+                },
+                {
+                  label: "User Songs",
+                  hint: "Current uploaded recording",
+                  icon: FolderOpen,
+                  action: () => setHomePage("user"),
+                },
+              ].map((item) => (
                 <button
-                  onClick={() => stepChord(-1)}
-                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 cursor-pointer"
-                  title="Previous Chord (Left Arrow)"
+                  key={item.label}
+                  className="home-row"
+                  onClick={item.action}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <item.icon />
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>{item.hint}</small>
+                  </span>
+                  <ChevronRight />
                 </button>
-
-                <button
-                  onClick={togglePlay}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-300 hover:to-sky-400 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/25 transition cursor-pointer"
-                >
-                  {isPlaying ? (
-                    <>
-                      <Pause className="w-4 h-4 fill-current" />
-                      Pause
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-current" />
-                      Play Song
-                    </>
+              ))}
+              <div className="home-group-label">Instrument</div>
+              <button className="home-row" onClick={() => setMidiOpen(true)}>
+                <Piano />
+                <span>
+                  <strong>Connect an instrument</strong>
+                  <small>USB / Bluetooth MIDI · Android</small>
+                </span>
+                <ChevronRight />
+              </button>
+              <div className="home-group-label">Settings</div>
+              <button
+                className="home-row"
+                onClick={() => {
+                  setHomePage(null);
+                  setBottomTab("settings");
+                }}
+              >
+                <Settings />
+                <span>
+                  <strong>Play Settings</strong>
+                  <small>Tempo, transpose, sound and analysis views</small>
+                </span>
+                <ChevronRight />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                className="text-button"
+                onClick={() => setHomePage("home")}
+              >
+                <ChevronLeft size={16} /> All music
+              </button>
+              {(homePage === "demos" || homePage === "favorites") &&
+                demos
+                  .filter(
+                    (d) => homePage === "demos" || favoriteIds.includes(d.id),
+                  )
+                  .map((d) => (
+                    <button
+                      key={d.id}
+                      className="home-row"
+                      disabled={isAnalyzing}
+                      onClick={() => {
+                        setHomePage(null);
+                        loadDemoTrack(d.id);
+                      }}
+                    >
+                      <Music />
+                      <span>
+                        <strong>{d.title}</strong>
+                        <small>
+                          {d.keyName} · {Math.round(d.bpm)} BPM ·{" "}
+                          {formatTime(d.duration)}
+                        </small>
+                      </span>
+                      <ChevronRight />
+                    </button>
+                  ))}
+              {homePage === "favorites" &&
+                !demos.some((d) => favoriteIds.includes(d.id)) && (
+                  <p className="home-empty">
+                    No favorites yet. Open a demo song and use Song menu / Add
+                    to Favorites.
+                  </p>
+                )}
+              {homePage === "user" && (
+                <>
+                  <p className="home-empty">
+                    Uploaded audio stays in this session only. Reopen the file
+                    after restarting; it is not stored in your favorites.
+                  </p>
+                  {activeDemoId === "custom" && analysis && (
+                    <button
+                      className="home-row"
+                      onClick={() => setHomePage(null)}
+                    >
+                      <FileAudio />
+                      <span>
+                        <strong>{analysis.filename}</strong>
+                        <small>Current session</small>
+                      </span>
+                      <ChevronRight />
+                    </button>
                   )}
-                </button>
-
-                <button
-                  onClick={() => stepChord(1)}
-                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 cursor-pointer"
-                  title="Next Chord (Right Arrow)"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-
-                {/* Song Audio Volume */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#080C15] border border-slate-800 text-xs">
                   <button
-                    onClick={() => setSongMuted((m) => !m)}
-                    className="text-slate-300 hover:text-white cursor-pointer"
-                    title="Mute/Unmute Original Song Track"
+                    className="amber-button"
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    {songMuted || songVolume === 0 ? (
-                      <VolumeX className="w-4 h-4 text-rose-400" />
-                    ) : (
-                      <Volume2 className="w-4 h-4 text-emerald-400" />
-                    )}
+                    <Upload size={18} /> Choose a song
                   </button>
-                  <span className="text-slate-400 hidden sm:inline">Song:</span>
+                </>
+              )}
+            </>
+          )}
+          <div className="home-signoff">
+            <AudioLines size={24} />
+            <span>
+              KeySense Studio<small>Your pocket music studio</small>
+            </span>
+          </div>
+        </main>
+      ) : (
+        <main className="practice-workspace">
+          {!analysis && !isAnalyzing && (
+            <div className="home-empty">
+              <h1>Start a practice session</h1>
+              <button
+                className="amber-button"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload /> Choose a song
+              </button>
+              <button
+                className="text-button"
+                onClick={() => setHomePage("demos")}
+              >
+                Browse demo songs
+              </button>
+            </div>
+          )}
+          {analysis && shiftedKey && (
+            <>
+              <section className="song-transport" aria-label="Song playback">
+                <div className="song-identity">
+                  <div className="song-art">
+                    <Music />
+                  </div>
+                  <div className="song-title">
+                    <h1>{title}</h1>
+                    <p>{artist}</p>
+                  </div>
+                  <button
+                    className="icon-button"
+                    aria-label="Upload another song"
+                    disabled={isAnalyzing}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload />
+                  </button>
+                </div>
+                <div className="session-metadata">
+                  <span className="key-pill">{shiftedKey.name}</span>
+                  <span>{Math.round(analysis.bpm)} BPM</span>
+                  <span>Estimated chords</span>
+                  {transpose !== 0 && (
+                    <span>
+                      Guide {transpose > 0 ? "+" : ""}
+                      {transpose} st
+                    </span>
+                  )}
+                </div>
+                <div className="seek-row">
+                  <time>{formatTime(currentTime)}</time>
                   <input
                     type="range"
+                    aria-label="Song position"
                     min={0}
-                    max={1}
-                    step={0.05}
-                    value={songMuted ? 0 : songVolume}
-                    onChange={(e) => {
-                      setSongMuted(false);
-                      setSongVolume(parseFloat(e.target.value));
-                    }}
-                    className="w-16 accent-emerald-400 cursor-pointer"
+                    max={analysis.duration}
+                    step={0.01}
+                    value={Math.min(currentTime, analysis.duration)}
+                    onChange={(e) => handleSeek(Number(e.target.value))}
                   />
+                  <time>{formatTime(analysis.duration)}</time>
                 </div>
-
-                {/* Practice Speed Selector (Pitch-Preserved!) */}
-                <div className="inline-flex items-center rounded-xl bg-[#080C15] p-0.5 border border-slate-800 text-xs">
-                  {[0.5, 0.75, 1.0, 1.25].map((spd) => (
-                    <button
-                      key={spd}
-                      onClick={() => setPlaybackRate(spd)}
-                      className={`px-2 py-1 rounded-lg font-mono transition cursor-pointer ${
-                        playbackRate === spd
-                          ? 'bg-slate-800 text-sky-300 font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                      title="Change playback speed without altering song pitch"
-                    >
-                      {spd}x
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right: Transpose Semitones + "Play in C" + Notation System */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                {/* Transpose Control */}
-                <div className="flex items-center gap-1 rounded-xl bg-[#080C15] border border-slate-800 px-2 py-1 text-xs">
-                  <span className="text-slate-400 mr-1">Transpose:</span>
+                <div className="transport-buttons">
                   <button
-                    onClick={() => setTranspose((t) => Math.max(-6, t - 1))}
-                    className="w-6 h-6 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 font-mono font-bold cursor-pointer"
+                    className="transport-button"
+                    aria-label="Previous chord"
+                    disabled={isAnalyzing}
+                    onClick={() => stepChord(-1)}
                   >
-                    −
+                    <Rewind />
                   </button>
-                  <span
-                    className={`w-10 text-center font-mono font-bold ${
-                      transpose !== 0 ? 'text-amber-300' : 'text-slate-300'
-                    }`}
-                  >
-                    {transpose > 0 ? `+${transpose}` : transpose} st
-                  </span>
                   <button
-                    onClick={() => setTranspose((t) => Math.min(6, t + 1))}
-                    className="w-6 h-6 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 font-mono font-bold cursor-pointer"
+                    className="transport-button main-play"
+                    aria-label={isPlaying ? "Pause song" : "Play song"}
+                    disabled={isAnalyzing || !audioUrl}
+                    onClick={togglePlay}
                   >
-                    +
-                  </button>
-
-                  {shiftedKey.rootPc !== (analysis.key.mode === 'major' ? 0 : 9) && (
-                    <button
-                      onClick={handleTransposeToC}
-                      className="ml-1 px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-medium cursor-pointer"
-                      title="Transpose all chords and piano keys to C Major / A Minor (all white keys!)"
-                    >
-                      To C
-                    </button>
-                  )}
-
-                  {transpose !== 0 && (
-                    <button
-                      onClick={() => setTranspose(0)}
-                      className="p-1 text-slate-400 hover:text-white cursor-pointer"
-                      title="Reset to Original Song Key"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Notation System Switcher */}
-                <div className="inline-flex rounded-xl bg-[#080C15] p-0.5 border border-slate-800 text-xs">
-                  {(
-                    [
-                      { id: 'chord', label: 'Chords' },
-                      { id: 'nashville', label: 'Numbers (1-4-5)' },
-                      { id: 'roman', label: 'Roman (I-IV-V)' },
-                    ] as const
-                  ).map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setNotation(item.id)}
-                      className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                        notation === item.id
-                          ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 3-Column Live Harmony Spotlight HUD */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
-              {/* Col 1 (5 cols): Active Chord & Exact Left/Right Hand Piano Keys */}
-              <div className="md:col-span-5 rounded-2xl border border-sky-500/35 bg-gradient-to-br from-[#0F192D] to-[#0B111E] p-4 relative overflow-hidden">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-sky-400">
-                      Current Chord
-                    </span>
-                    <div className="flex items-baseline gap-2.5 mt-0.5">
-                      <span className="text-4xl font-black tracking-tight text-white font-mono">
-                        {activeChordDisplay ? activeChordDisplay.primary : '—'}
-                      </span>
-                      {activeChordDisplay && (
-                        <span className="text-sm font-mono px-2 py-0.5 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700">
-                          {activeChordDisplay.secondary} · {activeChord?.roman}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {activeChord && activeChordDisplay && (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() =>
-                          pianoSynth.auditionChord(
-                            activeChordDisplay.midiVoicing.lh,
-                            activeChordDisplay.midiVoicing.rh,
-                            1.4
-                          )
-                        }
-                        className="px-2.5 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-medium flex items-center gap-1 cursor-pointer"
-                        title="Play this chord on the studio piano"
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                        Hear
-                      </button>
-                      <button
-                        onClick={() => handleToggleLoopChord(activeChord)}
-                        className={`px-2.5 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1 cursor-pointer ${
-                          loopRange &&
-                          Math.abs(loopRange.start - activeChord.start) < 0.08
-                            ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-                            : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700'
-                        }`}
-                        title="Loop this chord continuously to practice finger placement"
-                      >
-                        <Repeat className="w-3.5 h-3.5" />
-                        Loop
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Exact Left-Hand & Right-Hand Piano Keys Readout */}
-                {activeChordDisplay && (
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-200 font-mono">
-                      <span className="font-bold text-amber-400">LH:</span>
-                      {activeChordDisplay.lhNames.join(' · ') || '—'}
-                    </div>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/35 text-sky-200 font-mono">
-                      <span className="font-bold text-sky-400">RH:</span>
-                      {activeChordDisplay.rhNames.join(' · ') || '—'}
-                    </div>
-                  </div>
-                )}
-
-                {/* Progress bar to next chord */}
-                <div className="mt-3 h-1 w-full rounded-full bg-slate-900 overflow-hidden">
-                  <div
-                    className="h-full bg-sky-400 transition-all duration-75"
-                    style={{ width: `${chordProgressPct}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Col 2 (3 cols): Next Chord Preview */}
-              <div className="md:col-span-3 rounded-2xl border border-slate-800/90 bg-[#0D1320] p-4 flex flex-col justify-between">
-                <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Up Next
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-extrabold text-slate-200 font-mono">
-                      {nextChordDisplay ? nextChordDisplay.primary : 'End'}
-                    </span>
-                    {nextChordDisplay && (
-                      <span className="text-xs font-mono text-slate-400">
-                        ({nextChordDisplay.secondary})
-                      </span>
+                    {isPlaying ? (
+                      <Pause fill="currentColor" />
+                    ) : (
+                      <Play fill="currentColor" />
                     )}
-                  </div>
-                </div>
-                <div className="mt-3 text-xs text-slate-400 font-mono">
-                  {nextChord
-                    ? `In ${Math.max(0, nextChord.start - currentTime).toFixed(1)}s · ${
-                        transposeChordSymbol(nextChord, transpose, useFlats).noteNames.join(' - ')
-                      }`
-                    : 'Final bar of progression'}
-                </div>
-              </div>
-
-              {/* Col 3 (4 cols): Song Key, BPM & Clickable Scale Keys */}
-              <div className="md:col-span-4 rounded-2xl border border-slate-800/90 bg-[#0D1320] p-4 flex flex-col justify-between">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      {transpose === 0 ? 'Detected Song Key' : `Transposed Key (${transpose > 0 ? `+${transpose}` : transpose})`}
+                  </button>
+                  <button
+                    className="transport-button"
+                    aria-label="Next chord"
+                    disabled={isAnalyzing}
+                    onClick={() => stepChord(1)}
+                  >
+                    <FastForward />
+                  </button>
+                  <button
+                    className="transport-button record-control"
+                    aria-label="Open live microphone"
+                    onClick={() => {
+                      audioRef.current?.pause();
+                      setMicOpen(true);
+                    }}
+                  >
+                    <span>
+                      <Mic size={18} />
                     </span>
-                    <div className="text-2xl font-extrabold text-white mt-0.5">
-                      {shiftedKey.name}
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-sm font-mono font-bold text-amber-300">
-                      {Math.round(analysis.bpm)} BPM
-                    </div>
-                    <div className="text-[11px] text-slate-400">
-                      Rel: {shiftedKey.relativeKey}
-                    </div>
-                  </div>
+                  </button>
+                  <button
+                    className={
+                      "transport-button loop-control" +
+                      (loopRange ? " selected" : "")
+                    }
+                    aria-label="Loop current chord"
+                    aria-pressed={!!loopRange}
+                    disabled={!activeChord}
+                    onClick={() =>
+                      activeChord && handleToggleLoopChord(activeChord)
+                    }
+                  >
+                    <Repeat />
+                    <small>A-B</small>
+                  </button>
+                  <button
+                    className="transport-button"
+                    aria-label="Open play settings"
+                    onClick={() => setBottomTab("settings")}
+                  >
+                    <SlidersHorizontal />
+                  </button>
                 </div>
-
-                {/* Relevant song progression (in-key chords only, in order) */}
-                {progression.length > 0 && (
-                  <div className="mt-2.5 flex items-center gap-1 flex-wrap">
-                    <span className="text-[11px] text-slate-400 mr-1">Progression:</span>
-                    {progression.map((pc, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          const block = analysis?.chords.find((c) => c.symbol === pc.symbol && chordIsInKey(c, analysis.key));
-                          const notes = block
-                            ? getActiveChordMidiNotes(block, voicingMode, transpose)
-                            : { lh: [] as number[], rh: [] as number[], all: [] };
-                          [...notes.lh, ...notes.rh].forEach((m) => pianoSynth.noteOn(m, 0.8, 1.2));
-                        }}
-                        className="px-1.5 py-0.5 rounded bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/30 text-sky-200 text-[11px] font-mono font-semibold transition cursor-pointer"
-                        title={`${pc.symbol} — click to hear (${pc.start.toFixed(1)}s–${pc.end.toFixed(1)}s)`}
-                      >
-                        {pc.roman !== '—' ? pc.roman : pc.nashville}
-                        <span className="text-slate-400 font-normal"> {pc.symbol}</span>
-                      </button>
-                    ))}
+                {loopRange && (
+                  <div className="loop-notice">
+                    Looping {loopRange.label}: {formatTime(loopRange.start)} -{" "}
+                    {formatTime(loopRange.end)}{" "}
+                    <button onClick={() => setLoopRange(null)}>
+                      Clear loop
+                    </button>
                   </div>
                 )}
+              </section>
 
-                {/* Scale Notes Quick Pills */}
-                <div className="mt-2.5 flex items-center gap-1 flex-wrap">
-                  <span className="text-[11px] text-slate-400 mr-1">Scale:</span>
-                  {shiftedKey.scaleNotes.map((sn, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() =>
-                        pianoSynth.noteOn(60 + shiftedKey.scalePitchClasses[idx], 0.8, 0.9)
-                      }
-                      className="px-1.5 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-200 text-[11px] font-mono font-semibold transition cursor-pointer"
-                      title="Click to hear scale note"
-                    >
-                      {sn}
-                    </button>
-                  ))}
+              <section className="chart-section" aria-labelledby="chart-title">
+                <div className="chart-heading">
+                  <h2 id="chart-title">Chord progression</h2>
+                  <button
+                    className="text-button"
+                    disabled={!activeChord}
+                    onClick={() => setDialog("chord")}
+                  >
+                    Chord &amp; section <SlidersHorizontal size={14} />
+                  </button>
                 </div>
-              </div>
-            </div>
-
-            {/* Relevant-progression filter toggle */}
-            <div className="flex items-center justify-end gap-2">
-              <label className="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={onlyInKey}
-                  onChange={(e) => setOnlyInKey(e.target.checked)}
-                  className="accent-sky-500"
-                />
-                Only in-key progression ({progression.length} chords)
-              </label>
-            </div>
-
-            {/* Synchronized Waveform + Chord Timeline */}
-            <WaveformTimeline
-              analysis={visibleAnalysis ?? analysis}
-              currentTime={currentTime}
-              isPlaying={isPlaying}
-              transpose={transpose}
-              useFlats={useFlats}
-              notation={notation}
-              activeChordId={activeChord?.id ?? null}
-              loopRange={loopRange}
-              onSeek={handleSeek}
-              onSelectChord={handleSelectChord}
-              onToggleLoopChord={handleToggleLoopChord}
-              onClearLoop={() => setLoopRange(null)}
-            />
-
-            {/* Interactive 61-Key Studio Piano + Falling Note Waterfall */}
-            <StudioPiano
-              chords={visibleChords}
-              pianoRoll={analysis.pianoRoll}
-              currentTime={currentTime}
-              activeChord={activeChord}
-              transpose={transpose}
-              useFlats={useFlats}
-              scalePitchClasses={shiftedKey.scalePitchClasses}
-              voicingMode={voicingMode}
-              onChangeVoicingMode={setVoicingMode}
-              synthTone={synthTone}
-              onChangeSynthTone={setSynthTone}
-              playAlongVolume={playAlongVolume}
-              onChangePlayAlongVolume={setPlayAlongVolume}
-              liveDetectedMidi={liveMicMidi}
-            />
-
-            {/* Bottom Musician Tools Tabs */}
-            <div className="space-y-3 pt-1">
-              <div className="flex items-center gap-2 border-b border-slate-800/90 pb-2">
-                <button
-                  onClick={() => setBottomTab('chords')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                    bottomTab === 'chords'
-                      ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Piano Chord Diagrams &amp; Song Chart
-                </button>
-                <button
-                  onClick={() => setBottomTab('harmony')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                    bottomTab === 'harmony'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Key Scale, Pitch Profile &amp; Number System
-                </button>
-                <button
-                  onClick={() => setBottomTab('tracker')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                    bottomTab === 'tracker'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Chord Tracker
-                </button>
-              </div>
-
-              {bottomTab === 'chords' ? (
-                <ChordDictionaryGrid
+                <PracticeBoard
                   chords={visibleChords}
-                  songKeyName={shiftedKey.name}
+                  duration={analysis.duration}
                   bpm={analysis.bpm}
-                  transpose={transpose}
-                  useFlats={useFlats}
-                  notation={notation}
-                  voicingMode={voicingMode}
-                  activeChordId={activeChord?.id ?? null}
-                  onSelectChord={handleSelectChord}
-                />
-              ) : bottomTab === 'harmony' ? (
-                <KeyHarmonyPanel
-                  keyInfo={analysis.key}
-                  transpose={transpose}
-                  tuningHz={analysis.tuningHz}
-                />
-              ) : (
-                <ChordTracker
-                  analysis={analysis}
-                  title={demos.find((d) => d.id === activeDemoId)?.title || analysis.filename}
-                  keyName={shiftedKey.name}
                   currentTime={currentTime}
-                  isPlaying={isPlaying}
-                  activeChordId={activeChord?.id ?? null}
                   transpose={transpose}
                   useFlats={useFlats}
                   notation={notation}
-                  onSeek={handleSeek}
-                  onSelectChord={handleSelectChord}
+                  onSelect={handleSelectChord}
+                  sections={sections}
                 />
-              )}
-            </div>
-          </>
-        )}
-      </main>
+              </section>
 
-      {/* Live Microphone Chord & Piano Key Modal */}
+              <section
+                className="instrument-panel"
+                aria-label="Chord instrument view"
+              >
+                <div className="current-chord">
+                  <div>
+                    <small>NOW PLAYING</small>
+                    <strong>{activeChordDisplay?.primary || "--"}</strong>
+                  </div>
+                  <div className="next-chord">
+                    <small>UP NEXT</small>
+                    <span>{nextChordDisplay?.primary || "End"}</span>
+                  </div>
+                </div>
+                {bottomTab === "keyboard" && (
+                  <>
+                    <PracticeKeyboard
+                      notes={
+                        liveMicMidi.length
+                          ? liveMicMidi
+                          : activeChordDisplay?.midiVoicing.all || []
+                      }
+                      useFlats={useFlats}
+                    />
+                    <p className="instrument-caption">
+                      {liveMicMidi.length
+                        ? "Live input pitch classes"
+                        : "Highlighted chord pitch classes"}{" "}
+                      · tap any key to play
+                    </p>
+                  </>
+                )}
+                {bottomTab === "staff" && (
+                  <ChordStaff
+                    notes={activeChordDisplay?.midiVoicing.all || []}
+                    useFlats={useFlats}
+                  />
+                )}
+                {bottomTab === "guitar" && (
+                  <GuitarDiagram
+                    notes={activeChordDisplay?.midiVoicing.all || []}
+                    bassPc={mod12((activeChord?.bassPc || 0) + transpose)}
+                  />
+                )}
+                {bottomTab === "settings" && (
+                  <div className="play-settings">
+                    <h2>Play Settings</h2>
+                    <div className="settings-grid">
+                      <label>
+                        Playback speed
+                        <select
+                          value={playbackRate}
+                          onChange={(e) =>
+                            setPlaybackRate(Number(e.target.value))
+                          }
+                        >
+                          {[0.5, 0.75, 1, 1.25, 1.5].map((n) => (
+                            <option key={n} value={n}>
+                              {n}x
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Transpose guide
+                        <select
+                          value={transpose}
+                          onChange={(e) => setTranspose(Number(e.target.value))}
+                        >
+                          {Array.from({ length: 25 }, (_, i) => i - 12).map(
+                            (n) => (
+                              <option key={n} value={n}>
+                                {n > 0 ? "+" : ""}
+                                {n} semitones
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </label>
+                      <label>
+                        Notation
+                        <select
+                          value={notation}
+                          onChange={(e) =>
+                            setNotation(e.target.value as NotationMode)
+                          }
+                        >
+                          <option value="chord">Chord names</option>
+                          <option value="roman">Roman numerals</option>
+                          <option value="nashville">Nashville numbers</option>
+                        </select>
+                      </label>
+                      <label>
+                        Voicing
+                        <select
+                          value={voicingMode}
+                          onChange={(e) =>
+                            setVoicingMode(e.target.value as VoicingMode)
+                          }
+                        >
+                          <option value="smooth">Smooth</option>
+                          <option value="root">Easy triad</option>
+                          <option value="pro">Pro 7th/9th</option>
+                          <option value="detected">Detected notes</option>
+                        </select>
+                      </label>
+                      <label>
+                        Piano tone
+                        <select
+                          value={synthTone}
+                          onChange={(e) =>
+                            setSynthTone(e.target.value as SynthTone)
+                          }
+                        >
+                          <option value="grand">Grand piano</option>
+                          <option value="rhodes">Warm Rhodes</option>
+                        </select>
+                      </label>
+                      <label>
+                        Song volume
+                        <input
+                          aria-label="Song volume"
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={songVolume}
+                          onChange={(e) =>
+                            setSongVolume(Number(e.target.value))
+                          }
+                        />
+                      </label>
+                      <label>
+                        Chord guide volume
+                        <input
+                          aria-label="Chord guide volume"
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={playAlongVolume}
+                          onChange={(e) =>
+                            setPlayAlongVolume(Number(e.target.value))
+                          }
+                        />
+                      </label>
+                    </div>
+                    <p className="instrument-caption">
+                      Transpose changes the chord guide, diagrams and MIDI, not
+                      the original recording. Playback speed preserves the
+                      recording's pitch.
+                    </p>
+                    <div className="settings-actions">
+                      <button
+                        className="text-button"
+                        onClick={handleTransposeToC}
+                      >
+                        White-key guide
+                      </button>
+                      <button
+                        className="text-button"
+                        onClick={() => setSongMuted(!songMuted)}
+                      >
+                        {songMuted ? (
+                          <VolumeX size={16} />
+                        ) : (
+                          <Volume2 size={16} />
+                        )}
+                        {songMuted ? "Unmute song" : "Mute song"}
+                      </button>
+                      <button
+                        className="text-button"
+                        onClick={() => {
+                          setTranspose(0);
+                          setPlaybackRate(1);
+                          setLoopRange(null);
+                          handleSeek(0);
+                        }}
+                      >
+                        Reset playback
+                      </button>
+                    </div>
+                    <label className="check-label">
+                      <input
+                        type="checkbox"
+                        checked={onlyInKey}
+                        onChange={(e) => setOnlyInKey(e.target.checked)}
+                      />{" "}
+                      Show only chords in the estimated key
+                    </label>
+                    <AdvancedTool title="Full studio piano">
+                      <StudioPiano
+                        chords={analysis.chords}
+                        pianoRoll={analysis.pianoRoll}
+                        currentTime={currentTime}
+                        activeChord={activeChord}
+                        transpose={transpose}
+                        useFlats={useFlats}
+                        scalePitchClasses={shiftedKey.scalePitchClasses}
+                        voicingMode={voicingMode}
+                        onChangeVoicingMode={setVoicingMode}
+                        synthTone={synthTone}
+                        onChangeSynthTone={setSynthTone}
+                        playAlongVolume={playAlongVolume}
+                        onChangePlayAlongVolume={setPlayAlongVolume}
+                        liveDetectedMidi={liveMicMidi}
+                      />
+                    </AdvancedTool>
+                    <AdvancedTool title="Waveform &amp; loop editor">
+                      <WaveformTimeline
+                        analysis={analysis}
+                        currentTime={currentTime}
+                        isPlaying={isPlaying}
+                        transpose={transpose}
+                        useFlats={useFlats}
+                        notation={notation}
+                        activeChordId={activeChord?.id ?? null}
+                        loopRange={loopRange}
+                        onSeek={handleSeek}
+                        onSelectChord={handleSelectChord}
+                        onToggleLoopChord={handleToggleLoopChord}
+                        onClearLoop={() => setLoopRange(null)}
+                      />
+                    </AdvancedTool>
+                    <AdvancedTool title="Key harmony &amp; scale">
+                      <KeyHarmonyPanel
+                        keyInfo={analysis.key}
+                        transpose={transpose}
+                        tuningHz={analysis.tuningHz}
+                      />
+                    </AdvancedTool>
+                    <AdvancedTool title="Piano chord dictionary">
+                      <ChordDictionaryGrid
+                        chords={visibleChords}
+                        songKeyName={shiftedKey.name}
+                        bpm={analysis.bpm}
+                        transpose={transpose}
+                        useFlats={useFlats}
+                        notation={notation}
+                        voicingMode={voicingMode}
+                        activeChordId={activeChord?.id ?? null}
+                        onSelectChord={handleSelectChord}
+                      />
+                    </AdvancedTool>
+                    <AdvancedTool title="Chord Tracker &amp; text export">
+                      <ChordTracker
+                        analysis={analysis}
+                        title={title}
+                        keyName={shiftedKey.name}
+                        currentTime={currentTime}
+                        isPlaying={isPlaying}
+                        activeChordId={activeChord?.id ?? null}
+                        transpose={transpose}
+                        useFlats={useFlats}
+                        notation={notation}
+                        onSeek={handleSeek}
+                        onSelectChord={handleSelectChord}
+                      />
+                    </AdvancedTool>
+                  </div>
+                )}
+              </section>
+              <nav className="instrument-tabs" aria-label="Instrument views">
+                <button
+                  aria-label={focusMode ? "Exit full screen" : "Full screen"}
+                  aria-pressed={focusMode}
+                  onClick={() => setFocusMode(!focusMode)}
+                >
+                  {focusMode ? <Minimize /> : <Maximize />}
+                  <span>{focusMode ? "Exit Full Screen" : "Full Screen"}</span>
+                </button>
+                {(
+                  [
+                    { id: "staff", label: "Staff Notation", icon: AudioLines },
+                    { id: "keyboard", label: "Keyboard", icon: Piano },
+                    { id: "guitar", label: "Guitar", icon: Guitar },
+                    {
+                      id: "settings",
+                      label: "Play Settings",
+                      icon: SlidersHorizontal,
+                    },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    aria-pressed={bottomTab === tab.id}
+                    onClick={() => {
+                      setBottomTab(tab.id);
+                      setFocusMode(false);
+                    }}
+                    className={bottomTab === tab.id ? "active" : ""}
+                  >
+                    <tab.icon />
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </>
+          )}
+        </main>
+      )}
+      <StudioDialog
+        open={dialog === "more"}
+        title="Song menu"
+        onClose={() => setDialog(null)}
+      >
+        <button
+          className="menu-action"
+          onClick={() => {
+            setDialog(null);
+            setMidiOpen(true);
+          }}
+        >
+          <Piano />
+          <span>
+            Connect to Instrument<small>USB / Bluetooth MIDI on Android</small>
+          </span>
+          <ChevronRight />
+        </button>
+        <button
+          className="menu-action"
+          disabled={!analysis || activeDemoId === "custom"}
+          onClick={toggleFavorite}
+        >
+          <Star fill={isFavorite ? "currentColor" : "none"} />
+          <span>
+            {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+            <small>
+              {activeDemoId === "custom"
+                ? "Favorites are available for bundled demos"
+                : "Bookmark this demo song"}
+            </small>
+          </span>
+          {isFavorite && <Check />}
+        </button>
+        <button
+          className="menu-action"
+          onClick={() => {
+            setDialog(null);
+            setHomePage(null);
+            setBottomTab("settings");
+          }}
+        >
+          <SlidersHorizontal />
+          <span>Chord Analysis &amp; Play Settings</span>
+          <ChevronRight />
+        </button>
+        <button
+          className="menu-action"
+          disabled={!analysis || exportingMidi}
+          onClick={handleExportMidi}
+        >
+          <Download />
+          <span>
+            {exportingMidi ? "Exporting MIDI..." : "Export MIDI"}
+            <small>Chord guide and detected notes</small>
+          </span>
+        </button>
+        <button
+          className="menu-action"
+          onClick={() => {
+            setDialog(null);
+            returnHome();
+          }}
+        >
+          <Home />
+          <span>Music library</span>
+          <ChevronRight />
+        </button>
+      </StudioDialog>
+      <StudioDialog
+        open={dialog === "chord"}
+        title="Chord & section"
+        onClose={() => setDialog(null)}
+      >
+        <div className="chord-dialog-label">
+          {activeChordDisplay?.primary || "--"}
+          <small>
+            {activeChordDisplay?.midiVoicing.all
+              .map((m) => midiToNoteName(m, useFlats))
+              .join(" · ")}
+          </small>
+        </div>
+        <p className="instrument-caption">
+          Estimated chord · confidence{" "}
+          {Math.round((activeChord?.confidence || 0) * 100)}%. Group{" "}
+          {selectedBar + 1}. Choose a section color for your own rehearsal plan.
+        </p>
+        <div className="section-choices">
+          {["A", "B", "C", "D"].map((section) => (
+            <button
+              key={section}
+              className={"section-" + section}
+              aria-pressed={sections[selectedBar] === section}
+              onClick={() =>
+                setSections((prev) => ({ ...prev, [selectedBar]: section }))
+              }
+            >
+              {section}
+            </button>
+          ))}
+        </div>
+        <div className="settings-actions">
+          <button
+            className="text-button"
+            onClick={() =>
+              setSections((prev) => {
+                const next = { ...prev };
+                delete next[selectedBar];
+                return next;
+              })
+            }
+          >
+            Clear section
+          </button>
+          <button
+            className="amber-button"
+            disabled={!activeChord}
+            onClick={() => {
+              if (activeChord) {
+                const n = getActiveChordMidiNotes(
+                  activeChord,
+                  voicingMode,
+                  transpose,
+                );
+                pianoSynth.auditionChord(n.lh, n.rh, 1.4);
+              }
+            }}
+          >
+            Hear chord
+          </button>
+        </div>
+        <p className="instrument-caption">
+          Section colors last for this song session. They are not automatically
+          detected song sections.
+        </p>
+      </StudioDialog>
       <LiveMicModal
         isOpen={micOpen}
         onClose={() => setMicOpen(false)}
         onLiveNotesUpdate={setLiveMicMidi}
-        onRecordedClipReady={(blob, filename) => handleAnalyzeAudioBlob(blob, filename)}
+        onRecordedClipReady={(blob, filename) =>
+          handleAnalyzeAudioBlob(blob, filename)
+        }
       />
-
-      {/* Native MIDI / Bluetooth (USB + BLE) input panel — Android APK */}
       <MidiPanel
         isOpen={midiOpen}
         onClose={() => setMidiOpen(false)}
@@ -1125,5 +1484,4 @@ export const App: React.FC = () => {
     </div>
   );
 };
-
 export default App;

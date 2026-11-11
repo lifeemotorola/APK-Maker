@@ -11,7 +11,7 @@
 #   6. python pack_apk.py: align + add classes.dex
 #   7. apksigner: v1+v2 sign with the debug keystore
 #
-# Output: android/app/build/KeySense-Studio-1.1.0.apk (also copied to the
+# Output: android/app/build/KeySense-Studio-1.2.0.apk (also copied to the
 #         repo root as KeySense-Studio.apk)
 # ============================================================================
 set -euo pipefail
@@ -51,6 +51,8 @@ npx esbuild scripts/test_progression.ts --bundle --platform=node --format=esm --
 node "$BUILD/test_progression.mjs"
 npx esbuild scripts/test_chord_tracker.ts --bundle --platform=node --format=esm --outfile="$BUILD/test_chord_tracker.mjs"
 node "$BUILD/test_chord_tracker.mjs"
+npx esbuild scripts/test_practice_layout.ts --bundle --platform=node --format=esm --outfile="$BUILD/test_practice_layout.mjs"
+node "$BUILD/test_practice_layout.mjs"
 node scripts/test_livemic_shell.mjs
 
 echo "==> [2/6] Building web UI (Vite)"
@@ -90,7 +92,7 @@ rm -f "$BUILD/res.zip" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" "$BUILD"/KeySe
     -I "$TOOLS/android.jar" \
     --manifest "$APP/src/main/AndroidManifest.xml" \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 3 --version-name 1.1.0 \
+    --version-code 4 --version-name 1.2.0 \
     "$BUILD/res.zip" \
     -A "$APP/src/main/assets"
 
@@ -101,17 +103,17 @@ python3 "$HERE/tools/pack_apk.py" "$BUILD/unsigned.apk" "$BUILD/dex/classes.dex"
     --ks-key-alias androiddebugkey \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD/KeySense-Studio-1.1.0.apk" \
+    --out "$BUILD/KeySense-Studio-1.2.0.apk" \
     "$BUILD/aligned.apk"
 
 echo "==> Verifying signature"
-"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/KeySense-Studio-1.1.0.apk"
+"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/KeySense-Studio-1.2.0.apk"
 
 echo "==> APK badging"
-"$TOOLS/aapt2" dump badging "$BUILD/KeySense-Studio-1.1.0.apk" > "$BUILD/badging.txt" || true
+"$TOOLS/aapt2" dump badging "$BUILD/KeySense-Studio-1.2.0.apk" > "$BUILD/badging.txt" || true
 head -25 "$BUILD/badging.txt"
 
-cp "$BUILD/KeySense-Studio-1.1.0.apk" "$ROOT/KeySense-Studio.apk"
+cp "$BUILD/KeySense-Studio-1.2.0.apk" "$ROOT/KeySense-Studio.apk"
 echo
-echo "DONE: $BUILD/KeySense-Studio-1.1.0.apk"
+echo "DONE: $BUILD/KeySense-Studio-1.2.0.apk"
 echo "      (also copied to $ROOT/KeySense-Studio.apk)"
