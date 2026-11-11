@@ -279,9 +279,12 @@
       if (!confirm('Auto-generate will replace the current editor content. Continue?')) return;
     }
     if (!state.draft) openEditor(null);
+    var ref = $('fRef').value.trim();
+    var topic = $('fTopic').value.trim();
+    if (!ref && !topic && Gen.defaultRef) ref = Gen.defaultRef(new Date());
     var g = Gen.generateSermon({
-      ref: $('fRef').value,
-      topic: $('fTopic').value,
+      ref: ref,
+      topic: topic,
       duration: parseInt($('fDuration').value, 10) || 30,
       bible: window.bible_data || [],
     });
@@ -289,9 +292,14 @@
     show('editor');
   }
 
+  function quickGenerate() {
+    openEditor(null);
+    generateNow();
+  }
+
   $('genBtn').addEventListener('click', generateNow);
-  $('genQuickBtn').addEventListener('click', function () { openEditor(null); $('fTopic').focus(); });
-  $('genQuickBtn2').addEventListener('click', function () { openEditor(null); $('fTopic').focus(); });
+  $('genQuickBtn').addEventListener('click', quickGenerate);
+  $('genQuickBtn2').addEventListener('click', quickGenerate);
 
   $('saveSermonBtn').addEventListener('click', function () {
     var d = collectDraft();

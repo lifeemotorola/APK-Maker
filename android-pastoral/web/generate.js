@@ -123,6 +123,19 @@
     return scored.slice(0, limit || 10).map(function (x) { return x.v; });
   }
 
+  /* Rotating well-known texts so a one-tap auto-generate with no ref and no
+   * topic still produces a full sermon — deterministic per calendar day. */
+  var DEFAULT_REFS = [
+    'Psalm 23', 'John 3:16', 'Romans 8:28', 'Philippians 4:4', 'Isaiah 40:31',
+    'Proverbs 3:5', 'Matthew 11:28', 'Psalm 46', 'Jeremiah 29:11', 'Romans 12:2',
+  ];
+
+  function defaultRef(d) {
+    var day = d || new Date();
+    var key = day.getFullYear() * 10000 + (day.getMonth() + 1) * 100 + day.getDate();
+    return DEFAULT_REFS[key % DEFAULT_REFS.length];
+  }
+
   /* Generate a full sermon draft. opts: {ref, topic, duration, bible} */
   function generateSermon(opts) {
     opts = opts || {};
@@ -265,6 +278,8 @@
 
   return {
     generateSermon: generateSermon,
+    defaultRef: defaultRef,
+    DEFAULT_REFS: DEFAULT_REFS,
     parseRef: parseRef,
     keywords: keywords,
     booksOf: booksOf,

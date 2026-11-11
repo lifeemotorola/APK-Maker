@@ -24,8 +24,10 @@ offline, no permissions, no network.
   an illustration, application questions, a conclusion, and timed delivery
   notes. Give it a reference (e.g. `Psalm 23`) and/or topic keywords
   (e.g. `hope, shepherd`) — with only a topic it searches the whole Bible
-  for the best-matching verses. Everything it writes stays fully editable
-  before you save.
+  for the best-matching verses. The Home/Sermons **Auto-generate** buttons
+  are a true one-tap generate: with no ref and no topic they use a rotating
+  well-known text for the day (`defaultRef`, e.g. Psalm 23, John 3:16,
+  Romans 8:28...). Everything it writes stays fully editable before you save.
 - **Home dashboard** — sermon count, sermons this month, series count,
   latest sermon, recent list.
 - **Series** — every series with its sermon count, tap to filter the list.
