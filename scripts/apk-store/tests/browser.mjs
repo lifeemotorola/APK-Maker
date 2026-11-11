@@ -52,7 +52,7 @@ try {
   assert.equal(await page.locator('.card-title').first().innerText(), 'Choir Tune Finder');
   await page.locator('[data-app="choirtune"] [data-detail]').first().click();
   assert.equal(await page.locator('#app-dialog').isVisible(), true);
-  assert.match(await page.locator('#dialog-content').innerText(), /2.5 GB available RAM/);
+  assert.match(await page.locator('#dialog-content').innerText(), /No preset RAM minimum is enforced/);
   assert.equal(await page.locator('.hash').innerText(), 'a'.repeat(64));
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#app-dialog').isVisible(), false);

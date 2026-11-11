@@ -45,6 +45,13 @@ check(/MediaStore\.Downloads/.test(main) && /DIRECTORY_DOWNLOADS \+ "\/ChoirTune
 check(/REQUEST_STORAGE_PERMISSION/.test(main), 'legacy storage permission requested before saving on API<=28');
 
 const controller = readRoot('android-choirtune/app/src/main/java/com/choirtune/app/DemucsController.java');
+// Regression: do not bring back the artificial RAM eligibility gate. These
+// are source/contract checks, not evidence that low-memory phones can infer.
+check(!/ActivityManager|MemoryInfo|getMemoryInfo|availMem|totalMem|memory\.lowMemory/.test(controller), 'native startup has no reported-memory eligibility gate');
+check(/OutOfMemoryError/.test(controller) && /No preset RAM limit was applied/.test(controller), 'real Java allocation failures remain explicit');
+const jni = readRoot('android-choirtune/native/jni.cpp');
+check(/std::bad_alloc/.test(jni) && /No preset RAM limit was applied/.test(jni), 'real native allocation failures remain explicit');
+check(/no preset minimum-RAM check/.test(html) && !/2\.5 GB/.test(html), 'UI explains there is no preset RAM gate without promising unlimited memory');
 check(/44100 \* 15 \* 60 \* 4/.test(controller), 'native input limit covers 15-minute PCM, not only 30 seconds');
 check(main.includes('/demucs/analysis.f32') && /demucs\.analysis\(\)/.test(main), 'trusted local mono analysis endpoint');
 check(/ACTION_CREATE_DOCUMENT/.test(main) && /byte\[65536\]/.test(main) && /demucsExport/.test(bridge), 'large WAV export streams through document picker without base64');
@@ -67,8 +74,8 @@ check(/roundRect/.test(app) || /fillRect/.test(app), 'piano roll drawn on canvas
 check(/ecj\.jar/.test(build) && /d8/.test(build) && /aapt2/.test(build) && /apksigner/.test(build), 'build.sh runs ecj/d8/aapt2/apksigner');
 check(/melody\.js/.test(build), 'build.sh stages melody.js into the APK');
 check(/check_no_emoji\.py/.test(build) && /test_web\.mjs/.test(build), 'build.sh runs emoji gate + this test');
-check(/--version-code 6/.test(build) && /--version-name 1\.5/.test(build), 'versionCode 6 / versionName 1.5');
-check(/ChoirTune-1\.5\.apk/.test(build), 'artifact name ChoirTune-1.5.apk');
+check(/--version-code 7/.test(build) && /--version-name 1\.5\.1/.test(build), 'versionCode 7 / versionName 1.5.1');
+check(/ChoirTune-1\.5\.1\.apk/.test(build), 'artifact name ChoirTune-1.5.1.apk');
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!EMOJI.test(html + app + melody + css), 'no emoji-range glyphs in web sources');
 

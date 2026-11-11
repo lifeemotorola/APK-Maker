@@ -23,7 +23,7 @@ Java_com_choirtune_app_DemucsController_runNative(JNIEnv* env, jclass, jstring m
     if (!w) { env->ReleaseStringUTFChars(model, m); env->ReleaseStringUTFChars(pcm, p); return nullptr; }
     std::string error;
     try { choir::isolate(m, p, w); }
-    catch (const std::bad_alloc&) { error = "Insufficient memory for Demucs. Close other apps and try a shorter clip."; }
+    catch (const std::bad_alloc&) { error = "Demucs ran out of working memory on this device. No preset RAM limit was applied."; }
     catch (const std::exception& e) { error = e.what(); }
     catch (...) { error = "Native Demucs inference failed"; }
     env->ReleaseStringUTFChars(model, m);

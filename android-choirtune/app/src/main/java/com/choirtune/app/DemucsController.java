@@ -1,6 +1,5 @@
 package com.choirtune.app;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.util.Base64;
 import android.util.Log;
@@ -53,10 +52,9 @@ public final class DemucsController {
         if (destroyed || running) return "Demucs is still processing or cancelling; please wait";
         cleanup();
         if (bytes < 44100 || bytes > MAX_BYTES || bytes % 4 != 0) return "Choose audio between 0.25 seconds and 15 minutes";
-        ActivityManager.MemoryInfo memory = new ActivityManager.MemoryInfo();
-        ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(memory);
-        if (memory.lowMemory || memory.totalMem < 3500L * 1024 * 1024 || memory.availMem < 2500L * 1024 * 1024)
-            return "Demucs needs at least 2.5 GB currently available RAM (6 GB phones recommended). Close other apps or use ordinary estimates.";
+        // Do not reject based on reported total/free RAM or low-memory flags.
+        // Attempt inference on the user's device; real allocation failures are
+        // still reported, and Android may terminate a process under pressure.
         long needed = MODEL_BYTES + bytes * 9L / 4 + 20L * 1024 * 1024;
         if (directory.getUsableSpace() < needed)
             return "Free at least " + ((needed + 1048575) / 1048576) + " MB of internal storage for this song";
@@ -97,7 +95,7 @@ public final class DemucsController {
                 }
                 failure = runNative(model.getAbsolutePath(), input.getAbsolutePath(), output.getAbsolutePath());
                 if (failure == null) failure = "Native inference did not return a result";
-            } catch (OutOfMemoryError e) { failure = "Not enough memory for Demucs. Close other apps and try again."; }
+            } catch (OutOfMemoryError e) { failure = "Demucs ran out of working memory on this device. No preset RAM limit was applied."; }
             catch (Exception e) { failure = e.getMessage() == null ? "Demucs processing failed" : e.getMessage(); }
             synchronized (this) {
                 running = false;
