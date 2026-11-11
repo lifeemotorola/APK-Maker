@@ -59,6 +59,8 @@ check(html.includes('id="bookSel"') && html.includes('id="chapterSel"') && html.
 check(/bible_data/.test(app) && /versesOf/.test(app) && /chaptersOf/.test(app), 'scripture browser reads bundled bible_data');
 check(/pickVerse/.test(app) && /pickMode/.test(app) && /lastAri/.test(app), 'pick verse into editor + last verse tracked');
 check(/PastoralGen/.test(app) && /generateSermon/.test(app) && /applyGenerated/.test(app) && /genFromVerseBtn/.test(app) && /genBtn/.test(app), 'auto-generate wired in editor + scripture views');
+check(/defaultRef/.test(gen), 'generate.js has a daily default ref for one-tap generation');
+check(/quickGenerate/.test(app) && /Gen\.defaultRef/.test(app), 'quick Auto-generate buttons generate immediately (daily default ref when empty)');
 check(/sermonText/.test(app) && /OUTLINE/.test(app), 'sermon export formats outline');
 check(/saveState/.test(app) && /loadState/.test(app) && /localStorage/.test(app), 'state load/save with browser fallback');
 check(/duplicateSermon/.test(app) && /renderHome/.test(app) && /renderSeries/.test(app), 'duplicate / dashboard / series views');
@@ -111,7 +113,12 @@ check(g3.delivery.indexOf('25 min') >= 0, 'topic-only respects duration');
 const g4 = G.generateSermon({ ref: 'Romans 8:28-30', bible });
 check(g4.ref === 'Romans 8:28-30' && g4.points.length === 3, 'verse-range ref: ' + g4.ref);
 
-check(!EMOJI.test(JSON.stringify([g1, g2, g3, g4])), 'generated sermons contain no emoji/arrow glyphs');
+const dr = G.defaultRef(new Date(2026, 10, 6));
+check(typeof dr === 'string' && dr.length > 3 && G.DEFAULT_REFS.indexOf(dr) >= 0, 'defaultRef returns a known text for the day: ' + dr);
+check(G.defaultRef(new Date(2026, 10, 6)) === dr && G.defaultRef(new Date(2026, 10, 7)) !== undefined, 'defaultRef deterministic per day');
+const g5 = G.generateSermon({ ref: dr, topic: '', duration: 30, bible });
+check(g5.points.length === 3 && g5.title.length > 4 && g5.keyVerse.length > 10 && g5.intro.length > 60, 'one-tap default-ref generation produces a whole sermon');
+check(!EMOJI.test(JSON.stringify([g1, g2, g3, g4, g5])), 'generated sermons contain no emoji/arrow glyphs');
 
 if (failures) {
   console.error('\nPASTORAL WEB TEST: ' + failures + ' FAILURE(S)');
