@@ -73,6 +73,9 @@
   });
 
   async function handleFile(file) {
+    if (window.ChoirLocalDemucs && window.ChoirLocalDemucs.busy()) { toast('Offline isolation is running. Cancel it and wait before choosing another song.'); return; }
+    var useDemucs = !!(window.ChoirLocalDemucs && window.ChoirLocalDemucs.enabled());
+    if (window.ChoirLocalDemucs) window.ChoirLocalDemucs.clear();
     if (file.size > 40 * 1024 * 1024) { toast('Please choose a file smaller than 40 MB'); return; }
     if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     if (window.ChoirServerAudio) window.ChoirServerAudio.stop();
@@ -94,6 +97,12 @@
       ctx = null;
       if (job !== analysisId) return;
       if (audioBuf.duration > 300) throw new Error('Please choose a song up to 5 minutes long.');
+      if (useDemucs) {
+        audioBuf = await window.ChoirLocalDemucs.isolate(audioBuf, function (message) {
+          if (job === analysisId) setStatus(message);
+        }, function () { return job !== analysisId; });
+        if (job !== analysisId) return;
+      }
       var pcm = new Float32Array(audioBuf.length);
       for (var c = 0; c < audioBuf.numberOfChannels; c++) {
         var d = audioBuf.getChannelData(c);
@@ -114,9 +123,9 @@
       origAudio = new Audio();
       origAudio.src = URL.createObjectURL(file);
       origAudio.onended = function () { $('playOrigBtn').textContent = 'Play original'; };
-      current = { title: file.name.replace(/\.[^.]+$/, ''), tune: tune, parts: parts };
+      current = { title: file.name.replace(/\.[^.]+$/, '') + (useDemucs ? ' (Demucs vocals; SATB estimates)' : ''), tune: tune, parts: parts };
       renderResults();
-      setStatus('Choose a part to inspect pitches in Hz and hear its estimated notes. Check voice assignments against the recording.');
+      setStatus((useDemucs ? 'Blended vocals isolated on-device by Demucs. SATB tracks are synthesized estimates, not separated singers. ' : '') + 'Choose a part to inspect pitches in Hz and hear its estimated notes. Check voice assignments against the recording.');
     } catch (err) {
       if (ctx) ctx.close().catch(function () {});
       if (job === analysisId) setStatus('Could not analyze song: ' + (err && err.message ? err.message : 'unsupported or damaged audio file'));
@@ -125,6 +134,7 @@
 
   window.ChoirImportServerAnalysis = function (analysis, title) {
     analysisId++;
+    if (window.ChoirLocalDemucs) { window.ChoirLocalDemucs.cancel(); window.ChoirLocalDemucs.clear(); }
     if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     stopTune(); clearOriginal();
     current = { title: title + ' (server vocals)', tune: analysis.tune, parts: analysis.parts };
@@ -218,7 +228,7 @@
   }
 
   // ---------------- playback ----------------
-  function stopTune() {
+  function stopTune(keepLocal) {
     if (synth) {
       synth.oscs.forEach(function (o) { try { o.stop(); } catch (e) {} });
       if (synth.raf) cancelAnimationFrame(synth.raf);
@@ -226,6 +236,7 @@
       synth = null;
     }
     if (origAudio) origAudio.pause();
+    if (keepLocal !== true && window.ChoirLocalDemucs) window.ChoirLocalDemucs.stopAudio();
     $('playOrigBtn').textContent = 'Play original';
     if (current) drawRoll(0);
   }
@@ -388,6 +399,7 @@
       var entry = state.tunes.filter(function (t) { return t.id === id; })[0];
       row.querySelector('.act-load').addEventListener('click', function () {
         analysisId++;
+        if (window.ChoirLocalDemucs) { window.ChoirLocalDemucs.cancel(); window.ChoirLocalDemucs.clear(); }
         stopTune();
         clearOriginal();
         setStatus('Saved tune opened. Original audio is not stored.');

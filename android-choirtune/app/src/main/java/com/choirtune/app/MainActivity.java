@@ -53,6 +53,8 @@ public class MainActivity extends Activity {
     private boolean pendingMicrophone = false;
     private WebView webView;
     private NativeBridge bridge;
+    private DemucsController demucs;
+    public DemucsController demucs() { return demucs; }
     private ValueCallback<Uri[]> fileChooserCallback;
     private String pendingSaveName;
     private String pendingSaveData;
@@ -71,6 +73,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         microphone = new MicrophoneController(this);
+        demucs = new DemucsController(this);
 
         webView = new WebView(this);
         webView.setLayoutParams(new ViewGroup.LayoutParams(
@@ -92,6 +95,12 @@ public class MainActivity extends Activity {
                 Uri uri = Uri.parse(url);
                 if (!"appassets.androidplatform.net".equals(uri.getHost())) return null;
                 String path = uri.getPath();
+                if ("https".equals(uri.getScheme()) && "/demucs/vocals.wav".equals(path)) {
+                    try {
+                        return new WebResourceResponse("audio/wav", null, 200, "OK",
+                            Collections.singletonMap("Cache-Control", "no-store"), demucs.vocals());
+                    } catch (IOException ignored) { }
+                }
                 if ("https".equals(uri.getScheme()) && path != null
                         && path.matches("/www/([A-Za-z0-9_-]+\\.(html|css|js)|img/[A-Za-z0-9_.-]+\\.png)")) {
                     try {
@@ -354,6 +363,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         pendingMicrophone = false;
         if (microphone != null) microphone.destroy();
+        if (demucs != null) demucs.destroy();
         if (webView != null) {
             webView.stopLoading();
             webView.destroy();

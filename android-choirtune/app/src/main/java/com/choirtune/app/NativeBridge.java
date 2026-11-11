@@ -29,13 +29,26 @@ public class NativeBridge {
 
     @JavascriptInterface
     public String appVersion() {
-        return "1.3";
+        return "1.4";
     }
 
     @JavascriptInterface
     public void log(String msg) {
         android.util.Log.d(MainActivity.TAG, "page: " + msg);
     }
+
+    @JavascriptInterface
+    public boolean demucsAvailable() { return activity.demucs().available(); }
+    @JavascriptInterface
+    public String demucsBegin(int bytes) { return activity.demucs().begin(bytes); }
+    @JavascriptInterface
+    public String demucsAppend(String chunk) { return activity.demucs().append(chunk); }
+    @JavascriptInterface
+    public String demucsStart() { return activity.demucs().start(); }
+    @JavascriptInterface
+    public String demucsStatus() { return activity.demucs().status(); }
+    @JavascriptInterface
+    public void demucsCancel() { activity.demucs().cancel(); }
 
     /** The whole app state as a JSON string ("{}" when empty). */
     @JavascriptInterface
