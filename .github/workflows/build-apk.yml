@@ -541,10 +541,17 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: '3.11'
-      - name: Install Android NDK r27 and native build tools
+      - name: Set up Android SDK and NDK r27
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: 'ndk;27.2.12479018'
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+      - name: Configure Android NDK and install native build tools
         run: |
-          sdkmanager 'ndk;27.2.12479018' >/dev/null
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          ndk="$ANDROID_HOME/ndk/27.2.12479018"
+          test -f "$ndk/build/cmake/android.toolchain.cmake"
+          echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
           python -m venv "$HOME/apk-venv"
           "$HOME/apk-venv/bin/pip" install -r android-choirtune/native/requirements-build.txt
       - name: Build and test Choir Tune Finder
