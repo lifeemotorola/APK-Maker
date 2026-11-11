@@ -45,6 +45,9 @@ public class MainActivity extends Activity {
     private static final int REQUEST_FILE_CHOOSER = 1001;
     private static final int REQUEST_STORAGE_PERMISSION = 1002;
 
+    private static final int REQUEST_MIC_PERMISSION = 1003;
+    private MicrophoneController microphone;
+    private boolean pendingMicrophone = false;
     private WebView webView;
     private NativeBridge bridge;
     private ValueCallback<Uri[]> fileChooserCallback;
@@ -64,6 +67,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        microphone = new MicrophoneController(this);
 
         webView = new WebView(this);
         webView.setLayoutParams(new ViewGroup.LayoutParams(
@@ -139,6 +143,14 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQUEST_MIC_PERMISSION) {
+            if (pendingMicrophone) {
+                pendingMicrophone = false;
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) microphone.start();
+                else pushJs("window.ChoirTunerNative&&window.ChoirTunerNative.onError('Microphone permission denied. Enable it in Android settings and tap Start again.')");
+            }
+            return;
+        }
         if (requestCode == REQUEST_STORAGE_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                     && pendingSaveName != null) {
@@ -164,6 +176,22 @@ public class MainActivity extends Activity {
     // ------------------------------------------------------------------
     // State (app-private files dir)
     // ------------------------------------------------------------------
+
+    public void startMicrophone() {
+        runOnUiThread(new Runnable() { public void run() {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) microphone.start();
+            else if (!pendingMicrophone) {
+                pendingMicrophone = true;
+                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_MIC_PERMISSION);
+            }
+        }});
+    }
+    public void stopMicrophone() {
+        runOnUiThread(new Runnable() { public void run() {
+            pendingMicrophone = false;
+            if (microphone != null) microphone.stop();
+        }});
+    }
 
     private File stateFile() {
         return new File(getFilesDir(), STATE_FILE);
@@ -297,12 +325,16 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        stopMicrophone();
+        pushJs("window.ChoirTunerNative&&window.ChoirTunerNative.onStopped()");
         if (webView != null) webView.onPause();
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
+        pendingMicrophone = false;
+        if (microphone != null) microphone.destroy();
         if (webView != null) {
             webView.stopLoading();
             webView.destroy();

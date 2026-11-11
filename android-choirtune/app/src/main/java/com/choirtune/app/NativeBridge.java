@@ -17,13 +17,19 @@ public class NativeBridge {
     }
 
     @JavascriptInterface
+    public void startMicrophone() { activity.startMicrophone(); }
+
+    @JavascriptInterface
+    public void stopMicrophone() { activity.stopMicrophone(); }
+
+    @JavascriptInterface
     public String platform() {
         return "android";
     }
 
     @JavascriptInterface
     public String appVersion() {
-        return "1.1";
+        return "1.2";
     }
 
     @JavascriptInterface

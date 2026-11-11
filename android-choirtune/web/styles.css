@@ -62,3 +62,17 @@ h1 { font-size: 19px; margin: 0; }
   .stat:first-child { grid-column: 1 / -1; }
   .btn { min-height: 44px; }
 }
+
+.voice-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.voice-presets .btn { min-height: 52px; padding: 10px 4px; }
+.voice-presets [aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+.pitch-readout { display: flex; align-items: baseline; justify-content: center; gap: 16px; margin-top: 12px; }
+.pitch-readout strong { font-size: 56px; line-height: 1.2; }
+.pitch-readout span { font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.pitch-cents { text-align: center; min-height: 26px; font-size: 16px; font-variant-numeric: tabular-nums; }
+.pitch-gauge { position: relative; margin: 12px 4px 6px; height: 46px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+.tune-zone { position: absolute; left: 45%; width: 10%; height: 100%; background: rgba(52,211,153,.16); }
+.gauge-center { position: absolute; left: 50%; height: 100%; width: 1px; background: var(--muted); }
+.pitch-needle { position: absolute; left: 50%; width: 4px; margin-left: -2px; top: -3px; height: 50px; background: var(--accent); visibility: hidden; }
+.locked .pitch-needle { background: var(--ok); box-shadow: 0 0 12px var(--ok); }
+.gauge-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 10px; }

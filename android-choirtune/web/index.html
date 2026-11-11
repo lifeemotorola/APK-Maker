@@ -19,6 +19,42 @@
     </div>
   </header>
 
+  <section class="card" aria-labelledby="tunerHeading">
+    <h2 id="tunerHeading" class="sect">Live choir tuner</h2>
+    <p class="dim help">Tune one singer or dominant pitch at a time. A4 = 440 Hz. Green means within 5 cents for three readings.
+      Range presets guide the display; they do not identify a singer or split a live choir into voices.</p>
+    <div class="voice-presets" role="group" aria-label="Vocal guide range">
+      <button id="preset-soprano" class="btn" aria-pressed="true">Soprano</button>
+      <button id="preset-alto" class="btn" aria-pressed="false">Alto</button>
+      <button id="preset-tenor" class="btn" aria-pressed="false">Tenor</button>
+      <button id="preset-bass" class="btn" aria-pressed="false">Bass</button>
+    </div>
+    <div id="liveRange" class="dim help"></div>
+    <div class="pitch-readout"><strong id="liveNote">--</strong><span id="liveHz">-- Hz</span></div>
+    <div id="liveCents" class="pitch-cents">-- cents</div>
+    <div id="pitchGauge" class="pitch-gauge" role="img" aria-label="Microphone stopped">
+      <div class="tune-zone"></div><div class="gauge-center"></div><div id="pitchNeedle" class="pitch-needle"></div>
+    </div>
+    <div class="gauge-labels"><span>Flat -50</span><span>0 cents</span><span>Sharp +50</span></div>
+    <div id="liveState" class="pitch-cents">Microphone stopped</div>
+    <div class="row">
+      <button id="startTunerBtn" class="btn primary">Start microphone</button>
+      <button id="stopTunerBtn" class="btn" disabled>Stop microphone</button>
+    </div>
+    <div class="row">
+      <label class="fld">Target <select id="tuningMode" class="input"><option value="nearest">Nearest note</option><option value="reference">Selected reference note</option></select></label>
+      <label class="fld">Noise gate <select id="noiseFloor" class="input"><option value="0.004">Quiet room</option><option value="0.008" selected>Normal room</option><option value="0.02">Noisy room</option></select></label>
+    </div>
+    <div class="row">
+      <label class="fld">Reference <select id="referenceNote" class="input" aria-label="Reference note"></select></label>
+      <button id="playDroneBtn" class="btn">Play reference drone</button>
+      <button id="stopDroneBtn" class="btn" disabled>Stop drone</button>
+    </div>
+    <p class="dim help">Use a comfortable speaker volume. Playing a reference stops the microphone so the tuner does not measure its own tone.
+      Actual sample rate and response time depend on the device. Nothing is recorded or saved by the live tuner.</p>
+    <div id="tunerStatus" role="status" aria-live="polite" class="status">Ready. Tap Start microphone and allow access.</div>
+  </section>
+
   <!-- UPLOAD -->
   <section class="card">
     <h2 class="sect">1 · Upload a song</h2>
@@ -87,6 +123,8 @@
 
 <script src="melody.js"></script>
 <script src="satb.js"></script>
+<script src="tunerPitch.js"></script>
+<script src="tuner.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
