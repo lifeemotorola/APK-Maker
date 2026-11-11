@@ -1,6 +1,6 @@
 /* Choir Tune Finder — app logic.
  * Decode uploaded song (WebAudio) -> mono PCM -> melody.js extracts the lead
- * tune -> piano roll + tune sheet + synth playback + txt/.mid export.
+ * tune -> written rehearsal guidance + synth playback + txt/.mid export.
  * State (saved-tune library) via window.ChoirTune bridge (localStorage
  * fallback in a plain browser). */
 (function () {
@@ -160,7 +160,7 @@
       origAudio.onended = function () { $('playOrigBtn').textContent = 'Play original'; };
       current = { title: file.name.replace(/\.[^.]+$/, '') + (useDemucs ? ' (Demucs vocals; SATB estimates)' : ''), tune: tune, parts: parts };
       renderResults();
-      setStatus((useDemucs ? 'Blended vocals isolated on-device by Demucs. SATB tracks are synthesized estimates, not separated singers. ' : 'Analyzed without Demucs. ') + 'Choose a part to inspect pitches in Hz and hear its estimated notes. Check voice assignments against the recording.');
+      setStatus((useDemucs ? 'Blended vocals isolated on-device by Demucs. SATB tracks are synthesized estimates, not separated singers. ' : 'Analyzed without Demucs. ') + 'Choose a part to read rehearsal guidance and hear its estimated notes. Check voice assignments against the recording.');
     } catch (err) {
       if (ctx) ctx.close().catch(function () {});
       if (job === analysisId) setStatus('Could not analyze song: ' + (err && err.message ? err.message : 'unsupported or damaged audio file'));
@@ -195,72 +195,33 @@
       '<div class="stat key-stat"><div class="n">' + esc(t.key.name) + '</div><div class="l">source key (estimate)</div></div>' +
       '<div class="stat"><div class="n">' + t.bpm + '</div><div class="l">BPM</div></div>' +
       '<div class="stat"><div class="n">' + t.notes.length + '</div><div class="l">tune notes</div></div>';
-    renderSheet();
-    drawRoll(0);
+    renderGuidance();
     $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function renderSheet() {
+  function renderGuidance() {
     var t = activeTune();
-    var beat = 60 / (t.bpm || 120);
-    $('sheetBody').innerHTML = t.notes.map(function (n, i) {
-      return '<tr><td>' + (i + 1) + '</td><td class="note">' + esc(M.midiToName(n.midi + transpose)) +
-        '</td><td>' + M.noteFrequency(n, transpose).toFixed(1) + '</td><td>' + n.start.toFixed(3) + '</td><td>' + n.dur.toFixed(2) + 's</td><td>' +
-        (n.dur / beat).toFixed(1) + '</td></tr>';
-    }).join('') || '<tr><td colspan="6" class="dim">no stable pitches estimated for this part; try a clearer vocal recording</td></tr>';
-  }
-
-  function drawRoll(playheadSec) {
-    var canvas = $('roll');
-    var t = activeTune();
-    var dpr = window.devicePixelRatio || 1;
-    var w = canvas.clientWidth || 600;
-    var h = 190;
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    canvas.style.height = h + 'px';
-    var ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, w, h);
-    if (!t.notes.length) return;
-    var minM = 127, maxM = 0;
-    t.notes.forEach(function (n) { minM = Math.min(minM, n.midi + transpose); maxM = Math.max(maxM, n.midi + transpose); });
-    minM -= 2; maxM += 2;
-    var span = Math.max(1, maxM - minM);
-    var dur = Math.max(0.5, t.duration);
-    function xOf(sec) { return (sec / dur) * w; }
-    function yOf(midi) { return h - ((midi - minM) / span) * (h - 12) - 10; }
-    // grid: one row per pitch
-    for (var m = minM; m <= maxM; m++) {
-      var y = yOf(m);
-      ctx.fillStyle = (m % 12 === 0) ? 'rgba(148,163,184,0.20)' : 'rgba(148,163,184,0.07)';
-      ctx.fillRect(0, y, w, 1);
-      ctx.fillStyle = 'rgba(148,163,184,0.45)';
-      ctx.font = '9px monospace';
-      ctx.fillText(M.midiToName(m), 3, y - 1);
+    var voice = S.VOICES.filter(function (v) { return v.id === selectedPart; })[0];
+    var name = voice ? voice.name : 'Main melody';
+    var key = M.midiToName(60 + ((t.key.rootPc + transpose) % 12 + 12) % 12).replace(/\d+$/, '') + (t.key.mode === 'minor' ? ' Minor' : ' Major');
+    var advice = {
+      soprano: 'Let the upper line stay light and clear. Listen to the lower parts as well; avoid pushing for high notes.',
+      alto: 'Listen for your middle harmony instead of following the soprano melody. Keep the vowel steady when the tune above you changes.',
+      tenor: 'Keep the inner line steady and use a comfortable tone. Match the rhythm with the bass without copying its lower notes.',
+      bass: 'Give the choir a steady foundation. Hold the lower line gently and keep its rhythm clear without forcing a deeper sound.'
+    };
+    var text = '<p><strong>Practice ' + esc(name) + '.</strong> The estimated practice key is ' + esc(key) + '.';
+    if (transpose) text += ' Playback and this guide are transposed ' + transpose + ' semitones; the original recording and source-key display are unchanged.';
+    text += '</p>';
+    if (t.notes.length) {
+      var first = t.notes[0];
+      text += '<p><strong>Find your starting pitch.</strong> The first estimated note for ' + esc(name) + ' is ' + esc(M.midiToName(first.midi + transpose)) +
+        ', around ' + first.start.toFixed(1) + ' seconds into the recording. Listen for that entrance with Play estimated part, then match it gently. This is an estimate, not necessarily the song tonic or the true first sung note.</p>';
+    } else {
+      text += '<p><strong>No stable pitches estimated for this part.</strong> There is no reliable starting note to suggest. Try a clearer, unaccompanied recording or rehearse from a trusted instrument or score; this does not mean the voice is absent.</p>';
     }
-    // notes
-    t.notes.forEach(function (n) {
-      var x0 = xOf(n.start), x1 = Math.max(x0 + 2, xOf(n.end));
-      var y = yOf(n.midi + transpose);
-      ctx.fillStyle = (S.VOICES.filter(function (v) { return v.id === selectedPart; })[0] || { color: '#38bdf8' }).color;
-      ctx.strokeStyle = 'rgba(186,230,253,0.9)';
-      var bh = Math.max(4, (h - 12) / span - 2);
-      ctx.beginPath();
-      ctx.rect(x0, y - bh / 2, x1 - x0, bh);
-      ctx.fill();
-      ctx.stroke();
-    });
-    // playhead
-    if (playheadSec > 0) {
-      var px = xOf(playheadSec);
-      ctx.strokeStyle = '#F8FAFC';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(px, 0);
-      ctx.lineTo(px, h);
-      ctx.stroke();
-    }
+    text += '<p>' + (advice[selectedPart] || 'The main melody is a listening guide, not an assigned choir voice. Select Soprano, Alto, Tenor or Bass to rehearse that estimated part.') + '</p>';
+    $('tuningGuide').innerHTML = text;
   }
 
   // ---------------- playback ----------------
@@ -274,7 +235,6 @@
     if (origAudio) origAudio.pause();
     if (keepLocal !== true && window.ChoirLocalDemucs) window.ChoirLocalDemucs.stopAudio();
     $('playOrigBtn').textContent = 'Play original';
-    if (current) drawRoll(0);
   }
 
   function clearOriginal() {
@@ -316,7 +276,6 @@
     var tick = function () {
       if (!synth) return;
       var el = ctx.currentTime - t0;
-      drawRoll(el);
       if (el > t.duration + 0.2) { stopTune(); return; }
       synth.raf = requestAnimationFrame(tick);
     };
@@ -338,11 +297,7 @@
   $('transposeSel').addEventListener('change', function (e) {
     stopTune();
     transpose = parseInt(e.target.value, 10) || 0;
-    if (current) { renderSheet(); drawRoll(0); }
-  });
-
-  $('noteDetails').addEventListener('toggle', function () {
-    if (this.open && current) drawRoll(0);
+    if (current) renderGuidance();
   });
 
   $('partSel').addEventListener('change', function () {
@@ -466,7 +421,6 @@
   }
 
   // ---------------- boot ----------------
-  window.addEventListener('resize', function () { if (current) drawRoll(0); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) stopTune(); });
   loadState();
   renderLibrary();

@@ -152,7 +152,7 @@
       $('serverWarning').textContent = (result.warnings || []).join(' ');
       $('serverArtifact').innerHTML = '';
       result.files.forEach(function (file) { var option = document.createElement('option'); option.value = file.name; option.textContent = file.label; $('serverArtifact').appendChild(option); });
-      status('Ready. View the estimated pitch chart, play/solo/mute parts, or download a server output.');
+      status('Ready. Read the rehearsal guide, play/solo/mute parts, or download a server output.');
     } catch (e) { if (job === generation) status('Server processing stopped: ' + e.message + '. Use Delete server job to remove any retained data.'); }
     finally { clearTimeout(deadline); if (job === generation) { upload = null; $('uploadServerBtn').disabled = false; } }
   });
