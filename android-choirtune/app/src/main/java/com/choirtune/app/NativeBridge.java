@@ -29,7 +29,7 @@ public class NativeBridge {
 
     @JavascriptInterface
     public String appVersion() {
-        return "1.6.0";
+        return "1.6.1";
     }
 
     @JavascriptInterface

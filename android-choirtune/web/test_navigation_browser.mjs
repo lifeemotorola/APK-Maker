@@ -20,7 +20,20 @@ try {
   for (const width of [360, 768]) {
     const page = await browser.newPage({ viewport: { width, height: 850 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
+    // Simulate native model availability, but fail if this ordinary workflow
+    // attempts neural processing. This is not an Android inference test.
+    await page.addInitScript(() => {
+      window.demucsAttempts = 0;
+      window.ChoirTune = {
+        loadState: () => localStorage.getItem('choirtune.state'),
+        saveState: json => { localStorage.setItem('choirtune.state', json); return true; },
+        demucsAvailable: () => true,
+        demucsBegin: () => { window.demucsAttempts++; throw new Error('Unexpected Demucs attempt'); }
+      };
+    });
     await page.goto(base);
+    assert.equal(await page.locator('#useDemucs').isChecked(), false);
+    assert.equal(await page.locator('#pickDemucsBtn').isDisabled(), true);
     assert.equal(await page.locator('#screen-home').isVisible(), true);
     assert.equal(await page.locator('#screen-settings').isVisible(), false);
     assert.equal(await page.locator('.tagline').textContent(), 'By Emmanuel Suah');
@@ -42,8 +55,16 @@ try {
       assert.equal(await page.locator('.screen:visible').count(), 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, name + ' fits viewport');
     }
+    // Enabling optional isolation must not affect home analysis.
+    await page.locator('#menuBtn').click();
+    await page.locator('[data-screen="settings"]').click();
+    await page.locator('#useDemucs').check();
+    assert.equal(await page.locator('#pickDemucsBtn').isEnabled(), true);
+    await page.locator('#screen-settings .back-home').click();
     await page.locator('#fileInput').setInputFiles({ name: 'Choir test.wav', mimeType: 'audio/wav', buffer: wav });
     await page.waitForFunction(() => !document.querySelector('#results').classList.contains('hidden'), { timeout: 20000 });
+    assert.equal(await page.evaluate(() => window.demucsAttempts), 0);
+    assert.match(await page.locator('#status').textContent(), /Analyzed without Demucs/);
     assert.match(await page.locator('.key-stat').textContent(), /source key \(estimate\)/);
     for (const part of ['soprano', 'alto', 'tenor', 'bass']) {
       await page.selectOption('#partSel', part);
@@ -68,5 +89,5 @@ try {
     }
     await page.close();
   }
-  console.log('CHOIRTUNE BROWSER TEST: responsive home/menu, keyboard focus, all tools, real WAV analysis, key/parts, saved-tune navigation and chart PASSED');
+  console.log('CHOIRTUNE BROWSER TEST: responsive home/menu, keyboard focus, all tools, real no-Demucs WAV analysis despite native opt-in, key/parts, saved-tune navigation and chart PASSED');
 } finally { await browser.close(); }

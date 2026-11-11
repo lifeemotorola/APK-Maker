@@ -53,7 +53,18 @@ function harness({ available = true, failBegin = '', failAppend = '', phases = [
 }
 const audio = { duration: 0.25 };
 const h = harness();
+assert.equal(h.api.enabled(), false, 'Native availability does not opt into Demucs');
+assert.equal(h.elements.useDemucs.checked, false);
+assert.equal(h.elements.pickDemucsBtn.disabled, true);
+assert.equal(h.calls.some(([kind]) => kind === 'begin' || kind === 'start'), false);
+h.elements.useDemucs.checked = true;
+h.elements.useDemucs.listeners.change();
 assert.equal(h.api.enabled(), true);
+assert.equal(h.elements.pickDemucsBtn.disabled, false);
+h.elements.useDemucs.checked = false;
+h.elements.useDemucs.listeners.change();
+assert.equal(h.api.enabled(), false);
+assert.equal(h.elements.pickDemucsBtn.disabled, true);
 const progress = [];
 const vocals = await h.api.isolate(audio, (text) => progress.push(text));
 assert.equal(vocals.sampleRate, 11025);
@@ -82,6 +93,7 @@ for (const duration of [0, 0.24, 900.001, 3600, NaN]) {
 const browser = harness({ available: false });
 assert.equal(browser.api.enabled(), false);
 assert.equal(browser.elements.useDemucs.disabled, true);
+assert.equal(browser.elements.pickDemucsBtn.disabled, true);
 await assert.rejects(browser.api.isolate(audio, () => {}), /not available/);
 for (const options of [{ failBegin: 'Could not prepare private audio storage' }, { failAppend: 'Invalid size' }, { phases: ['error'] }, { badOutput: true }]) {
   const test = harness(options);

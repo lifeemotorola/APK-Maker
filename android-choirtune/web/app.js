@@ -63,6 +63,11 @@
     if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
     e.target.value = '';
   });
+  $('pickDemucsBtn').addEventListener('click', function () { $('demucsFileInput').click(); });
+  $('demucsFileInput').addEventListener('change', function (e) {
+    if (e.target.files && e.target.files[0]) handleFile(e.target.files[0], true);
+    e.target.value = '';
+  });
   var dz = $('dropZone');
   dz.addEventListener('dragover', function (e) { e.preventDefault(); dz.classList.add('over'); });
   dz.addEventListener('dragleave', function () { dz.classList.remove('over'); });
@@ -72,9 +77,16 @@
     if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
 
-  async function handleFile(file) {
+  async function handleFile(file, requestDemucs) {
     if (window.ChoirLocalDemucs && window.ChoirLocalDemucs.busy()) { toast('Offline isolation is running. Cancel it and wait before choosing another song.'); return; }
-    var useDemucs = !!(window.ChoirLocalDemucs && window.ChoirLocalDemucs.enabled());
+    // Home upload and drag/drop always analyze the original audio, regardless
+    // of the optional Demucs checkbox. Only its dedicated picker can opt in.
+    var useDemucs = requestDemucs === true;
+    if (useDemucs && !(window.ChoirLocalDemucs && window.ChoirLocalDemucs.enabled())) {
+      toast('Enable optional Demucs isolation on a supported Android device first.');
+      return;
+    }
+    if (window.ChoirNavigation) window.ChoirNavigation.show('home', false);
     if (window.ChoirLocalDemucs) window.ChoirLocalDemucs.clear();
     if (file.size > 250 * 1024 * 1024) { toast('Please choose a file no larger than 250 MB'); return; }
     if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
@@ -84,7 +96,7 @@
     stopTune();
     clearOriginal();
     current = null;
-    setStatus('Decoding "' + file.name + '"...');
+    setStatus('Decoding "' + file.name + '"' + (useDemucs ? ' for Demucs...' : ' without Demucs...'));
     $('results').classList.add('hidden');
     try {
       var buf = await file.arrayBuffer();
@@ -100,7 +112,7 @@
       if (audioBuf.duration > 900) throw new Error('Please choose a song up to 15 minutes long.');
       if (useDemucs) {
         if (audioBuf.duration > 30 && !confirm('Full-song offline Demucs may take hours and use significant battery. Keep the app open and powered. Process the entire song?')) {
-          setStatus('Offline isolation cancelled. Uncheck Demucs for faster ordinary pitch estimates.');
+          setStatus('Offline isolation cancelled. Use Find key & choir tunes for analysis without Demucs.');
           return;
         }
         audioBuf = await window.ChoirLocalDemucs.isolate(audioBuf, function (message) {
@@ -148,7 +160,7 @@
       origAudio.onended = function () { $('playOrigBtn').textContent = 'Play original'; };
       current = { title: file.name.replace(/\.[^.]+$/, '') + (useDemucs ? ' (Demucs vocals; SATB estimates)' : ''), tune: tune, parts: parts };
       renderResults();
-      setStatus((useDemucs ? 'Blended vocals isolated on-device by Demucs. SATB tracks are synthesized estimates, not separated singers. ' : '') + 'Choose a part to inspect pitches in Hz and hear its estimated notes. Check voice assignments against the recording.');
+      setStatus((useDemucs ? 'Blended vocals isolated on-device by Demucs. SATB tracks are synthesized estimates, not separated singers. ' : 'Analyzed without Demucs. ') + 'Choose a part to inspect pitches in Hz and hear its estimated notes. Check voice assignments against the recording.');
     } catch (err) {
       if (ctx) ctx.close().catch(function () {});
       if (job === analysisId) setStatus('Could not analyze song: ' + (err && err.message ? err.message : 'unsupported or damaged audio file'));

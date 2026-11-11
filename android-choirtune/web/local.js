@@ -6,8 +6,12 @@
   var $ = function (id) { return document.getElementById(id); };
   var N = window.ChoirTune, available = !!(N && N.demucsAvailable && N.demucsAvailable());
   var busy = false, cancelled = false, ready = false;
-  $('useDemucs').checked = available;
+  // Model support never opts the user into neural processing.
+  $('useDemucs').checked = false;
   $('useDemucs').disabled = !available;
+  function updatePicker() { $('pickDemucsBtn').disabled = !available || !$('useDemucs').checked; }
+  $('useDemucs').addEventListener('change', updatePicker);
+  updatePicker();
   if (!available) $('localModelInfo').textContent = 'Bundled Demucs runs in the Android APK on supported 64-bit ARM phones. It is not available in this browser/device. Ordinary offline SATB estimates support songs up to 15 minutes. The optional server has its own limits.';
   function delay(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
   function check(stale) {
