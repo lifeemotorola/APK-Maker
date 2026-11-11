@@ -30,13 +30,13 @@ const bridge = readRoot('android-choirtune/app/src/main/java/com/choirtune/app/N
 const build = readRoot('android-choirtune/build.sh');
 
 check(/package="com\.choirtune\.app"/.test(manifest), 'manifest package com.choirtune.app');
-check(!/android\.permission\.INTERNET/.test(manifest), 'fully offline: no INTERNET permission');
+check(/android\.permission\.INTERNET/.test(manifest) && /usesCleartextTraffic="false"/.test(manifest), 'optional server feature: INTERNET permission with cleartext disabled');
 check(/READ_EXTERNAL_STORAGE/.test(manifest) && /maxSdkVersion="28"/.test(manifest), 'legacy storage permission only up to API 28 (MediaStore on 29+)');
 check(/@mipmap\/ic_launcher/.test(manifest) && /@string\/app_name/.test(manifest), 'PNG icon + app_name label');
 check(/Choir Tune Finder/.test(readRoot('android-choirtune/app/src/main/res/values/strings.xml')), 'app label Choir Tune Finder');
 
 check(/addJavascriptInterface/.test(main) && /"ChoirTune"/.test(main), 'window.ChoirTune bridge installed');
-check(/file:\/\/\/android_asset\/www\/index\.html/.test(main), 'page loaded from bundled assets');
+check(/https:\/\/appassets\.androidplatform\.net\/www\/index\.html/.test(main) && /shouldInterceptRequest/.test(main), 'page loaded from secure local bundled assets');
 check(/setAllowContentAccess\(true\)/.test(main) && /onShowFileChooser/.test(main), 'song upload file picker wired (content URIs)');
 check(/REQUEST_FILE_CHOOSER/.test(main) && /onActivityResult/.test(main), 'file chooser result handled');
 check(/state\.json/.test(main) && /getFilesDir/.test(main), 'state persisted in app-private files dir');
@@ -61,8 +61,8 @@ check(/roundRect/.test(app) || /fillRect/.test(app), 'piano roll drawn on canvas
 check(/ecj\.jar/.test(build) && /d8/.test(build) && /aapt2/.test(build) && /apksigner/.test(build), 'build.sh runs ecj/d8/aapt2/apksigner');
 check(/melody\.js/.test(build), 'build.sh stages melody.js into the APK');
 check(/check_no_emoji\.py/.test(build) && /test_web\.mjs/.test(build), 'build.sh runs emoji gate + this test');
-check(/--version-code 3/.test(build) && /--version-name 1\.2/.test(build), 'versionCode 3 / versionName 1.2');
-check(/ChoirTune-1\.2\.apk/.test(build), 'artifact name ChoirTune-1.2.apk');
+check(/--version-code 4/.test(build) && /--version-name 1\.3/.test(build), 'versionCode 4 / versionName 1.3');
+check(/ChoirTune-1\.3\.apk/.test(build), 'artifact name ChoirTune-1.3.apk');
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!EMOJI.test(html + app + melody + css), 'no emoji-range glyphs in web sources');
 

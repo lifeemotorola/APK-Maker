@@ -62,3 +62,9 @@ __pycache__/
 # Choir Tune Finder APK build outputs
 android-choirtune/app/build/
 android-choirtune/app/src/main/assets/www/
+
+# Server audio, model caches and processing environments
+choir-server-data/
+choir-server/.venv/
+choir-server/models/
+choir-server/.cache/

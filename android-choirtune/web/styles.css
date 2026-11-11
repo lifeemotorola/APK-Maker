@@ -76,3 +76,9 @@ h1 { font-size: 19px; margin: 0; }
 .pitch-needle { position: absolute; left: 50%; width: 4px; margin-left: -2px; top: -3px; height: 50px; background: var(--accent); visibility: hidden; }
 .locked .pitch-needle { background: var(--ok); box-shadow: 0 0 12px var(--ok); }
 .gauge-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+
+#serverUrl { width: 100%; min-width: 0; }
+#serverHeading ~ .fld { flex-wrap: wrap; margin-bottom: 12px; }
+#serverResults .voice-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: 13px; }
+#serverResults .voice-presets .btn { width: 100%; margin: 6px 0; }
+#serverFile { max-width: 100%; }

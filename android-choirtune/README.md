@@ -1,13 +1,48 @@
-# Choir Tune Finder 1.2 - Android APK
+# Choir Tune Finder 1.3 - Android APK
 
 Upload a song to estimate its **main melody and Soprano, Alto, Tenor, and Bass
-pitches**, entirely on-device. No account, server or network permission.
+pitches** on-device, with an optional, explicitly consented server-assisted
+vocal-isolation workflow. Offline analysis and the live tuner still work
+without an account or server.
 
 - Package: `com.choirtune.app`, label **Choir Tune Finder**
-- Version **1.2** / versionCode **3** (updates versions 1.0 and 1.1 with the same signing key)
+- Version **1.3** / versionCode **4** (updates earlier versions with the same signing key)
 - minSdk 23 / targetSdk 34; a recent Android System WebView is required
-- Artifact: `android-choirtune/app/build/ChoirTune-1.2.apk`
+- Artifact: `android-choirtune/app/build/ChoirTune-1.3.apk`
 - Root download copy: `ChoirTune.apk` (gitignored)
+
+## Optional server vocal isolation (1.3)
+
+A new panel accepts your **own deployed HTTPS server URL and access key**.
+There is no bundled public endpoint, model weights, or ready-made SATB model.
+The service code and deployment/limitations guide are in
+[`choir-server/README.md`](../choir-server/README.md).
+
+- Explicit per-recording consent; server uploads use a separate file picker.
+  Offline file selection does not send audio. Keys and job tokens stay in
+  memory; failed/interrupted deletion is reported, not claimed to have worked.
+- The service integrates **Demucs vocal/accompaniment isolation**, then tracks
+  pitches from the blended vocals. Actual inference needs operator-installed
+  runtime/weights and has not been verified in this environment.
+- A trusted external SATB model adapter can supply four actual audio stems.
+  **No choir-trained model is included.** Without one, the four practice WAVs
+  are clearly labelled **synthesized guides**, not separated singer audio.
+  Missing/invalid configured-model outputs fail rather than falling back silently.
+- A synchronized practice mixer supports solo and mute. Download model stems
+  when available, neural-isolated blended vocals/accompaniment, synthesized
+  guides, MIDI and a pitch report. View notes in the existing piano-roll/chart
+  UI; save note data locally, not server audio.
+- The supplied service uses a shared operator key, bounded private jobs,
+  authenticated artifact downloads, cancellation, deletion and one-hour default
+  expiry after completion. Review its operational/privacy guide before hosting.
+  The server operator can access recordings. Only upload recordings you are
+  authorized to share, to a server you trust.
+
+The requested guide limits now apply consistently: Soprano C4-A5, Alto G3-D5,
+Tenor C3-G4, Bass E2-E4. Overlapping ranges remain estimates, not singer IDs.
+Production hosting, a validated SATB model, actual neural inference and physical
+phone networking/memory/accuracy tests remain outstanding. Model-free contract
+CI is not a substitute for those checks.
 
 ## Live choir tuner (1.2)
 
@@ -45,7 +80,8 @@ singer's identity or perform simultaneous live SATB separation.
   Permission denial, unsupported capture, and read failures produce visible
   errors. Cancelled permission requests cannot restart the tuner later.
   Microphone frames are analyzed in memory; the live tuner does not store or
-  upload audio. No Internet permission is added.
+  upload audio. Version 1.3 adds Internet permission only for the optional
+  server workflow; the live tuner never uploads microphone frames.
 
 The UI/analysis loop targets **25 Hz**, not zero latency: the 4,096-sample
 capture window plus smoothing add response time, and device/OS scheduling
@@ -88,9 +124,9 @@ for several simultaneous fundamentals and assigns them to ordered guide ranges:
 
 | Part | Guide range | Description |
 | --- | --- | --- |
-| Soprano | C4-C6 | Highest part, often the melody |
+| Soprano | C4-A5 | Highest part, often the melody |
 | Alto | G3-D5 | Lower treble / middle harmony |
-| Tenor | C3-A4 | Higher standard male part |
+| Tenor | C3-G4 | Higher standard male part |
 | Bass | E2-E4 | Low foundation |
 
 These overlapping ranges are guides, not rules about gender or proof of voice
@@ -123,7 +159,10 @@ No real-choir accuracy benchmark or physical-phone test has been run yet.
 
 ## Android shell and build
 
-A bundled WebView loads `file:///android_asset/www/index.html`. The native
+A bundled WebView loads `https://appassets.androidplatform.net/www/index.html`
+through a restricted local asset interceptor (no external page hosting and no
+universal file-origin access). File access is disabled and cleartext network
+traffic is disallowed. The native
 `window.ChoirTune` bridge provides private `state.json` persistence, text sharing,
 and file saving. The system document picker supplies uploaded audio. Exports
 use MediaStore on Android 10+; Android 6-9 requests legacy write permission.
@@ -134,7 +173,7 @@ Browser mode falls back to localStorage and text/MIDI downloads.
 ./android-choirtune/build.sh
 ```
 
-The build runs all four dependency-free Node test suites, stages web assets,
+The build runs all five dependency-free Node test suites, stages web assets,
 runs the emoji gate, compiles Java with ecj, dexes with d8, packages with aapt2,
 aligns with `android/tools/pack_apk.py`, and signs with the debug keystore.
 Build outputs, tools and staged assets stay outside Git. Launcher artwork is
@@ -158,3 +197,11 @@ programmatically drawn. `.github/workflows/build-apk.yml` uploads `ChoirTune-APK
   gauge locking and directions, range presets, fixed targets, drone/capture
   exclusion, permission errors/cancellation and lifecycle release with test
   doubles; native permission/buffering/release wiring checks.
+
+- `node android-choirtune/web/test_server.mjs`: consent and HTTPS/key handling,
+  capability/output labels, misleading-stem rejection, synchronized mixer,
+  solo/mute, authenticated downloads and deletion using test doubles.
+- `python -m unittest discover -s choir-server -p 'test_*.py' -v`: service privacy,
+  bounded jobs, CORS/retention, cancellation, FFmpeg/adapter contracts and guide
+  exports, using injected fixtures rather than learned separation. See service
+  requirements before running. This has its own model-free CI job.

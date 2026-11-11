@@ -75,6 +75,7 @@
   async function handleFile(file) {
     if (file.size > 40 * 1024 * 1024) { toast('Please choose a file smaller than 40 MB'); return; }
     if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
+    if (window.ChoirServerAudio) window.ChoirServerAudio.stop();
     var job = ++analysisId;
     var ctx = null;
     stopTune();
@@ -121,6 +122,16 @@
       if (job === analysisId) setStatus('Could not analyze song: ' + (err && err.message ? err.message : 'unsupported or damaged audio file'));
     }
   }
+
+  window.ChoirImportServerAnalysis = function (analysis, title) {
+    analysisId++;
+    if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
+    stopTune(); clearOriginal();
+    current = { title: title + ' (server vocals)', tune: analysis.tune, parts: analysis.parts };
+    selectedPart = 'soprano'; transpose = 0;
+    $('partSel').value = selectedPart; $('transposeSel').value = '0';
+    renderResults(); setStatus('Estimated notes tracked from server vocal output. Verify voice assignments before rehearsal.');
+  };
 
   // ---------------- render results ----------------
   function renderResults() {
@@ -226,6 +237,7 @@
 
   window.ChoirSongPlayback = { stop: stopTune };
   $('playTuneBtn').addEventListener('click', function () {
+    if (window.ChoirServerAudio) window.ChoirServerAudio.stop();
     if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     if (!current) return;
     stopTune();
@@ -267,6 +279,7 @@
   $('stopTuneBtn').addEventListener('click', stopTune);
 
   $('playOrigBtn').addEventListener('click', function () {
+    if (window.ChoirServerAudio) window.ChoirServerAudio.stop();
     if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     if (!origAudio) return;
     if (!origAudio.paused) { origAudio.pause(); $('playOrigBtn').textContent = 'Play original'; return; }
