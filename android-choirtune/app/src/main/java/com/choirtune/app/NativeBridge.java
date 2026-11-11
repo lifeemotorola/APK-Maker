@@ -29,7 +29,7 @@ public class NativeBridge {
 
     @JavascriptInterface
     public String appVersion() {
-        return "1.4";
+        return "1.5";
     }
 
     @JavascriptInterface
@@ -44,11 +44,22 @@ public class NativeBridge {
     @JavascriptInterface
     public String demucsAppend(String chunk) { return activity.demucs().append(chunk); }
     @JavascriptInterface
-    public String demucsStart() { return activity.demucs().start(); }
+    public String demucsStart() {
+        String error = activity.demucs().start();
+        activity.keepDemucsAwake(activity.demucs().isRunning());
+        return error;
+    }
     @JavascriptInterface
-    public String demucsStatus() { return activity.demucs().status(); }
+    public String demucsStatus() {
+        String status = activity.demucs().status();
+        activity.keepDemucsAwake(activity.demucs().isRunning());
+        return status;
+    }
     @JavascriptInterface
-    public void demucsCancel() { activity.demucs().cancel(); }
+    public void demucsCancel() { activity.demucs().cancel(); activity.keepDemucsAwake(false); }
+
+    @JavascriptInterface
+    public void demucsExport() { activity.exportDemucsVocals(); }
 
     /** The whole app state as a JSON string ("{}" when empty). */
     @JavascriptInterface

@@ -561,6 +561,7 @@ jobs:
           export PATH="$HOME/apk-venv/bin:$PATH"
           cmake -S android-choirtune/native -B .cache/demucs-native/host -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build .cache/demucs-native/host -j 2
+          .cache/demucs-native/host/streaming_test .cache/demucs-native/stream-test
           python android-choirtune/native/test_inference.py
       - name: Verify APK signature
         run: java -jar android/tools/apksigner.jar verify -v ChoirTune.apk

@@ -1,23 +1,22 @@
-/* Bundled Demucs transport: bounded stereo PCM16 to the trusted Java bridge.
- * Audio stays app-private. No fetch to a remote host, no inferred SATB stems.
+/* Offline full-song transport. Only 30 seconds are resampled at once; native
+ * inference streams contextual blocks and stores WAV/analysis on private disk.
  */
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var N = window.ChoirTune, available = !!(N && N.demucsAvailable && N.demucsAvailable());
-  var busy = false, cancelled = false, url = null, vocalBytes = null;
+  var busy = false, cancelled = false, ready = false;
   $('useDemucs').checked = available;
   $('useDemucs').disabled = !available;
-  if (!available) $('localModelInfo').textContent = 'Bundled Demucs runs in the Android APK on supported 64-bit ARM phones. It is not available in this browser/device. Ordinary offline SATB estimates and the optional server remain available.';
-  function delay() { return new Promise(function (resolve) { setTimeout(resolve, 350); }); }
+  if (!available) $('localModelInfo').textContent = 'Bundled Demucs runs in the Android APK on supported 64-bit ARM phones. It is not available in this browser/device. Ordinary offline SATB estimates support songs up to 15 minutes. The optional server has its own limits.';
+  function delay(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
   function check(stale) {
     if (cancelled || (stale && stale())) throw new Error('Offline isolation cancelled');
   }
   function resetAudio() {
     $('localVocalsPlayer').pause();
     $('localVocalsPlayer').removeAttribute('src');
-    if (url) URL.revokeObjectURL(url);
-    url = null; vocalBytes = null;
+    ready = false;
     $('localVocals').classList.add('hidden');
   }
   function cancel() {
@@ -34,70 +33,84 @@
   async function isolate(audio, onProgress, stale) {
     if (!available) throw new Error('Bundled Demucs is not available on this device');
     if (busy) throw new Error('Wait for the previous offline job to stop');
-    if (!Number.isFinite(audio.duration) || audio.duration < 0.25 || audio.duration > 30)
-      throw new Error('Bundled Demucs accepts clips of 0.25 to 30 seconds. Choose a shorter clip or uncheck Demucs for ordinary estimates.');
+    if (!Number.isFinite(audio.duration) || audio.duration < 0.25 || audio.duration > 900)
+      throw new Error('Bundled Demucs accepts audio from 0.25 seconds up to 15 minutes. The whole song is processed, including 3-15 minute recordings.');
     busy = true; cancelled = false;
     $('cancelDemucsBtn').disabled = false;
     resetAudio();
-    var decode = null, began = false;
+    var began = false;
     try {
       check(stale);
-      onProgress('Resampling stereo audio for offline Demucs...');
       var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
       if (!OC) throw new Error('Offline resampling is unavailable. Update Android System WebView.');
       var frames = Math.round(audio.duration * 44100);
-      var offline = new OC(2, frames, 44100);
-      var source = offline.createBufferSource(); source.buffer = audio;
-      source.connect(offline.destination); source.start();
-      var stereo = await offline.startRendering();
-      check(stale);
       result(N.demucsBegin(frames * 4)); began = true;
-      var left = stereo.getChannelData(0), right = stereo.getChannelData(1);
-      // 8192 frames = 32 KiB per bridge call, well below the native limit.
-      for (var start = 0; start < frames; start += 8192) {
+      for (var offset = 0; offset < frames; offset += 30 * 44100) {
         check(stale);
-        var count = Math.min(8192, frames - start), bytes = new Uint8Array(count * 4);
-        var view = new DataView(bytes.buffer);
-        for (var i = 0; i < count; i++) {
-          view.setInt16(i * 4, Math.round(Math.max(-1, Math.min(1, left[start + i])) * 32767), true);
-          view.setInt16(i * 4 + 2, Math.round(Math.max(-1, Math.min(1, right[start + i])) * 32767), true);
+        onProgress('Preparing full song for offline Demucs: ' + Math.round(offset / frames * 100) + '%');
+        var count = Math.min(30 * 44100, frames - offset);
+        var offline = new OC(2, count, 44100);
+        var source = offline.createBufferSource(); source.buffer = audio;
+        source.connect(offline.destination);
+        source.start(0, offset / 44100, count / 44100);
+        var stereo = await offline.startRendering();
+        source.disconnect(); source.buffer = null; source = null; offline = null;
+        check(stale);
+        var left = stereo.getChannelData(0), right = stereo.getChannelData(1);
+        for (var start = 0; start < count; start += 8192) {
+          check(stale);
+          var length = Math.min(8192, count - start), bytes = new Uint8Array(length * 4);
+          var view = new DataView(bytes.buffer);
+          for (var i = 0; i < length; i++) {
+            view.setInt16(i * 4, Math.round(Math.max(-1, Math.min(1, left[start + i])) * 32767), true);
+            view.setInt16(i * 4 + 2, Math.round(Math.max(-1, Math.min(1, right[start + i])) * 32767), true);
+          }
+          result(N.demucsAppend(base64(bytes)));
+          if (start % 65536 === 0) await delay(0);
         }
-        result(N.demucsAppend(base64(bytes)));
-        // Let the Cancel button and UI run during bridge transfer.
-        if (start % 65536 === 0) await delay();
+        left = null; right = null; stereo = null;
       }
       check(stale); result(N.demucsStart());
-      var deadline = Date.now() + 20 * 60 * 1000;
+      var lastProgress = -1, lastChange = Date.now(), status;
       while (true) {
         check(stale);
-        if (Date.now() > deadline) throw new Error('Demucs exceeded 20 minutes; processing cancelled. Try a shorter clip.');
-        var status = JSON.parse(N.demucsStatus());
+        status = JSON.parse(N.demucsStatus());
         if (status.phase === 'done') break;
         if (status.phase === 'cancelled' || status.phase === 'error') throw new Error(status.error || 'Offline isolation cancelled');
         if (status.phase !== 'processing' && status.phase !== 'loading') throw new Error('Unexpected native job state');
+        var fraction = Number(status.progress) || 0;
+        if (fraction > lastProgress) { lastProgress = fraction; lastChange = Date.now(); }
+        // No whole-song 20-minute cutoff: a long song can take hours. Abort
+        // only after 30 minutes with no progress, or explicit user cancellation.
+        if (Date.now() - lastChange > 30 * 60 * 1000) throw new Error('Demucs made no progress for 30 minutes; processing cancelled.');
         onProgress(status.phase === 'loading' ? 'Verifying/loading embedded Demucs model. First run copies 84 MB locally...' :
-          'Isolating blended vocals offline: ' + Math.round((status.progress || 0) * 100) + '%. Keep the app open; this can take several minutes.');
-        await delay();
+          'Isolating the full song offline: ' + Math.round(fraction * 100) + '%. Keep the app open and powered; long songs may take hours.');
+        await delay(500);
       }
       check(stale);
-      var response = await fetch('https://appassets.androidplatform.net/demucs/vocals.wav', { cache: 'no-store' });
-      if (!response.ok) throw new Error('Could not read native vocal output');
+      // Fetch only mono 11025 Hz analysis (about 40 MB for 15 minutes), not
+      // the 159 MB stereo WAV. Playback/export stream the WAV from native disk.
+      var response = await fetch('https://appassets.androidplatform.net/demucs/analysis.f32', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Could not read native vocal analysis');
       var data = await response.arrayBuffer();
       check(stale);
-      if (data.byteLength !== frames * 4 + 44) throw new Error('Unexpected vocal WAV size');
-      decode = new (window.AudioContext || window.webkitAudioContext)();
-      var vocals = await new Promise(function (resolve, reject) { decode.decodeAudioData(data.slice(0), resolve, reject); });
-      check(stale);
-      vocalBytes = new Uint8Array(data);
-      url = URL.createObjectURL(new Blob([data], { type: 'audio/wav' }));
-      $('localVocalsPlayer').src = url;
+      if (data.byteLength !== Math.ceil(frames / 4) * 4) throw new Error('Unexpected vocal analysis size');
+      var pcm = new Float32Array(data.byteLength / 4), samples = new DataView(data);
+      for (var n = 0; n < pcm.length; n++) {
+        pcm[n] = samples.getFloat32(n * 4, true);
+        if (!Number.isFinite(pcm[n])) throw new Error('Invalid vocal analysis sample');
+        if (n % 262144 === 0) { await delay(0); check(stale); }
+      }
+      data = null; samples = null;
+      ready = true;
+      $('localVocalsPlayer').src = 'https://appassets.androidplatform.net/demucs/vocals.wav?job=' + Date.now();
       $('localVocals').classList.remove('hidden');
-      return vocals;
+      return { length: pcm.length, duration: frames / 44100, sampleRate: 11025,
+        numberOfChannels: 1, getChannelData: function () { return pcm; } };
     } catch (error) {
       if (began) N.demucsCancel();
       throw error;
     } finally {
-      if (decode) await decode.close().catch(function () {});
       busy = false; $('cancelDemucsBtn').disabled = true;
     }
   }
@@ -108,9 +121,7 @@
   });
   $('cancelDemucsBtn').addEventListener('click', cancel);
   $('saveLocalVocalsBtn').addEventListener('click', function () {
-    if (!vocalBytes) return;
-    var path = N.saveFile('demucs-blended-vocals.wav', base64(vocalBytes), 'audio/wav');
-    if (window.ChoirTuneEvents) window.ChoirTuneEvents.onSaved(path ? 'Vocal WAV saved: ' + path : 'Export requested; check storage permission.');
+    if (ready) N.demucsExport();
   });
   window.ChoirLocalDemucs = {
     isolate: isolate, cancel: cancel, clear: resetAudio,

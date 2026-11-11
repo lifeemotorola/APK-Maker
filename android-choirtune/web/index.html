@@ -90,8 +90,8 @@
     <h2 class="sect">1 · Upload a song</h2>
     <label class="help"><input id="useDemucs" type="checkbox" /> Isolate blended vocals with bundled Demucs before estimating SATB (offline)</label>
     <p id="localModelInfo" class="dim help">Demucs is available in the Android APK on 64-bit ARM phones. It needs at least 2.5 GB free RAM; a 6 GB or larger phone is recommended.
-      Choose a clip of 0.25 to 30 seconds; longer clips are rejected, never silently truncated. Inference can take several minutes and use significant battery.
-      Keep the app open. No model download, server or access key is needed. Uncheck for ordinary estimates up to 5 minutes.</p>
+      Choose a full song up to 15 minutes / 250 MB, including 3-15 minute recordings. Every section is processed in chunks; nothing is silently truncated. Long songs may take hours and use significant battery.
+      Keep the app open and powered; the screen stays awake during visible native processing. Allow roughly 500 MB free internal storage for a 15-minute song. No model download, server or access key is needed. Uncheck for faster ordinary estimates, also up to 15 minutes.</p>
     <p class="dim help"><a href="licenses.html">Embedded model and native runtime licenses</a></p>
     <button id="cancelDemucsBtn" class="btn" disabled>Cancel offline isolation</button>
     <div id="localVocals" class="hidden"><p class="help">Demucs blended vocal estimate, not four separated singers. SATB playback remains synthesized pitch guides.</p>
@@ -100,7 +100,7 @@
     </div>
     <div id="dropZone" class="dropzone">
       <p>Tap to choose an audio file, or drag &amp; drop it here</p>
-      <p class="dim">MP3, WAV, M4A and other device-supported audio. Up to 5 minutes / 40 MB. Nothing leaves your device.</p>
+      <p class="dim">MP3, WAV, M4A and other device-supported audio. Up to 15 minutes / 250 MB. Nothing leaves your device.</p>
       <button id="pickBtn" class="btn primary">Choose song</button>
       <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac" class="hidden" />
     </div>

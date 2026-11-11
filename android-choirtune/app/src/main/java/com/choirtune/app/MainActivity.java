@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.InputStream;
 
 /**
  * Choir Tune Finder — APK shell.
@@ -47,6 +48,7 @@ public class MainActivity extends Activity {
     private static final String STATE_FILE = "state.json";
     private static final int REQUEST_FILE_CHOOSER = 1001;
     private static final int REQUEST_STORAGE_PERMISSION = 1002;
+    private static final int REQUEST_VOCAL_EXPORT = 1004;
 
     private static final int REQUEST_MIC_PERMISSION = 1003;
     private MicrophoneController microphone;
@@ -54,7 +56,16 @@ public class MainActivity extends Activity {
     private WebView webView;
     private NativeBridge bridge;
     private DemucsController demucs;
+    private boolean demucsAwake;
     public DemucsController demucs() { return demucs; }
+    public void keepDemucsAwake(final boolean awake) {
+        runOnUiThread(new Runnable() { public void run() {
+            if (demucsAwake == awake) return;
+            demucsAwake = awake;
+            if (awake) getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }});
+    }
     private ValueCallback<Uri[]> fileChooserCallback;
     private String pendingSaveName;
     private String pendingSaveData;
@@ -95,6 +106,12 @@ public class MainActivity extends Activity {
                 Uri uri = Uri.parse(url);
                 if (!"appassets.androidplatform.net".equals(uri.getHost())) return null;
                 String path = uri.getPath();
+                if ("https".equals(uri.getScheme()) && "/demucs/analysis.f32".equals(path)) {
+                    try {
+                        return new WebResourceResponse("application/octet-stream", null, 200, "OK",
+                            Collections.singletonMap("Cache-Control", "no-store"), demucs.analysis());
+                    } catch (IOException ignored) { }
+                }
                 if ("https".equals(uri.getScheme()) && "/demucs/vocals.wav".equals(path)) {
                     try {
                         return new WebResourceResponse("audio/wav", null, 200, "OK",
@@ -148,6 +165,24 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_VOCAL_EXPORT) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                final Uri destination = data.getData();
+                new Thread(new Runnable() { public void run() {
+                    try (InputStream in = demucs.vocals();
+                         OutputStream out = getContentResolver().openOutputStream(destination, "wt")) {
+                        if (out == null) throw new IOException("Cannot open export destination");
+                        byte[] buffer = new byte[65536]; int n;
+                        while ((n = in.read(buffer)) != -1) out.write(buffer, 0, n);
+                        out.flush();
+                        pushJs("window.ChoirTuneEvents&&window.ChoirTuneEvents.onSaved('Blended vocal WAV exported')");
+                    } catch (Exception e) {
+                        pushJs("window.ChoirTuneEvents&&window.ChoirTuneEvents.onError('Vocal export failed. Keep the song open and check destination storage.')");
+                    }
+                }}, "choir-vocal-export").start();
+            }
+            return;
+        }
         if (requestCode == REQUEST_FILE_CHOOSER) {
             ValueCallback<Uri[]> cb = fileChooserCallback;
             fileChooserCallback = null;
@@ -271,6 +306,21 @@ public class MainActivity extends Activity {
             pushJs("if(window.ChoirTuneEvents){window.ChoirTuneEvents.onError("
                     + org.json.JSONObject.quote("share failed: " + e.getMessage()) + ")}");
         }
+        }});
+    }
+
+    /** Stream large vocal WAVs via SAF, never through a base64 JS string. */
+    public void exportDemucsVocals() {
+        runOnUiThread(new Runnable() { public void run() {
+            try {
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("audio/wav");
+                intent.putExtra(Intent.EXTRA_TITLE, "demucs-blended-vocals.wav");
+                startActivityForResult(intent, REQUEST_VOCAL_EXPORT);
+            } catch (Exception e) {
+                pushJs("window.ChoirTuneEvents&&window.ChoirTuneEvents.onError('No document provider available for WAV export')");
+            }
         }});
     }
 
