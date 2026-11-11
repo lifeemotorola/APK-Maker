@@ -58,3 +58,7 @@ wificam-driver/build/
 # Python bytecode caches
 __pycache__/
 *.pyc
+
+# Choir Tune Finder APK build outputs
+android-choirtune/app/build/
+android-choirtune/app/src/main/assets/www/
