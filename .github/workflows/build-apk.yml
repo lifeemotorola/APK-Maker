@@ -524,7 +524,7 @@ jobs:
   build-choirtune-apk:
     name: Build Choir Tune Finder APK
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -537,17 +537,34 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Install Android NDK r27 and native build tools
+        run: |
+          sdkmanager 'ndk;27.2.12479018' >/dev/null
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          python -m venv "$HOME/apk-venv"
+          "$HOME/apk-venv/bin/pip" install -r android-choirtune/native/requirements-build.txt
       - name: Build and test Choir Tune Finder
         run: ./android-choirtune/build.sh
+      - name: Real weighted host inference and input guards
+        run: |
+          export PATH="$HOME/apk-venv/bin:$PATH"
+          cmake -S android-choirtune/native -B .cache/demucs-native/host -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build .cache/demucs-native/host -j 2
+          python android-choirtune/native/test_inference.py
       - name: Verify APK signature
         run: java -jar android/tools/apksigner.jar verify -v ChoirTune.apk
+      - name: Check embedded model, ABI and native load alignment
+        run: python android-choirtune/native/verify_apk.py ChoirTune.apk
       - name: Upload APK artifact
         uses: actions/upload-artifact@v7
         with:
           name: ChoirTune-APK
           path: |
             ChoirTune.apk
-            android-choirtune/app/build/ChoirTune-1.3.apk
             android-choirtune/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30

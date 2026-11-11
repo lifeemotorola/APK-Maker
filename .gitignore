@@ -68,3 +68,7 @@ choir-server-data/
 choir-server/.venv/
 choir-server/models/
 choir-server/.cache/
+
+# Native dependency/model/build caches (never commit weights twice)
+.cache/
+android-choirtune/app/src/main/assets/demucs/

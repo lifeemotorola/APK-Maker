@@ -61,8 +61,8 @@ check(/roundRect/.test(app) || /fillRect/.test(app), 'piano roll drawn on canvas
 check(/ecj\.jar/.test(build) && /d8/.test(build) && /aapt2/.test(build) && /apksigner/.test(build), 'build.sh runs ecj/d8/aapt2/apksigner');
 check(/melody\.js/.test(build), 'build.sh stages melody.js into the APK');
 check(/check_no_emoji\.py/.test(build) && /test_web\.mjs/.test(build), 'build.sh runs emoji gate + this test');
-check(/--version-code 4/.test(build) && /--version-name 1\.3/.test(build), 'versionCode 4 / versionName 1.3');
-check(/ChoirTune-1\.3\.apk/.test(build), 'artifact name ChoirTune-1.3.apk');
+check(/--version-code 5/.test(build) && /--version-name 1\.4/.test(build), 'versionCode 5 / versionName 1.4');
+check(/ChoirTune-1\.4\.apk/.test(build), 'artifact name ChoirTune-1.4.apk');
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!EMOJI.test(html + app + melody + css), 'no emoji-range glyphs in web sources');
 

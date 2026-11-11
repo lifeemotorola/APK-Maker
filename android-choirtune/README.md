@@ -1,15 +1,79 @@
-# Choir Tune Finder 1.3 - Android APK
+# Choir Tune Finder 1.4 - Android APK
 
 Upload a song to estimate its **main melody and Soprano, Alto, Tenor, and Bass
 pitches** on-device, with an optional, explicitly consented server-assisted
-vocal-isolation workflow. Offline analysis and the live tuner still work
+vocal-isolation workflow. Version 1.4 also embeds real Demucs weights and an
+ARM64 C++ runtime for offline blended-vocal isolation. Offline analysis and the live tuner still work
 without an account or server.
 
 - Package: `com.choirtune.app`, label **Choir Tune Finder**
-- Version **1.3** / versionCode **4** (updates earlier versions with the same signing key)
+- Version **1.4** / versionCode **5** (updates earlier versions with the same signing key)
 - minSdk 23 / targetSdk 34; a recent Android System WebView is required
-- Artifact: `android-choirtune/app/build/ChoirTune-1.3.apk`
+- Artifact: `android-choirtune/app/build/ChoirTune-1.4.apk`
 - Root download copy: `ChoirTune.apk` (gitignored)
+
+## Bundled offline Demucs (1.4)
+
+The APK includes **htdemucs four-stem f16 weights** (83,994,361 bytes) and a
+C++17/Eigen inference engine, not a model-download button or server dependency.
+It is about **75 MiB** compressed. It installs on **64-bit ARM (arm64-v8a)**
+Android 6+ devices; no 32-bit ARM or x86 native libraries are included.
+
+1. In **Upload a song**, leave **Isolate blended vocals with bundled Demucs**
+   checked (default when the native library loads).
+2. Choose a **0.25-30 second** audio clip, at most 40 MB. Longer clips are
+   rejected, never silently cut. Keep the app open while it processes.
+3. Listen to or export **Demucs blended vocals**, then inspect the estimated
+   SATB pitches, synthesized part playback, transpose, MIDI/text and library.
+4. **Cancel offline isolation** stops transfer or requests cooperative native
+   cancellation. A current matrix operation may need to finish before memory
+   is released. A new job is rejected until the worker has stopped.
+5. Uncheck Demucs to use the existing ordinary estimates for up to five minutes,
+   or use the separate optional server workflow for longer recordings.
+
+**Honest output contract:** standard Demucs estimates vocals/drums/instrumental
+bass/other. Only **stem 3, blended vocals**, is passed to the existing SATB
+estimator. Instrumental bass is never used as choir Bass. Four SATB tracks are
+**pitch estimates/synthesized practice guides, NOT separated singers**. This
+is not a SATB-trained neural model and does not promise all four voices will
+be found correctly. Empty or ambiguous parts remain possible.
+
+**Memory and time:** approximately 6 GB device RAM is recommended; at least
+2.5 GB currently available RAM and roughly 120 MB free internal storage are
+checked before processing. Devices below about 4 GB physical RAM are refused.
+A one-second synthetic host test peaked around 1.7 GB RSS and took about a
+minute; this is not a phone-speed benchmark. Model segment buffers are large
+regardless of clip length. Long clips can take many minutes, heat the phone,
+consume battery, or still be killed by Android memory pressure. A 20-minute UI
+deadline requests cancellation. Low-memory/allocation errors are shown, not
+silently replaced by ordinary estimates. Native CPU processing is single-job,
+single-threaded Eigen, with no OpenMP/BLAS dependency.
+
+**Offline/privacy:** no network request is needed for the model or isolation.
+The verified model is copied from APK assets into app-private files on first
+use and verified by SHA-256 before each run. Input PCM and the one vocal WAV
+live in private cache; input is deleted on completion, and output is deleted
+on cancellation, replacement or activity destruction. After a crash, Android
+may retain cache until app storage is cleared. Saving notes does not save
+vocal audio; explicitly export the WAV to retain it. App backup is disabled
+so recordings and the large model copy are not included in Android backup.
+The optional server section still uploads only with its separate consent.
+
+The user-supplied eight archive parts are read at immutable repository commit
+`b2b6ed2f48bcc9e432c8a4c9a0af3d78e475bb58`. The combined archive extracts to:
+
+- Model: `ggml-model-htdemucs-4s-f16.bin`
+- Size: `83,994,361` bytes
+- SHA-256: `72b17c42d308982ddb5069bc3bf48b81a5aac4cb6516e4366c0fa7cef6df0064`
+
+`native/fetch.py` obtains pinned sources and these actual Git blobs via GitHub
+codeload, reconstructs the archive and verifies exact size/hash. No model
+binaries or dependency trees are duplicated into Git. Source/tool/model caches
+are ignored. The APK bundles Demucs MIT licenses, Eigen MPL2/compatible notices,
+and corresponding pinned source locations, accessible through **Embedded model
+and native runtime licenses**. This independently written JNI/Java bridge does
+not copy the GPL Android example app. The engine changes only two upstream
+process-exit invariant checks into exceptions; see `native/fetch.py`.
 
 ## Optional server vocal isolation (1.3)
 
@@ -169,15 +233,25 @@ use MediaStore on Android 10+; Android 6-9 requests legacy write permission.
 Browser mode falls back to localStorage and text/MIDI downloads.
 
 ```bash
+# Linux x86_64: Python 3.11+, Node, a JDK, CMake/Ninja and Android NDK.
+# Official NDK r27 is recommended (CI installs 27.2.12479018).
+export ANDROID_NDK_HOME=/path/to/android-sdk/ndk/27.2.12479018
+python3 -m venv "$HOME/apk-venv"
+"$HOME/apk-venv/bin/pip" install -r android-choirtune/native/requirements-build.txt
 ./android/fetch-tools.sh
 ./android-choirtune/build.sh
 ```
 
-The build runs all five dependency-free Node test suites, stages web assets,
+The build runs all six dependency-free Node test suites, stages web assets,
+verifies the model checksum, compiles/statically links/strips the native runtime,
 runs the emoji gate, compiles Java with ecj, dexes with d8, packages with aapt2,
 aligns with `android/tools/pack_apk.py`, and signs with the debug keystore.
 Build outputs, tools and staged assets stay outside Git. Launcher artwork is
-programmatically drawn. `.github/workflows/build-apk.yml` uploads `ChoirTune-APK`.
+programmatically drawn. The build refuses to produce a model-free placeholder
+if native setup fails. `native/verify_apk.py` checks the exact embedded model,
+ARM64 ELF machine/JNI exports and 16 KiB LOAD alignment. Native libraries are
+installer-extracted (`extractNativeLibs=true`); C++ is statically linked.
+`.github/workflows/build-apk.yml` uploads `ChoirTune-APK`.
 
 ## Tests
 
@@ -205,3 +279,37 @@ programmatically drawn. `.github/workflows/build-apk.yml` uploads `ChoirTune-APK
   bounded jobs, CORS/retention, cancellation, FFmpeg/adapter contracts and guide
   exports, using injected fixtures rather than learned separation. See service
   requirements before running. This has its own model-free CI job.
+
+### Native validation and remaining device testing
+
+```bash
+export PATH="$HOME/apk-venv/bin:$PATH"
+python android-choirtune/native/fetch.py
+cmake -S android-choirtune/native -B .cache/demucs-native/host -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build .cache/demucs-native/host -j 2
+python android-choirtune/native/test_inference.py
+python android-choirtune/native/verify_apk.py ChoirTune.apk
+node android-choirtune/web/test_local.mjs
+```
+
+The native smoke test loads all 533 actual checkpoint tensors, performs learned
+inference, checks a non-passthrough stereo 44.1 kHz WAV of the exact duration,
+and rejects malformed/oversized/silent input. Synthetic tones do **not** assess
+choir separation quality. The local JS harness covers PCM stereo interleaving,
+clip limits, memory rejection, polling/errors, cancellation, stale work, WAV
+retrieval and export. App tests verify that the **vocal output**, not original
+PCM, feeds pitch extraction and that native failures never silently fall back.
+These tests do not replace Android WebView/JNI/device integration testing.
+
+This sandbox's ARM64 APK was built with the NDK r22 mirror at
+`denoland/android_ndk@401019bf85744311b26c88ced255cd53401af8b7` because official
+Google downloads and GitHub release-asset hosts are blocked here. CI uses
+Google's official r27 installation instead. The artifact's actual ELF LOAD
+alignment is checked in either case, not inferred from the NDK version.
+
+Before claiming phone readiness, install on a physical ARM64 phone, turn off
+Wi-Fi/mobile data, run a short licensed choir-with-accompaniment clip, listen
+to the blended vocals, verify SATB labels/exports, cancel mid-run and retry,
+exercise background/rotation/destruction, and check low-memory/storage errors.
+No physical-device execution or real-choir quality benchmark has been completed
+in this environment. The optional server tests remain model-free as before.

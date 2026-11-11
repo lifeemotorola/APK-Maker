@@ -128,8 +128,31 @@ sandbox.ChoirImportServerAnalysis({ tune: serverTrack, parts: Object.fromEntries
 assert.equal($('partSel').value, 'soprano');
 assert($('sheetBody').innerHTML.includes('E5'));
 assert($('playOrigBtn').disabled);
+// Native Demucs output, not the original PCM, must feed both estimators.
+let nativeCalls = 0, nativeFail = false;
+const vocalPcm = new Float32Array(22050);
+for (let i = 0; i < vocalPcm.length; i++) vocalPcm[i] = 0.5 * Math.sin(2 * Math.PI * 659.255 * i / 22050);
+sandbox.ChoirLocalDemucs = {
+  enabled: () => true, busy: () => false, clear() {}, cancel() {}, stopAudio() {},
+  async isolate(audio, progress) {
+    nativeCalls++;
+    if (nativeFail) throw new Error('Native model failed');
+    progress('Isolating blended vocals offline');
+    return { duration: 1, length: vocalPcm.length, sampleRate: 22050, numberOfChannels: 1, getChannelData: () => vocalPcm };
+  }
+};
+await upload('Native.wav');
+assert.equal(nativeCalls, 1);
+assert($('sheetBody').innerHTML.includes('E5'));
+assert($('songInfo').innerHTML.includes('Demucs vocals; SATB estimates'));
+assert($('status').textContent.includes('not separated singers'));
+nativeFail = true;
+await upload('Native-error.wav');
+assert($('status').textContent.includes('Native model failed'));
+assert($('results').classList.contains('hidden')); // no silent fallback to mix
+sandbox.ChoirLocalDemucs = undefined;
 decodeFail = true;
 await upload('broken.mp3');
 assert($('status').textContent.includes('Could not analyze'));
 assert($('results').classList.contains('hidden'));
-console.log('CHOIRTUNE APP TEST: upload, playback, stop, transpose, MIDI, share, library, decode error ALL PASSED');
+console.log('CHOIRTUNE APP TEST: upload, playback, stop, transpose, MIDI, share, library, native-vocal analysis and errors ALL PASSED');
