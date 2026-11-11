@@ -520,3 +520,34 @@ jobs:
             android-jsmaster/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
+
+  build-choirtune-apk:
+    name: Build Choir Tune Finder APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build and test Choir Tune Finder
+        run: ./android-choirtune/build.sh
+      - name: Verify APK signature
+        run: java -jar android/tools/apksigner.jar verify -v ChoirTune.apk
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ChoirTune-APK
+          path: |
+            ChoirTune.apk
+            android-choirtune/app/build/ChoirTune-1.0.apk
+            android-choirtune/app/build/badging.txt
+          if-no-files-found: error
+          retention-days: 30

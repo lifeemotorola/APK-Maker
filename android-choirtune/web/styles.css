@@ -1,0 +1,64 @@
+:root {
+  --bg: #0B0F16;
+  --card: #121927;
+  --border: #22304a;
+  --text: #EAF1F8;
+  --muted: #93A7BF;
+  --accent: #38BDF8;
+  --accent-dim: rgba(56, 189, 248, 0.14);
+  --ok: #34D399;
+  --err: #F87171;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+.app { max-width: 760px; margin: 0 auto; padding: 12px 14px 40px; }
+.topbar { padding: 8px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon { width: 44px; height: 44px; border-radius: 12px; }
+h1 { font-size: 19px; margin: 0; }
+.tagline { font-size: 11px; color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+.hidden { display: none !important; }
+.sect { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 10px; }
+.dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 22px 14px; text-align: center; color: var(--muted); font-size: 13px; }
+.dropzone.over { border-color: var(--accent); background: var(--accent-dim); }
+.dropzone .dim { font-size: 11px; opacity: 0.8; }
+.btn { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); border-radius: 10px; padding: 9px 14px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+.btn.primary { background: var(--accent); color: #06121c; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+.input { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+.fld { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.status { min-height: 18px; font-size: 12px; color: var(--accent); margin-top: 8px; }
+.songinfo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.stat { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px; text-align: center; overflow: hidden; }
+.stat .n { font-size: 15px; font-weight: 800; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat .l { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.roll { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; margin: 8px 0; }
+.tablewrap { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+.sheet { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sheet th { position: sticky; top: 0; background: var(--bg); color: var(--muted); text-align: left; padding: 7px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+.sheet td { padding: 6px 10px; border-top: 1px solid var(--border); font-family: monospace; }
+.sheet td.note { color: var(--accent); font-weight: 700; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.item { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+.item .t { font-weight: 700; font-size: 14px; }
+.item .s { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.item .actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.item .actions .btn { padding: 5px 10px; font-size: 11px; }
+.dim { color: var(--muted); }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--card); border: 1px solid var(--accent); color: var(--text); padding: 9px 16px; border-radius: 99px; font-size: 12.5px; z-index: 9; max-width: 90vw; }
+
+.help { font-size: 12px; line-height: 1.6; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn:focus-visible, .input:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+@media (max-width: 480px) {
+  .songinfo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:first-child { grid-column: 1 / -1; }
+  .btn { min-height: 44px; }
+}
