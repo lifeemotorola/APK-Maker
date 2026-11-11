@@ -12,6 +12,9 @@ for (const part of ['soprano', 'alto', 'tenor', 'bass']) assert.match(html, new 
 const home = html.split('id="screen-home"')[1].split('id="screen-tuner"')[0];
 assert.match(home, /id="pickBtn"/);
 assert.match(home, /id="results"/);
+assert.match(home, /Without Demucs/);
+assert.doesNotMatch(home, /id="demucsFileInput"/);
+assert.match(html.split('id="screen-settings"')[1], /id="demucsFileInput"/);
 assert.doesNotMatch(home, /id="(?:serverUrl|startTunerBtn|useDemucs|library)"/);
 for (const screen of ['tuner', 'settings', 'library', 'server']) {
   assert.match(html, new RegExp('id="screen-' + screen + '" class="screen hidden" hidden'));

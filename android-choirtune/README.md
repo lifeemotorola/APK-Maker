@@ -1,4 +1,4 @@
-# Choir Tune Finder 1.6.0 - Android APK
+# Choir Tune Finder 1.6.1 - Android APK
 
 Upload a song to estimate its **main melody and Soprano, Alto, Tenor, and Bass
 pitches** on-device, with an optional, explicitly consented server-assisted
@@ -7,19 +7,32 @@ ARM64 C++ runtime for offline blended-vocal isolation. Offline analysis and the 
 without an account or server.
 
 - Package: `com.choirtune.app`, label **Choir Tune Finder**
-- Version **1.6.0** / versionCode **8** (updates earlier versions with the same signing key)
+- Version **1.6.1** / versionCode **9** (updates earlier versions with the same signing key)
 - minSdk 23 / targetSdk 34; a recent Android System WebView is required
-- Artifact: `android-choirtune/app/build/ChoirTune-1.6.0.apk`
+- Artifact: `android-choirtune/app/build/ChoirTune-1.6.1.apk`
 - Root download copy: `ChoirTune.apk` (gitignored)
 
 ## Simple song-first interface
 
 By Emmanuel Suah. The home screen focuses on choosing a song, its estimated key,
 and selecting Soprano, Alto, Tenor or Bass for synthesized practice playback.
-The hamburger menu opens the live tuner, song analysis setup, saved tunes, and
+The hamburger menu opens the live tuner, optional Demucs isolation, saved tunes, and
 optional server setup. Transpose, exports and the note chart are expandable.
 Leaving the tuner stops its microphone and reference drone. Navigating does not
 discard the selected song or cancel a background song-analysis job.
+
+## Find key and choir tunes without Demucs
+
+The main **Find key & choir tunes** section uses ordinary on-device pitch DSP.
+Choose a song (or drop it onto the upload area), inspect the estimated key, and
+select Soprano, Alto, Tenor or Bass for synthesized practice playback. It never
+runs Demucs or uploads audio, even if the optional Demucs checkbox is enabled.
+The same 15-minute / 250 MB input limits apply. Audio decoding still uses device
+memory; this mode is not a promise of unlimited resources or exact voice separation.
+
+Demucs is now **off by default**, including on supported ARM64 phones. Its
+separate picker is available under **Menu / Optional Demucs isolation** after
+explicitly enabling it. Both modes use the same result, playback and export tools.
 
 ## Bundled offline Demucs (1.5 full-song processing)
 
@@ -28,9 +41,9 @@ C++17/Eigen inference engine, not a model-download button or server dependency.
 It is about **75 MiB** compressed. It installs on **64-bit ARM (arm64-v8a)**
 Android 6+ devices; no 32-bit ARM or x86 native libraries are included.
 
-1. Open the hamburger menu / **Song analysis setup** and leave **Isolate blended vocals with bundled Demucs**
-   checked (default when the native library loads).
-2. Choose an audio file up to **15 minutes / 250 MB**, including 3-15 minute
+1. Open the hamburger menu / **Optional Demucs isolation** and check
+   **Isolate blended vocals with bundled Demucs** (off by default).
+2. Use **Choose song for Demucs** in that section to choose an audio file up to **15 minutes / 250 MB**, including 3-15 minute
    songs. Short test clips from 0.25 seconds still work; there is no three-minute
    minimum. Songs over 15 minutes are rejected, never silently cut. Confirm the
    long-job warning for songs over 30 seconds. Keep the app open and powered;
@@ -40,7 +53,8 @@ Android 6+ devices; no 32-bit ARM or x86 native libraries are included.
 4. **Cancel offline isolation** stops transfer or requests cooperative native
    cancellation. A current matrix operation may need to finish before memory
    is released. A new job is rejected until the worker has stopped.
-5. Uncheck Demucs for faster ordinary pitch estimates, also up to 15 minutes.
+5. Return to **Find key & choir tunes** for faster pitch estimates without
+   Demucs, also up to 15 minutes. No need to change the isolation checkbox.
    The separate optional server still has its own 5-minute / 40 MB limit;
    it is not automatically used as a fallback.
 
@@ -372,7 +386,8 @@ in this environment. The optional server tests remain model-free as before.
 The Android build runs `node android-choirtune/web/test_navigation.mjs` along with
 the DSP and app suites. Optional browser checks exercise the actual file picker,
 WebAudio analysis, key/part selector, menu focus, responsive pages, library
-round-trip and note chart:
+round-trip and note chart. A simulated available native bridge verifies that
+ordinary uploads do not start Demucs even after its optional checkbox is enabled:
 
 ```sh
 # In one terminal:

@@ -15,7 +15,7 @@ class Element {
   }
   addEventListener(event, fn) { this.listeners[event] = fn; }
   click() { return this.dispatch('click'); }
-  dispatch(event) { return this.listeners[event]?.({ target: this }); }
+  dispatch(event, extra = {}) { return this.listeners[event]?.({ target: this, ...extra }); }
   set innerHTML(value) {
     this.html = value;
     this.rows = [...value.matchAll(/data-id="([^"]+)"/g)].map((match) => {
@@ -35,6 +35,7 @@ class Element {
 }
 const elements = Object.fromEntries([...read('index.html').matchAll(/id="([^"]+)"/g)].map((m) => [m[1], new Element(m[1])]));
 const $ = (id) => elements[id];
+let confirmations = 0;
 let saved = '{}', exported, shared, decodeFail = false, decodedDuration = 1, paused = true, playCount = 0, revoked = 0;
 const pcm = new Float32Array(22050);
 for (let i = 0; i < pcm.length; i++) pcm[i] = 0.5 * Math.sin(2 * Math.PI * 440 * i / 22050);
@@ -51,7 +52,7 @@ class AudioContext {
 }
 const sandbox = {
   console, Float32Array, ArrayBuffer, Buffer, setTimeout: (fn, ms) => ms === 2600 ? 0 : setTimeout(fn, 0),
-  requestAnimationFrame: () => 1, cancelAnimationFrame() {}, confirm: () => true,
+  requestAnimationFrame: () => 1, cancelAnimationFrame() {}, confirm: () => { confirmations++; return true; },
   AudioContext,
   Audio: class {
     get paused() { return paused; }
@@ -73,9 +74,10 @@ vm.runInContext(read('melody.js'), sandbox);
 vm.runInContext(read('satb.js'), sandbox);
 vm.runInContext(read('app.js'), sandbox);
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-async function upload(name) {
-  $('fileInput').files = [{ name, size: 100, arrayBuffer: async () => new ArrayBuffer(10) }];
-  await $('fileInput').dispatch('change');
+async function upload(name, demucs = false) {
+  const input = $(demucs ? 'demucsFileInput' : 'fileInput');
+  input.files = [{ name, size: 100, arrayBuffer: async () => new ArrayBuffer(10) }];
+  await input.dispatch('change');
   for (let tries = 0; tries < 100; tries++) {
     if (!$('results').classList.contains('hidden') || $('status').textContent.includes('Could not analyze')) break;
     await delay(10);
@@ -141,13 +143,32 @@ sandbox.ChoirLocalDemucs = {
     return { duration: 1, length: vocalPcm.length, sampleRate: 22050, numberOfChannels: 1, getChannelData: () => vocalPcm };
   }
 };
-await upload('Native.wav');
+// The no-Demucs home path ignores an enabled optional isolation setting.
+await upload('No-Demucs.wav');
+assert.equal(nativeCalls, 0);
+assert($('sheetBody').innerHTML.includes('A4'), 'Original mix feeds ordinary pitch analysis');
+assert($('status').textContent.includes('Analyzed without Demucs'));
+assert(!$('songInfo').innerHTML.includes('Demucs vocals'));
+$('dropZone').dispatch('drop', { preventDefault() {}, dataTransfer: { files: [{ name: 'Dropped.wav', size: 100, arrayBuffer: async () => new ArrayBuffer(10) }] } });
+for (let tries = 0; tries < 100 && $('results').classList.contains('hidden'); tries++) await delay(10);
+assert.equal(nativeCalls, 0, 'Drop also bypasses Demucs');
+assert($('status').textContent.includes('Analyzed without Demucs'));
+const beforeOrdinaryConfirmations = confirmations;
+for (const duration of [180, 900]) {
+  decodedDuration = duration;
+  await upload('Ordinary-long-song.wav');
+  assert.equal(nativeCalls, 0);
+  assert($('status').textContent.includes('Analyzed without Demucs'));
+}
+assert.equal(confirmations, beforeOrdinaryConfirmations, 'No neural-processing warning on ordinary uploads');
+decodedDuration = 1;
+await upload('Native.wav', true);
 assert.equal(nativeCalls, 1);
 assert($('sheetBody').innerHTML.includes('E5'));
 assert($('songInfo').innerHTML.includes('Demucs vocals; SATB estimates'));
 assert($('status').textContent.includes('not separated singers'));
 nativeFail = true;
-await upload('Native-error.wav');
+await upload('Native-error.wav', true);
 assert($('status').textContent.includes('Native model failed'));
 assert($('results').classList.contains('hidden')); // no silent fallback to mix
 // Duration guard contracts use a short decoded fixture with overridden duration;
@@ -155,19 +176,22 @@ assert($('results').classList.contains('hidden')); // no silent fallback to mix
 for (const duration of [180, 900]) {
   decodedDuration = duration;
   const before = nativeCalls;
-  await upload('Long-song.wav');
+  await upload('Long-song.wav', true);
   assert.equal(nativeCalls, before + 1); // not rejected by old 30s/5min guards
   assert($('status').textContent.includes('Native model failed'));
 }
 decodedDuration = 900.01;
 const beforeOversized = nativeCalls;
-await upload('Too-long.wav');
+await upload('Too-long.wav', true);
 assert.equal(nativeCalls, beforeOversized);
 assert($('status').textContent.includes('15 minutes'));
 decodedDuration = 1;
 sandbox.ChoirLocalDemucs = undefined;
+$('demucsFileInput').files = [{ name: 'Unavailable.wav' }];
+$('demucsFileInput').dispatch('change');
+assert($('toast').textContent.includes('supported Android device'));
 decodeFail = true;
 await upload('broken.mp3');
 assert($('status').textContent.includes('Could not analyze'));
 assert($('results').classList.contains('hidden'));
-console.log('CHOIRTUNE APP TEST: upload, playback, stop, transpose, MIDI, share, library, native-vocal analysis and errors ALL PASSED');
+console.log('CHOIRTUNE APP TEST: upload, playback, stop, transpose, MIDI, share, library, no-Demucs upload/drop, explicit native-vocal analysis and errors ALL PASSED');

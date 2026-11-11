@@ -129,3 +129,5 @@ summary:focus-visible, .menu-button:focus-visible, .menu-link:focus-visible { ou
 .screen .fld { flex-wrap: wrap; }
 .screen .input { max-width: 100%; }
 @media (max-width: 380px) { .app { padding-inline: 12px; } .card { padding: 16px; } .brand-icon { display: none; } }
+
+.mode-label { color: var(--accent); font-size: 12px; font-weight: 600; line-height: 1.6; }

@@ -25,9 +25,9 @@
     <div class="menu-heading"><h2 id="menuTitle">Choir Tune Finder</h2><button id="closeMenuBtn" class="btn" aria-label="Close menu">Close</button></div>
     <p class="dim help">By Emmanuel Suah</p>
     <nav aria-label="App sections">
-      <button class="menu-link" data-screen="home" aria-current="page">Find key &amp; parts</button>
+      <button class="menu-link" data-screen="home" aria-current="page">Find key &amp; choir tunes (no Demucs)</button>
       <button class="menu-link" data-screen="tuner">Live tuner</button>
-      <button class="menu-link" data-screen="settings">Song analysis setup</button>
+      <button class="menu-link" data-screen="settings">Optional Demucs isolation</button>
       <button class="menu-link" data-screen="library">Saved tunes</button>
       <button class="menu-link" data-screen="server">Optional server setup</button>
     </nav>
@@ -37,12 +37,13 @@
     <section class="intro" aria-labelledby="homeTitle">
       <p class="eyebrow">YOUR CHOIR PRACTICE COMPANION</p>
       <h2 id="homeTitle" tabindex="-1">Find the key.<br />Learn your part.</h2>
-      <p>Choose a song to estimate its key and explore the Soprano, Alto, Tenor or Bass notes.</p>
+      <p>Find the key and choir tunes without Demucs. Choose a song to estimate its Soprano, Alto, Tenor and Bass notes directly on your device.</p>
     </section>
   <!-- UPLOAD -->
   <section class="card">
-    <h2 class="sect">Choose your choir song</h2>
-    <p class="dim help">Parts are pitch estimates, not isolated singers. Offline vocal isolation can be slow and memory-intensive. Change it in Menu / Song analysis setup.</p>
+    <h2 class="sect">Find key &amp; choir tunes</h2>
+    <p class="mode-label">Without Demucs · Offline pitch analysis</p>
+    <p class="dim help">No vocal isolation, server or model processing is used in this section. Parts are pitch estimates, not isolated singers. Best with clear, unaccompanied singing.</p>
     <button id="cancelDemucsBtn" class="btn" disabled>Cancel offline isolation</button>
     <div id="localVocals" class="hidden"><p class="help">Demucs blended vocal estimate, not four separated singers. SATB playback remains synthesized pitch guides.</p>
       <audio id="localVocalsPlayer" controls preload="none" aria-label="Demucs blended vocals"></audio>
@@ -51,7 +52,7 @@
     <div id="dropZone" class="dropzone">
       <p class="upload-title">Start with a recording</p><p>Tap below, or drop an audio file here.</p>
       <p class="dim">MP3, WAV, M4A and other device-supported audio. Up to 15 minutes / 250 MB. Nothing leaves your device.</p>
-      <button id="pickBtn" class="btn primary">Choose song</button>
+      <button id="pickBtn" class="btn primary">Choose song (no Demucs)</button>
       <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac" class="hidden" />
     </div>
     <details class="explanation"><summary>How accurate are the parts?</summary><p class="dim help">Estimates pitches for Soprano (C4-A5), Alto (G3-D5), Tenor (C3-G4), and Bass (E2-E4).
@@ -148,14 +149,16 @@
 
   </div>
   <div id="screen-settings" class="screen hidden" hidden>
-    <div class="page-heading"><button class="btn back-home" type="button">Back to song</button><h2 tabindex="-1">Song analysis setup</h2></div>
+    <div class="page-heading"><button class="btn back-home" type="button">Back to song</button><h2 tabindex="-1">Optional Demucs isolation</h2></div>
   <section class="card">
     <label class="help"><input id="useDemucs" type="checkbox" /> Isolate blended vocals with bundled Demucs before estimating SATB (offline)</label>
     <p id="localModelInfo" class="dim help">Demucs is available in the Android APK on 64-bit ARM phones. There is no preset minimum-RAM check. Demucs still uses substantial working memory; processing may fail or Android may close the app if memory runs out.
       Choose a full song up to 15 minutes / 250 MB, including 3-15 minute recordings. Every section is processed in chunks; nothing is silently truncated. Long songs may take hours and use significant battery.
-      Keep the app open and powered; the screen stays awake during visible native processing. Allow roughly 500 MB free internal storage for a 15-minute song. No model download, server or access key is needed. Uncheck for faster ordinary estimates, also up to 15 minutes.</p>
+      Keep the app open and powered; the screen stays awake during visible native processing. Allow roughly 500 MB free internal storage for a 15-minute song. No model download, server or access key is needed. The main Find key &amp; choir tunes section always skips Demucs, even when this option is checked.</p>
     <p class="dim help"><a href="licenses.html">Embedded model and native runtime licenses</a></p>
-    <p class="dim help">Changes apply to the next song you choose. Return to the song screen to begin.</p>
+    <p class="dim help">Demucs is off by default. To use it, enable the option above and choose a song here. This does not change the no-Demucs section.</p>
+    <button id="pickDemucsBtn" class="btn primary" disabled>Choose song for Demucs</button>
+    <input id="demucsFileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac" class="hidden" aria-label="Choose song for optional Demucs isolation" />
   </section>
   </div>
   <div id="screen-library" class="screen hidden" hidden>

@@ -31,6 +31,10 @@ def verify(path):
         ui = apk.read('assets/www/index.html').decode()
         assert 'By Emmanuel Suah' in ui and 'id="menuBtn"' in ui
         assert 'Find the key.' in ui and 'screen-settings' in ui
+        assert 'Without Demucs' in ui and 'id="demucsFileInput"' in ui
+        assert "$('useDemucs').checked = false" in local
+        app = apk.read('assets/www/app.js').decode()
+        assert 'var useDemucs = requestDemucs === true;' in app
         assert 'ChoirNavigation' in apk.read('assets/www/navigation.js').decode()
         dex = apk.read('classes.dex')
         assert b'Demucs needs at least 2.5 GB currently available RAM' not in dex, 'Obsolete RAM gate shipped in APK'
