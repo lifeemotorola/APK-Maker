@@ -9,7 +9,7 @@ server in the repo root) into a **self-contained Android APK** that adds
 - Runs the full KeySense Studio UI (bundled in `assets/www`) inside a WebView,
   fully offline — all 5 demo songs (WAV + precomputed chord/key analysis) are
   bundled in `assets/demos`.
-- **MIDI / Bluetooth input**: a new **"MIDI / BT"** button opens a device
+- **MIDI / Bluetooth input**: **Song menu / Connect to Instrument** opens a device
   panel that lists all MIDI devices known to Android's
   `android.media.midi.MidiManager` — **USB MIDI keyboards** and **Bluetooth
   LE MIDI controllers** (e.g. Yamaha MD-BT01, Roland WM-EC, QuiccoSound
@@ -112,7 +112,7 @@ toolchain is fetched from npm/PyPI by `fetch-tools.sh`.
 
 ```bash
 ./android/build.sh
-# -> android/app/build/KeySense-Studio-1.1.0.apk  (copied to ./KeySense-Studio.apk)
+# -> android/app/build/KeySense-Studio-1.2.0.apk  (copied to ./KeySense-Studio.apk)
 ```
 
 The build needs only `node`, `npm`, `python3` and network access to the
@@ -139,3 +139,53 @@ adb install KeySense-Studio.apk
 minSdk 23 (Android 6.0), targetSdk 34. Signed with the standard Android
 debug key (`android` / `androiddebugkey`) — fine for local installs and
 testing; use your own release keystore for distribution.
+
+
+## KeySense Studio 1.2.0: chord-tracker-inspired practice layout
+
+The interface uses dark player surfaces, amber timed chord blocks, large transport
+controls and bottom Staff Notation / Keyboard / Guitar / Play Settings tabs,
+inspired by the supplied Yamaha screenshots. It retains KeySense branding; it
+is not a Yamaha product or an instrument-control compatibility claim.
+
+- The home screen opens music uploads, bundled demos, demo favorites, the current
+  uploaded song and instrument connections. Favorites persist as demo IDs in local
+  storage; uploaded audio remains session-only and must be reopened after restart.
+- Chord blocks seek/audition the real detected progression. Four-beat practice
+  groups use the estimated BPM, not a detected meter or automatically detected
+  song sections. Long charts disclose the 500-group display cap; the full Chord
+  Tracker remains in Play Settings.
+- Chord & section lets you audition a chord and manually color its practice group
+  A-D. These labels reset when a new song loads; they are not analysis results.
+- Staff shows suggested chord voicings (treble/bass), not rhythm transcription.
+  Keyboard highlights chord pitch classes and is playable. Guitar suggests
+  standard-tuning, capo-zero fret positions only when the complete chord and
+  root/slash bass fit; unavailable shapes are explicitly reported. Dots are not
+  finger numbers or a guarantee of an easy grip.
+- Play Settings retains speed, guide transposition, voicing/tone, volumes,
+  in-key filtering, full 61-key piano, waveform loop editor, key harmony, dictionary
+  and full Chord Tracker/text export. Canvas tools mount when expanded.
+- Transpose changes diagrams, the synthesized guide and MIDI, not original audio.
+  Full Screen is an in-app chart-focus view; the bottom control or Escape exits.
+  The red microphone opens the existing Live Mic dialog; it is not a fake record
+  toggle. USB/BLE MIDI connection and MIDI export remain in the song menu.
+
+### Web preview and checks
+
+Run from the repository root, with the Python DSP dependencies installed:
+
+```sh
+python3 server.py                 # audio API + static_ui on 0.0.0.0:8000
+npm run dev -- --host 0.0.0.0    # Vite preview on 5173, same-origin API proxy
+npx tsc --noEmit -p tsconfig.json
+npx esbuild scripts/test_practice_layout.ts --bundle --platform=node --format=esm --outfile=.cache/test_practice.mjs
+node .cache/test_practice.mjs
+```
+
+The Android build runs the practice-layout test alongside the existing analyzer,
+progression, chord-tracker and mic-shell tests. With Playwright installed, the
+optional `node scripts/test_keysense_browser.mjs` checks real demo/API playback,
+seeking, looping, instrument tabs, settings, favorites and mobile/desktop layout.
+Use `PLAYWRIGHT_MODULE` and `CHROMIUM_EXECUTABLE` for an external test toolchain,
+and `KEYSENSE_PREVIEW_URL` for a different server. Desktop checks do not replace
+physical Android, microphone, Bluetooth or USB-instrument testing.

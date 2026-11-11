@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 KeySense Studio — Unified Production & Live-Preview Server
-Binds to 0.0.0.0:8000, serving both the React Studio SPA (/home/user/static_ui)
+Binds to 0.0.0.0:8000, serving both the React Studio SPA (repository static_ui/)
 and the Acoustic DSP API (/api/analyze, /api/demos, /api/export-midi, /demos/*).
 """
 
@@ -20,7 +20,7 @@ from email.policy import default as default_email_policy
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-ROOT_DIR = Path("/home/user")
+ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 

@@ -60,7 +60,7 @@ check(/Live Progression Track/.test(modal), 'Live Progression Track UI present i
 check(/buildLiveLogText/.test(modal) && /exportTrackLog/.test(modal), 'live progression exportable as a text chart');
 const appSrc = fs.readFileSync('src/App.tsx', 'utf8');
 const trackerSrc = fs.readFileSync('src/components/ChordTracker.tsx', 'utf8');
-check(/ChordTracker/.test(appSrc) && /setBottomTab\('tracker'\)/.test(appSrc), 'App adds the Chord Tracker tab');
+check(/ChordTracker/.test(appSrc) && /Chord Tracker &amp; text export/.test(appSrc), 'App retains Chord Tracker in advanced Play Settings');
 check(/buildProgressionTrack/.test(trackerSrc) && /findActiveEntry/.test(trackerSrc), 'ChordTracker builds the timed progression track');
 check(/buildChartText/.test(trackerSrc) && /downloadBytes/.test(trackerSrc), 'ChordTracker exports the chart text');
 

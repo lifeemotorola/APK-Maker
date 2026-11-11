@@ -1,6 +1,6 @@
 """
 Generates 5 lush, realistic multi-instrument studio demo songs (Acoustic Piano +
-Warm Rhodes Pad + Upright/Sub Bass + Top Melody + Drum Groove) saved in /home/user/demos,
+Warm Rhodes Pad + Upright/Sub Bass + Top Melody + Drum Groove) saved in the repository demos/ directory,
 and runs KeySense's DSP Engine on each so users can immediately explore real songs.
 """
 
@@ -16,7 +16,7 @@ import soundfile as sf
 
 from backend.dsp_engine import analyze_audio_bytes
 
-DEMOS_DIR = Path("/home/user/demos")
+DEMOS_DIR = Path(__file__).resolve().parents[1] / "demos"
 
 
 def midi_to_hz(midi: float) -> float:
