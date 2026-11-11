@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https:; img-src 'self' blob: data:; media-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Choir Tune Finder</title>
 <link rel="stylesheet" href="styles.css" />
@@ -55,6 +56,35 @@
     <div id="tunerStatus" role="status" aria-live="polite" class="status">Ready. Tap Start microphone and allow access.</div>
   </section>
 
+  <section class="card" aria-labelledby="serverHeading">
+    <h2 id="serverHeading" class="sect">Optional server vocal isolation</h2>
+    <p class="dim help">Requires your own deployed HTTPS processing server and access key. No public server is bundled.
+      Demucs estimates blended vocals without accompaniment. Four actual SATB audio stems require an additional operator-supplied model.
+      Without it, practice tracks are synthesized pitch guides, NOT isolated singers.</p>
+    <label class="fld">Server address <input id="serverUrl" class="input" type="url" placeholder="https://your-server.example" autocomplete="off" /></label>
+    <label class="fld">Access key <input id="serverKey" class="input" type="password" autocomplete="off" /></label>
+    <button id="checkServerBtn" class="btn">Check server capabilities</button>
+    <p><input id="serverFile" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg" aria-label="Choose recording for server processing" /></p>
+    <label class="dim help"><input id="uploadConsent" type="checkbox" /> I authorize sending this selected recording to the server above for processing. I have permission to upload it.</label>
+    <p class="dim help">Up to 5 minutes / 40 MB. The operator can access uploaded audio. The supplied service deletes known jobs on request
+      and expires completed results after one hour by default. Check server capabilities for retention. Never upload private recordings to an untrusted server.</p>
+    <div class="row"><button id="uploadServerBtn" class="btn primary">Upload and process on server</button><button id="deleteServerBtn" class="btn">Cancel / delete server job</button></div>
+    <div id="serverStatus" class="status" role="status" aria-live="polite">Offline features below never upload songs.</div>
+    <div id="serverResults" class="hidden">
+      <p id="stemKind" class="help"></p><p id="serverWarning" class="dim help"></p>
+      <div class="voice-presets">
+        <div><label><input id="include-soprano" type="checkbox" checked /> Soprano</label><button id="solo-soprano" class="btn">Solo soprano</button></div>
+        <div><label><input id="include-alto" type="checkbox" checked /> Alto</label><button id="solo-alto" class="btn">Solo alto</button></div>
+        <div><label><input id="include-tenor" type="checkbox" checked /> Tenor</label><button id="solo-tenor" class="btn">Solo tenor</button></div>
+        <div><label><input id="include-bass" type="checkbox" checked /> Bass</label><button id="solo-bass" class="btn">Solo bass</button></div>
+      </div>
+      <div class="row"><button id="playServerPartsBtn" class="btn primary">Play practice mix</button><button id="playServerVocalsBtn" class="btn">Play blended vocals</button><button id="stopServerAudioBtn" class="btn">Stop server audio</button></div>
+      <div class="row"><button id="importServerBtn" class="btn">View pitch chart / save notes</button><select id="serverArtifact" class="input" aria-label="Server output to download"></select><button id="downloadServerBtn" class="btn">Download selected output</button></div>
+      <p class="dim help">Uncheck a part to mute it, or use Solo. Downloaded WAVs are untransposed server outputs. Pitch charts and MIDI can be transposed in the offline chart view.
+        Saving notes does not save server audio or extend its retention.</p>
+    </div>
+  </section>
+
   <!-- UPLOAD -->
   <section class="card">
     <h2 class="sect">1 · Upload a song</h2>
@@ -64,7 +94,7 @@
       <button id="pickBtn" class="btn primary">Choose song</button>
       <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac" class="hidden" />
     </div>
-    <p class="dim help">Estimates pitches for Soprano (C4-C6), Alto (G3-D5), Tenor (C3-A4), and Bass (E2-E4).
+    <p class="dim help">Estimates pitches for Soprano (C4-A5), Alto (G3-D5), Tenor (C3-G4), and Bass (E2-E4).
       These are overlapping guide ranges, not rules about a singer's gender or voice type.
       SATB labels are inferred from pitch and continuity, not isolated voices. Instruments, unison and crossing parts can mislead.
       Best with clear unaccompanied singing. Empty tracks mean no reliable pitch estimate, not that a voice is absent.</p>
@@ -126,5 +156,6 @@
 <script src="tunerPitch.js"></script>
 <script src="tuner.js"></script>
 <script src="app.js"></script>
+<script src="server.js"></script>
 </body>
 </html>

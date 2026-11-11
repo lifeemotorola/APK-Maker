@@ -20,6 +20,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceResponse;
+import java.io.ByteArrayInputStream;
+import java.util.Collections;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -31,7 +34,7 @@ import java.io.OutputStream;
 /**
  * Choir Tune Finder — APK shell.
  *
- * Bundled web app (assets/www, loaded via file:// — fully offline) that
+ * Bundled web app (assets/www, served under a secure local HTTPS origin) that
  * extracts the main melody ("the choir's tune") from an uploaded song.
  * window.ChoirTune bridge: state persistence (state.json in filesDir),
  * ACTION_SEND text sharing, and saveFile() for exports (Downloads/ChoirTune).
@@ -77,7 +80,7 @@ public class MainActivity extends Activity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setAllowFileAccess(true);
+        s.setAllowFileAccess(false);
         s.setAllowContentAccess(true); // picked song files are content:// URIs
         s.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
@@ -85,8 +88,24 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(bridge, "ChoirTune");
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                Uri uri = Uri.parse(url);
+                if (!"appassets.androidplatform.net".equals(uri.getHost())) return null;
+                String path = uri.getPath();
+                if ("https".equals(uri.getScheme()) && path != null
+                        && path.matches("/www/([A-Za-z0-9_-]+\\.(html|css|js)|img/[A-Za-z0-9_.-]+\\.png)")) {
+                    try {
+                        String mime = path.endsWith(".js") ? "application/javascript" : path.endsWith(".css") ? "text/css"
+                            : path.endsWith(".png") ? "image/png" : "text/html";
+                        return new WebResourceResponse(mime, "UTF-8", getAssets().open(path.substring(1)));
+                    } catch (IOException ignored) { }
+                }
+                return new WebResourceResponse("text/plain", "UTF-8", 404, "Not Found",
+                    Collections.<String, String>emptyMap(), new ByteArrayInputStream(new byte[0]));
+            }
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return !url.startsWith("file:///android_asset/www/");
+                return !url.startsWith("https://appassets.androidplatform.net/www/");
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
@@ -115,7 +134,7 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        webView.loadUrl("file:///android_asset/www/index.html");
+        webView.loadUrl("https://appassets.androidplatform.net/www/index.html");
     }
 
     @Override
@@ -326,7 +345,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         stopMicrophone();
-        pushJs("window.ChoirTunerNative&&window.ChoirTunerNative.onStopped()");
+        pushJs("window.ChoirTunerNative&&window.ChoirTunerNative.onStopped();window.ChoirServerAudio&&window.ChoirServerAudio.stop()");
         if (webView != null) webView.onPause();
         super.onPause();
     }

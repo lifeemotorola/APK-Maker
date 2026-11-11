@@ -9,9 +9,9 @@
   var SR = 11025, N = 4096, HOP = 512;
   var VOICES = [
     { id: 'bass', name: 'Bass', min: 40, max: 64, center: 48, color: '#a78bfa' },
-    { id: 'tenor', name: 'Tenor', min: 48, max: 69, center: 55, color: '#34d399' },
+    { id: 'tenor', name: 'Tenor', min: 48, max: 67, center: 55, color: '#34d399' },
     { id: 'alto', name: 'Alto', min: 55, max: 74, center: 64, color: '#fbbf24' },
-    { id: 'soprano', name: 'Soprano', min: 60, max: 84, center: 72, color: '#38bdf8' },
+    { id: 'soprano', name: 'Soprano', min: 60, max: 81, center: 72, color: '#38bdf8' },
   ];
   var templates;
   function hz(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }

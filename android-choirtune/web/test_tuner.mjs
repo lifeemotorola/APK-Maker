@@ -140,5 +140,5 @@ assert(/REQUEST_MIC_PERMISSION/.test(java) && /pendingMicrophone = false/.test(j
 assert(/onPause\(\)[\s\S]*?stopMicrophone\(\)/.test(java));
 assert(/audio.release\(\)/.test(capture) && /generation == token/.test(capture));
 assert(/short\[4096\]/.test(capture) && /rate \/ 25/.test(capture));
-assert(!/android.permission.INTERNET/.test(manifest));
+assert(/android.permission.INTERNET/.test(manifest), 'optional server access leaves native tuner independent of network');
 console.log('CHOIRTUNE TUNER TEST: YIN, Hz/cents, silence/noise, gauge/presets, reference, permissions, cancellation and lifecycle ALL PASSED');

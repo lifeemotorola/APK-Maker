@@ -5,7 +5,7 @@
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var P = window.ChoirTunerPitch, N = window.ChoirTune;
-  var ranges = { soprano: [60, 84, 72], alto: [55, 74, 64], tenor: [48, 69, 55], bass: [40, 64, 48] };
+  var ranges = { soprano: [60, 81, 72], alto: [55, 74, 64], tenor: [48, 67, 55], bass: [40, 64, 48] };
   var part = 'soprano', running = false, starting = false, generation = 0;
   var ctx = null, stream = null, source = null, analyser = null, timer = null, drone = null;
   var toneGeneration = 0;
@@ -90,6 +90,7 @@
     onStopped: function () { stopAll(); },
   };
   async function start() {
+    if (window.ChoirServerAudio) window.ChoirServerAudio.stop();
     stopAll();
     if (window.ChoirSongPlayback) window.ChoirSongPlayback.stop();
     var job = generation;
@@ -136,6 +137,7 @@
   $('tuningMode').addEventListener('change', function () { clearGauge(); });
   $('referenceNote').addEventListener('change', function () { stopDrone(); clearGauge(); });
   $('playDroneBtn').addEventListener('click', async function () {
+    if (window.ChoirServerAudio) window.ChoirServerAudio.stop();
     stopAll();
     if (window.ChoirSongPlayback) window.ChoirSongPlayback.stop();
     var job = generation, toneJob = toneGeneration, toneCtx = null;

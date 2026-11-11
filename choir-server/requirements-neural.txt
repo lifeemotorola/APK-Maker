@@ -1,0 +1,7 @@
+-r requirements.txt
+# Keep torch and torchaudio matched. Large downloads; install on the processing
+# server, not inside the APK or ordinary CI. Weights are downloaded separately.
+torch==2.5.1
+torchaudio==2.5.1
+demucs==4.0.1
+soundfile>=0.12,<1
