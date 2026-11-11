@@ -175,11 +175,12 @@
     $('partSummary').textContent = current.parts ? S.VOICES.slice().reverse().map(function (v) {
       return v.name + ': ' + current.parts[v.id].notes.length + ' estimated notes (' + M.midiToName(v.min) + '-' + M.midiToName(v.max) + ')';
     }).join(' / ') : 'Older saved tune: SATB data unavailable. Choose the song again to analyze its parts.';
+    if (window.ChoirNavigation) window.ChoirNavigation.show('home', false);
     $('results').classList.remove('hidden');
     $('songInfo').innerHTML =
       '<div class="stat"><div class="n">' + esc(current.title) + '</div><div class="l">song</div></div>' +
       '<div class="stat"><div class="n">' + M.formatTime(t.duration) + '</div><div class="l">length</div></div>' +
-      '<div class="stat"><div class="n">' + esc(t.key.name) + '</div><div class="l">source key (estimate)</div></div>' +
+      '<div class="stat key-stat"><div class="n">' + esc(t.key.name) + '</div><div class="l">source key (estimate)</div></div>' +
       '<div class="stat"><div class="n">' + t.bpm + '</div><div class="l">BPM</div></div>' +
       '<div class="stat"><div class="n">' + t.notes.length + '</div><div class="l">tune notes</div></div>';
     renderSheet();
@@ -326,6 +327,10 @@
     stopTune();
     transpose = parseInt(e.target.value, 10) || 0;
     if (current) { renderSheet(); drawRoll(0); }
+  });
+
+  $('noteDetails').addEventListener('toggle', function () {
+    if (this.open && current) drawRoll(0);
   });
 
   $('partSel').addEventListener('change', function () {

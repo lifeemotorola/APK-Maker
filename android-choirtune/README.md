@@ -1,4 +1,4 @@
-# Choir Tune Finder 1.5.1 - Android APK
+# Choir Tune Finder 1.6.0 - Android APK
 
 Upload a song to estimate its **main melody and Soprano, Alto, Tenor, and Bass
 pitches** on-device, with an optional, explicitly consented server-assisted
@@ -7,10 +7,19 @@ ARM64 C++ runtime for offline blended-vocal isolation. Offline analysis and the 
 without an account or server.
 
 - Package: `com.choirtune.app`, label **Choir Tune Finder**
-- Version **1.5.1** / versionCode **7** (updates earlier versions with the same signing key)
+- Version **1.6.0** / versionCode **8** (updates earlier versions with the same signing key)
 - minSdk 23 / targetSdk 34; a recent Android System WebView is required
-- Artifact: `android-choirtune/app/build/ChoirTune-1.5.1.apk`
+- Artifact: `android-choirtune/app/build/ChoirTune-1.6.0.apk`
 - Root download copy: `ChoirTune.apk` (gitignored)
+
+## Simple song-first interface
+
+By Emmanuel Suah. The home screen focuses on choosing a song, its estimated key,
+and selecting Soprano, Alto, Tenor or Bass for synthesized practice playback.
+The hamburger menu opens the live tuner, song analysis setup, saved tunes, and
+optional server setup. Transpose, exports and the note chart are expandable.
+Leaving the tuner stops its microphone and reference drone. Navigating does not
+discard the selected song or cancel a background song-analysis job.
 
 ## Bundled offline Demucs (1.5 full-song processing)
 
@@ -19,7 +28,7 @@ C++17/Eigen inference engine, not a model-download button or server dependency.
 It is about **75 MiB** compressed. It installs on **64-bit ARM (arm64-v8a)**
 Android 6+ devices; no 32-bit ARM or x86 native libraries are included.
 
-1. In **Upload a song**, leave **Isolate blended vocals with bundled Demucs**
+1. Open the hamburger menu / **Song analysis setup** and leave **Isolate blended vocals with bundled Demucs**
    checked (default when the native library loads).
 2. Choose an audio file up to **15 minutes / 250 MB**, including 3-15 minute
    songs. Short test clips from 0.25 seconds still work; there is no three-minute
@@ -357,3 +366,20 @@ exercise background/rotation/destruction, then test complete 3-15 minute songs
 and streamed WAV export, and check low-memory/storage errors.
 No physical-device execution or real-choir quality benchmark has been completed
 in this environment. The optional server tests remain model-free as before.
+
+## Interface regression checks
+
+The Android build runs `node android-choirtune/web/test_navigation.mjs` along with
+the DSP and app suites. Optional browser checks exercise the actual file picker,
+WebAudio analysis, key/part selector, menu focus, responsive pages, library
+round-trip and note chart:
+
+```sh
+# In one terminal:
+python3 -m http.server 4174 --bind 0.0.0.0 --directory android-choirtune/web
+# In another, with Playwright and its Chromium installed:
+node android-choirtune/web/test_navigation_browser.mjs
+```
+
+Set `CHOIR_PREVIEW_URL` to test a different server. These checks do not replace
+Android-device microphone, native Demucs, or installation testing.

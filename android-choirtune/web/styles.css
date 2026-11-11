@@ -82,3 +82,50 @@ h1 { font-size: 19px; margin: 0; }
 #serverResults .voice-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: 13px; }
 #serverResults .voice-presets .btn { width: 100%; margin: 6px 0; }
 #serverFile { max-width: 100%; }
+
+/* Simple song-first shell. Secondary tools live behind the menu. */
+:root { --bg: #101917; --card: #192621; --border: #30463e; --text: #f3f4ec; --muted: #b0c0b6; --accent: #c8e5a3; --accent-dim: rgba(200,229,163,.09); }
+.app { max-width: 720px; padding: 18px 18px 48px; }
+.topbar { display: flex; align-items: center; gap: 14px; padding-bottom: 20px; }
+.brand-icon { width: 38px; height: 38px; border-radius: 10px; }
+h1 { font-size: 17px; }
+.tagline { font-size: 12px; margin-top: 4px; }
+.menu-button { width: 46px; height: 46px; display: grid; place-items: center; flex-shrink: 0; border: 1px solid var(--border); border-radius: 13px; background: var(--card); color: var(--text); cursor: pointer; }
+.hamburger { width: 19px; display: grid; gap: 5px; }
+.hamburger i { display: block; height: 2px; background: currentColor; border-radius: 2px; }
+.intro { padding: 28px 4px 24px; }
+.eyebrow { color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .16em; }
+.intro h2 { font-size: clamp(34px, 7vw, 48px); font-weight: 600; line-height: 1.13; letter-spacing: -.035em; margin: 18px 0; }
+.intro > p:last-child { color: var(--muted); font-size: 15px; line-height: 1.7; max-width: 430px; }
+.card { padding: 22px; border-radius: 20px; margin-bottom: 18px; }
+.sect { font-size: 12px; letter-spacing: .07em; }
+.dropzone { margin-top: 16px; padding: 24px 14px; border-width: 1px; }
+.upload-title { color: var(--text); font-size: 18px; font-weight: 600; margin-top: 4px; }
+.dropzone .btn { width: 100%; margin-top: 14px; min-height: 52px; font-size: 15px; }
+.btn { min-height: 44px; font-weight: 600; }
+.btn.primary { color: #172315; }
+#cancelDemucsBtn:disabled { display: none; }
+#cancelDemucsBtn { margin-top: 12px; }
+summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 16px 0; min-height: 48px; }
+details { border-top: 1px solid var(--border); margin-top: 16px; }
+summary:focus-visible, .menu-button:focus-visible, .menu-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.songinfo { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 16px 0 24px; }
+.songinfo .key-stat { grid-column: 1 / -1; grid-row: 1; padding: 20px; background: var(--accent-dim); }
+.key-stat .n { font-size: 32px; color: var(--accent); }
+.stat:first-child { grid-column: 1 / -1; }
+.stat .l { font-size: 10px; margin-top: 5px; }
+.part-picker { display: block; text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--text); }
+.part-picker .input { display: block; width: 100%; min-height: 52px; margin-top: 12px; font-size: 16px; }
+#partSummary { margin: 12px 0; }
+.page-heading { padding: 16px 0; }
+.page-heading h2 { font-size: 24px; margin: 20px 0 4px; }
+.menu-dialog { position: fixed; inset: 0 auto 0 0; margin: 0; height: 100%; max-height: 100%; width: min(340px, 90vw); max-width: 90vw; border: 0; border-right: 1px solid var(--border); background: var(--card); color: var(--text); padding: 26px 22px; }
+.menu-dialog::backdrop { background: rgba(0,0,0,.65); }
+.menu-heading { display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+.menu-heading h2 { font-size: 17px; }
+.menu-dialog nav { display: grid; gap: 10px; margin: 34px 0; }
+.menu-link { background: transparent; border: 1px solid transparent; color: var(--text); padding: 16px; text-align: left; font: inherit; border-radius: 12px; min-height: 52px; cursor: pointer; }
+.menu-link[aria-current="page"] { background: var(--accent-dim); color: var(--accent); border-color: var(--border); }
+.screen .fld { flex-wrap: wrap; }
+.screen .input { max-width: 100%; }
+@media (max-width: 380px) { .app { padding-inline: 12px; } .card { padding: 16px; } .brand-icon { display: none; } }
