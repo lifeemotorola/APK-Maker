@@ -11,15 +11,105 @@
 <main class="app">
 
   <header class="topbar">
+    <button id="menuBtn" class="menu-button" aria-label="Open menu" aria-controls="appMenu" aria-expanded="false"><span class="hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button>
     <div class="brand">
       <img src="img/icon.png" alt="Choir Tune Finder" class="brand-icon" />
       <div>
         <h1>Choir Tune Finder</h1>
-        <div class="tagline">main melody and estimated SATB pitches for choir practice</div>
+        <div class="tagline">By Emmanuel Suah</div>
       </div>
     </div>
   </header>
 
+  <dialog id="appMenu" class="menu-dialog" aria-labelledby="menuTitle">
+    <div class="menu-heading"><h2 id="menuTitle">Choir Tune Finder</h2><button id="closeMenuBtn" class="btn" aria-label="Close menu">Close</button></div>
+    <p class="dim help">By Emmanuel Suah</p>
+    <nav aria-label="App sections">
+      <button class="menu-link" data-screen="home" aria-current="page">Find key &amp; parts</button>
+      <button class="menu-link" data-screen="tuner">Live tuner</button>
+      <button class="menu-link" data-screen="settings">Song analysis setup</button>
+      <button class="menu-link" data-screen="library">Saved tunes</button>
+      <button class="menu-link" data-screen="server">Optional server setup</button>
+    </nav>
+    <p class="dim help">Pitch estimates for practice, not isolated singers.</p>
+  </dialog>
+  <div id="screen-home" class="screen">
+    <section class="intro" aria-labelledby="homeTitle">
+      <p class="eyebrow">YOUR CHOIR PRACTICE COMPANION</p>
+      <h2 id="homeTitle" tabindex="-1">Find the key.<br />Learn your part.</h2>
+      <p>Choose a song to estimate its key and explore the Soprano, Alto, Tenor or Bass notes.</p>
+    </section>
+  <!-- UPLOAD -->
+  <section class="card">
+    <h2 class="sect">Choose your choir song</h2>
+    <p class="dim help">Parts are pitch estimates, not isolated singers. Offline vocal isolation can be slow and memory-intensive. Change it in Menu / Song analysis setup.</p>
+    <button id="cancelDemucsBtn" class="btn" disabled>Cancel offline isolation</button>
+    <div id="localVocals" class="hidden"><p class="help">Demucs blended vocal estimate, not four separated singers. SATB playback remains synthesized pitch guides.</p>
+      <audio id="localVocalsPlayer" controls preload="none" aria-label="Demucs blended vocals"></audio>
+      <button id="saveLocalVocalsBtn" class="btn">Export blended vocal WAV</button>
+    </div>
+    <div id="dropZone" class="dropzone">
+      <p class="upload-title">Start with a recording</p><p>Tap below, or drop an audio file here.</p>
+      <p class="dim">MP3, WAV, M4A and other device-supported audio. Up to 15 minutes / 250 MB. Nothing leaves your device.</p>
+      <button id="pickBtn" class="btn primary">Choose song</button>
+      <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac" class="hidden" />
+    </div>
+    <details class="explanation"><summary>How accurate are the parts?</summary><p class="dim help">Estimates pitches for Soprano (C4-A5), Alto (G3-D5), Tenor (C3-G4), and Bass (E2-E4).
+      These are overlapping guide ranges, not rules about a singer's gender or voice type.
+      SATB labels are inferred from pitch and continuity, not isolated voices. Instruments, unison and crossing parts can mislead.
+      Best with clear unaccompanied singing. Empty tracks mean no reliable pitch estimate, not that a voice is absent.</p></details>
+    <div id="status" role="status" aria-live="polite" class="status"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="card hidden">
+    <h2 class="sect">Your key &amp; estimated parts</h2>
+    <div class="songinfo" id="songInfo"></div>
+    <label class="fld part-picker">Which part would you like to hear?
+      <select id="partSel" class="input">
+        <option value="main">Main melody</option>
+        <option value="soprano">Soprano</option><option value="alto">Alto</option>
+        <option value="tenor">Tenor</option><option value="bass">Bass</option>
+      </select>
+    </label>
+    <div id="partSummary" class="dim help" aria-live="polite"></div>
+    <div class="row">
+      <button id="playTuneBtn" class="btn primary">Play estimated part</button>
+      <button id="stopTuneBtn" class="btn">Stop</button>
+      <button id="playOrigBtn" class="btn">Play original</button>
+    </div>
+    <details class="practice-tools"><summary>Transpose, save &amp; share</summary><div class="row">
+      <label class="fld inline">Transpose
+        <select id="transposeSel" class="input">
+          <option value="-6">-6</option><option value="-5">-5</option><option value="-4">-4</option>
+          <option value="-3">-3</option><option value="-2">-2</option><option value="-1">-1</option>
+          <option value="0" selected>0</option>
+          <option value="1">+1</option><option value="2">+2</option><option value="3">+3</option>
+          <option value="4">+4</option><option value="5">+5</option><option value="6">+6</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <button id="saveBtn" class="btn">Save to library</button>
+      <button id="exportTxtBtn" class="btn">Share tune sheet</button>
+      <button id="exportMidBtn" class="btn">Export part .mid</button>
+      <button id="sharePartsBtn" class="btn">Share all SATB pitches</button>
+    </div>
+    </details>
+    <details id="noteDetails" class="note-details"><summary>View notes &amp; pitch chart</summary>
+    <canvas id="roll" class="roll" aria-label="Estimated melody piano roll"></canvas>
+    <div class="tablewrap">
+      <table class="sheet">
+        <thead><tr><th>#</th><th>Note</th><th>Pitch Hz</th><th>Start (s)</th><th>Dur</th><th>Beats</th></tr></thead>
+        <tbody id="sheetBody"></tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+  </div>
+
+  <div id="screen-tuner" class="screen hidden" hidden>
+    <div class="page-heading"><button class="btn back-home" type="button">Back to song</button><h2 tabindex="-1">Live tuner</h2></div>
   <section class="card" aria-labelledby="tunerHeading">
     <h2 id="tunerHeading" class="sect">Live choir tuner</h2>
     <p class="dim help">Tune one singer or dominant pitch at a time. A4 = 440 Hz. Green means within 5 cents for three readings.
@@ -56,6 +146,29 @@
     <div id="tunerStatus" role="status" aria-live="polite" class="status">Ready. Tap Start microphone and allow access.</div>
   </section>
 
+  </div>
+  <div id="screen-settings" class="screen hidden" hidden>
+    <div class="page-heading"><button class="btn back-home" type="button">Back to song</button><h2 tabindex="-1">Song analysis setup</h2></div>
+  <section class="card">
+    <label class="help"><input id="useDemucs" type="checkbox" /> Isolate blended vocals with bundled Demucs before estimating SATB (offline)</label>
+    <p id="localModelInfo" class="dim help">Demucs is available in the Android APK on 64-bit ARM phones. There is no preset minimum-RAM check. Demucs still uses substantial working memory; processing may fail or Android may close the app if memory runs out.
+      Choose a full song up to 15 minutes / 250 MB, including 3-15 minute recordings. Every section is processed in chunks; nothing is silently truncated. Long songs may take hours and use significant battery.
+      Keep the app open and powered; the screen stays awake during visible native processing. Allow roughly 500 MB free internal storage for a 15-minute song. No model download, server or access key is needed. Uncheck for faster ordinary estimates, also up to 15 minutes.</p>
+    <p class="dim help"><a href="licenses.html">Embedded model and native runtime licenses</a></p>
+    <p class="dim help">Changes apply to the next song you choose. Return to the song screen to begin.</p>
+  </section>
+  </div>
+  <div id="screen-library" class="screen hidden" hidden>
+    <div class="page-heading"><button class="btn back-home" type="button">Back to song</button><h2 tabindex="-1">Saved tunes</h2></div>
+  <!-- LIBRARY -->
+  <section class="card">
+    <h2 class="sect">Saved tunes</h2>
+    <div id="library" class="list"></div>
+  </section>
+
+  </div>
+  <div id="screen-server" class="screen hidden" hidden>
+    <div class="page-heading"><button class="btn back-home" type="button">Back to song</button><h2 tabindex="-1">Optional server setup</h2></div>
   <section class="card" aria-labelledby="serverHeading">
     <h2 id="serverHeading" class="sect">Optional server vocal isolation</h2>
     <p class="dim help">Requires your own deployed HTTPS processing server and access key. No public server is bundled.
@@ -85,79 +198,7 @@
     </div>
   </section>
 
-  <!-- UPLOAD -->
-  <section class="card">
-    <h2 class="sect">1 · Upload a song</h2>
-    <label class="help"><input id="useDemucs" type="checkbox" /> Isolate blended vocals with bundled Demucs before estimating SATB (offline)</label>
-    <p id="localModelInfo" class="dim help">Demucs is available in the Android APK on 64-bit ARM phones. There is no preset minimum-RAM check. Demucs still uses substantial working memory; processing may fail or Android may close the app if memory runs out.
-      Choose a full song up to 15 minutes / 250 MB, including 3-15 minute recordings. Every section is processed in chunks; nothing is silently truncated. Long songs may take hours and use significant battery.
-      Keep the app open and powered; the screen stays awake during visible native processing. Allow roughly 500 MB free internal storage for a 15-minute song. No model download, server or access key is needed. Uncheck for faster ordinary estimates, also up to 15 minutes.</p>
-    <p class="dim help"><a href="licenses.html">Embedded model and native runtime licenses</a></p>
-    <button id="cancelDemucsBtn" class="btn" disabled>Cancel offline isolation</button>
-    <div id="localVocals" class="hidden"><p class="help">Demucs blended vocal estimate, not four separated singers. SATB playback remains synthesized pitch guides.</p>
-      <audio id="localVocalsPlayer" controls preload="none" aria-label="Demucs blended vocals"></audio>
-      <button id="saveLocalVocalsBtn" class="btn">Export blended vocal WAV</button>
-    </div>
-    <div id="dropZone" class="dropzone">
-      <p>Tap to choose an audio file, or drag &amp; drop it here</p>
-      <p class="dim">MP3, WAV, M4A and other device-supported audio. Up to 15 minutes / 250 MB. Nothing leaves your device.</p>
-      <button id="pickBtn" class="btn primary">Choose song</button>
-      <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac" class="hidden" />
-    </div>
-    <p class="dim help">Estimates pitches for Soprano (C4-A5), Alto (G3-D5), Tenor (C3-G4), and Bass (E2-E4).
-      These are overlapping guide ranges, not rules about a singer's gender or voice type.
-      SATB labels are inferred from pitch and continuity, not isolated voices. Instruments, unison and crossing parts can mislead.
-      Best with clear unaccompanied singing. Empty tracks mean no reliable pitch estimate, not that a voice is absent.</p>
-    <div id="status" role="status" aria-live="polite" class="status"></div>
-  </section>
-
-  <!-- RESULTS -->
-  <section id="results" class="card hidden">
-    <h2 class="sect">2 · Estimated choir pitches</h2>
-    <div class="songinfo" id="songInfo"></div>
-    <label class="fld">Part to view, play and export
-      <select id="partSel" class="input">
-        <option value="main">Main melody</option>
-        <option value="soprano">Soprano</option><option value="alto">Alto</option>
-        <option value="tenor">Tenor</option><option value="bass">Bass</option>
-      </select>
-    </label>
-    <div id="partSummary" class="dim help" aria-live="polite"></div>
-    <div class="row">
-      <button id="playTuneBtn" class="btn primary">Play estimated part</button>
-      <button id="stopTuneBtn" class="btn">Stop</button>
-      <button id="playOrigBtn" class="btn">Play original</button>
-      <label class="fld inline">Transpose
-        <select id="transposeSel" class="input">
-          <option value="-6">-6</option><option value="-5">-5</option><option value="-4">-4</option>
-          <option value="-3">-3</option><option value="-2">-2</option><option value="-1">-1</option>
-          <option value="0" selected>0</option>
-          <option value="1">+1</option><option value="2">+2</option><option value="3">+3</option>
-          <option value="4">+4</option><option value="5">+5</option><option value="6">+6</option>
-        </select>
-      </label>
-    </div>
-    <div class="row">
-      <button id="saveBtn" class="btn">Save to library</button>
-      <button id="exportTxtBtn" class="btn">Share tune sheet</button>
-      <button id="exportMidBtn" class="btn">Export part .mid</button>
-      <button id="sharePartsBtn" class="btn">Share all SATB pitches</button>
-    </div>
-    <canvas id="roll" class="roll" aria-label="Estimated melody piano roll"></canvas>
-    <div class="tablewrap">
-      <table class="sheet">
-        <thead><tr><th>#</th><th>Note</th><th>Pitch Hz</th><th>Start (s)</th><th>Dur</th><th>Beats</th></tr></thead>
-        <tbody id="sheetBody"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- LIBRARY -->
-  <section class="card">
-    <h2 class="sect">Saved tunes</h2>
-    <div id="library" class="list"></div>
-  </section>
-
+  </div>
   <div id="toast" class="toast hidden"></div>
 </main>
 
@@ -168,5 +209,6 @@
 <script src="local.js"></script>
 <script src="app.js"></script>
 <script src="server.js"></script>
+<script src="navigation.js"></script>
 </body>
 </html>
