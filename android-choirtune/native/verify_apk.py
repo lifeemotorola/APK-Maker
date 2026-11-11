@@ -29,11 +29,14 @@ def verify(path):
         assert 'synthesized pitch guides' in apk.read('assets/www/index.html').decode()
         assert 'no preset minimum-RAM check' in apk.read('assets/www/index.html').decode()
         ui = apk.read('assets/www/index.html').decode()
+        assert 'How to tune your choir' in ui and 'id="tuningGuide"' in ui
+        assert 'id="roll"' not in ui and 'View notes &amp; pitch chart' not in ui
         assert 'By Emmanuel Suah' in ui and 'id="menuBtn"' in ui
         assert 'Find the key.' in ui and 'screen-settings' in ui
         assert 'Without Demucs' in ui and 'id="demucsFileInput"' in ui
         assert "$('useDemucs').checked = false" in local
         app = apk.read('assets/www/app.js').decode()
+        assert 'renderGuidance' in app
         assert 'var useDemucs = requestDemucs === true;' in app
         assert 'ChoirNavigation' in apk.read('assets/www/navigation.js').decode()
         dex = apk.read('classes.dex')

@@ -83,21 +83,21 @@ async function upload(name, demucs = false) {
     await delay(10);
   }
 }
-$('stopTuneBtn').click(); // stopping before the first upload must not draw null tune
+$('stopTuneBtn').click(); // stopping before the first upload must not access a missing tune
 await upload('Solo.wav');
 assert(!$('results').classList.contains('hidden'));
-assert($('sheetBody').innerHTML.includes('A4'));
+assert($('tuningGuide').innerHTML.includes('A4'));
 assert($('partSummary').textContent.includes('Soprano: 1'));
 $('partSel').value = 'soprano'; $('partSel').dispatch('change');
-assert($('sheetBody').innerHTML.includes('A4'));
-const pitchCell = $('sheetBody').innerHTML.match(/<\/td><td>([0-9]+\.[0-9])<\/td>/);
-assert(pitchCell && Math.abs(Number(pitchCell[1]) - 440) < 1);
+assert($('tuningGuide').innerHTML.includes('A4'));
+assert($('tuningGuide').innerHTML.includes('Practice Soprano'));
+assert($('tuningGuide').innerHTML.includes('first estimated note'));
 $('playTuneBtn').click(); assert(playCount > 0);
 $('stopTuneBtn').click();
 $('playOrigBtn').click(); await delay(1); assert(!paused);
 $('stopTuneBtn').click(); assert(paused);
 $('transposeSel').value = '2'; $('transposeSel').dispatch('change');
-assert($('sheetBody').innerHTML.includes('B4'));
+assert($('tuningGuide').innerHTML.includes('B4'));
 $('exportMidBtn').click();
 const midi = Buffer.from(exported.data, 'base64');
 assert.equal(midi.toString('ascii', 0, 4), 'MThd');
@@ -106,14 +106,14 @@ assert(midi.includes(Buffer.from([0x90, 71, 100])));
 $('exportTxtBtn').click(); assert(shared.includes('B4') && shared.includes('Soprano'));
 $('sharePartsBtn').click(); assert(shared.includes('Soprano') && shared.includes('Alto') && shared.includes('Tenor') && shared.includes('Bass'));
 $('partSel').value = 'bass'; $('partSel').dispatch('change');
-assert($('sheetBody').innerHTML.includes('no stable pitches'));
+assert($('tuningGuide').innerHTML.includes('No stable pitches'));
 $('partSel').value = 'soprano'; $('partSel').dispatch('change');
 $('saveBtn').click(); assert.equal(JSON.parse(saved).tunes.length, 1);
 assert(JSON.parse(saved).tunes[0].parts.soprano.notes.length > 0);
 let row = $('library').rows[0];
 row.querySelector('.act-load').click();
 assert($('playOrigBtn').disabled); assert(revoked > 0);
-assert($('sheetBody').innerHTML.includes('B4'));
+assert($('tuningGuide').innerHTML.includes('B4'));
 assert.equal($('partSel').value, 'soprano');
 row.querySelector('.act-share').click(); assert(shared.includes('B4'));
 row.querySelector('.act-del').click(); assert.equal(JSON.parse(saved).tunes.length, 0);
@@ -124,11 +124,20 @@ $('library').rows[0].querySelector('.act-load').click();
 assert($('sharePartsBtn').disabled);
 $('partSel').value = 'alto'; $('partSel').dispatch('change');
 assert.equal($('partSel').value, 'main');
-assert($('sheetBody').innerHTML.includes('C4'));
+assert($('tuningGuide').innerHTML.includes('C4'));
 const serverTrack = { notes: [{ midi: 76, start: 0, end: 1, dur: 1, frequencyHz: 659.2 }], key: { rootPc: 0, mode: 'major', name: 'C Major' }, bpm: 120, duration: 1 };
 sandbox.ChoirImportServerAnalysis({ tune: serverTrack, parts: Object.fromEntries(['soprano','alto','tenor','bass'].map((v) => [v, serverTrack])) }, 'Server choir');
 assert.equal($('partSel').value, 'soprano');
-assert($('sheetBody').innerHTML.includes('E5'));
+assert($('tuningGuide').innerHTML.includes('E5'));
+assert($('tuningGuide').innerHTML.includes('C Major'));
+$('transposeSel').value = '2'; $('transposeSel').dispatch('change');
+assert($('tuningGuide').innerHTML.includes('D Major'));
+assert($('tuningGuide').innerHTML.includes('F#5'));
+assert($('tuningGuide').innerHTML.includes('original recording and source-key display are unchanged'));
+$('transposeSel').value = '-2'; $('transposeSel').dispatch('change');
+assert($('tuningGuide').innerHTML.includes('A# Major'));
+assert($('tuningGuide').innerHTML.includes('D5'));
+$('transposeSel').value = '0'; $('transposeSel').dispatch('change');
 assert($('playOrigBtn').disabled);
 // Native Demucs output, not the original PCM, must feed both estimators.
 let nativeCalls = 0, nativeFail = false;
@@ -146,7 +155,7 @@ sandbox.ChoirLocalDemucs = {
 // The no-Demucs home path ignores an enabled optional isolation setting.
 await upload('No-Demucs.wav');
 assert.equal(nativeCalls, 0);
-assert($('sheetBody').innerHTML.includes('A4'), 'Original mix feeds ordinary pitch analysis');
+assert($('tuningGuide').innerHTML.includes('A4'), 'Original mix feeds ordinary pitch analysis');
 assert($('status').textContent.includes('Analyzed without Demucs'));
 assert(!$('songInfo').innerHTML.includes('Demucs vocals'));
 $('dropZone').dispatch('drop', { preventDefault() {}, dataTransfer: { files: [{ name: 'Dropped.wav', size: 100, arrayBuffer: async () => new ArrayBuffer(10) }] } });
@@ -164,7 +173,7 @@ assert.equal(confirmations, beforeOrdinaryConfirmations, 'No neural-processing w
 decodedDuration = 1;
 await upload('Native.wav', true);
 assert.equal(nativeCalls, 1);
-assert($('sheetBody').innerHTML.includes('E5'));
+assert($('tuningGuide').innerHTML.includes('E5'));
 assert($('songInfo').innerHTML.includes('Demucs vocals; SATB estimates'));
 assert($('status').textContent.includes('not separated singers'));
 nativeFail = true;
@@ -194,4 +203,4 @@ decodeFail = true;
 await upload('broken.mp3');
 assert($('status').textContent.includes('Could not analyze'));
 assert($('results').classList.contains('hidden'));
-console.log('CHOIRTUNE APP TEST: upload, playback, stop, transpose, MIDI, share, library, no-Demucs upload/drop, explicit native-vocal analysis and errors ALL PASSED');
+console.log('CHOIRTUNE APP TEST: upload, playback, stop, transpose, MIDI, written guidance/part/transpose, share, library, no-Demucs upload/drop, explicit native-vocal analysis and errors ALL PASSED');

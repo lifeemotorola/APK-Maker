@@ -69,6 +69,7 @@ try {
     for (const part of ['soprano', 'alto', 'tenor', 'bass']) {
       await page.selectOption('#partSel', part);
       assert.equal(await page.locator('#partSel').inputValue(), part);
+      assert.match(await page.locator('#tuningGuide').textContent(), new RegExp('Practice ' + part[0].toUpperCase() + part.slice(1)));
     }
     await page.locator('.practice-tools summary').click();
     await page.locator('#saveBtn').click();
@@ -76,9 +77,17 @@ try {
     await page.locator('[data-screen="library"]').click();
     await page.locator('#library .act-load').first().click();
     assert.equal(await page.locator('#screen-home').isVisible(), true, 'Loading saved tune reveals song results');
-    await page.locator('.note-details summary').click();
-    assert.equal(await page.locator('#roll').isVisible(), true);
-    assert.equal(await page.locator('#sheetBody tr').count() > 0, true);
+    assert.equal(await page.locator('#guideHeading').textContent(), 'How to tune your choir');
+    assert.equal(await page.locator('#tuningGuide').isVisible(), true);
+    assert.match(await page.locator('#tuningGuide').textContent(), /Practice Bass/);
+    assert.match(await page.locator('#tuningGuide').textContent(), /No stable pitches/);
+    await page.selectOption('#partSel', 'soprano');
+    assert.match(await page.locator('#tuningGuide').textContent(), /first estimated note for Soprano is A4/);
+    await page.selectOption('#transposeSel', '2');
+    assert.match(await page.locator('#tuningGuide').textContent(), /first estimated note for Soprano is B4/);
+    assert.equal(await page.locator('#roll, #sheetBody, #noteDetails').count(), 0);
+    assert.equal(await page.locator('.rehearsal-steps li').count(), 4);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.deepEqual(errors, []);
     if (process.env.CHOIR_SCREENSHOT_DIR) {
       await page.screenshot({ path: process.env.CHOIR_SCREENSHOT_DIR + '/results-' + width + '.png', fullPage: true });
@@ -89,5 +98,5 @@ try {
     }
     await page.close();
   }
-  console.log('CHOIRTUNE BROWSER TEST: responsive home/menu, keyboard focus, all tools, real no-Demucs WAV analysis despite native opt-in, key/parts, saved-tune navigation and chart PASSED');
+  console.log('CHOIRTUNE BROWSER TEST: responsive home/menu, keyboard focus, all tools, real no-Demucs WAV analysis despite native opt-in, key/parts, saved-tune navigation and written choir guidance PASSED');
 } finally { await browser.close(); }

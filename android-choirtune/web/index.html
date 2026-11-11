@@ -97,15 +97,17 @@
       <button id="sharePartsBtn" class="btn">Share all SATB pitches</button>
     </div>
     </details>
-    <details id="noteDetails" class="note-details"><summary>View notes &amp; pitch chart</summary>
-    <canvas id="roll" class="roll" aria-label="Estimated melody piano roll"></canvas>
-    <div class="tablewrap">
-      <table class="sheet">
-        <thead><tr><th>#</th><th>Note</th><th>Pitch Hz</th><th>Start (s)</th><th>Dur</th><th>Beats</th></tr></thead>
-        <tbody id="sheetBody"></tbody>
-      </table>
-    </div>
-    </details>
+    <section class="choir-guide" aria-labelledby="guideHeading">
+      <h3 id="guideHeading">How to tune your choir</h3>
+      <div id="tuningGuide" class="help" aria-live="polite"></div>
+      <ol class="help rehearsal-steps">
+        <li><strong>Listen, then sing.</strong> Tap Play estimated part, listen to a short phrase, then stop playback and sing it back on a gentle vowel. Practice one section at a time before adding words.</li>
+        <li><strong>Check one singer at a time.</strong> Open Menu / Live tuner. Choose your voice range, set Target to Selected reference note, and choose the note you want to hold. A4 = 440 Hz. The range preset alone does not set the target pitch.</li>
+        <li><strong>Correct gently.</strong> Flat means too low: raise your pitch slightly. Sharp means too high: lower it slightly. Aim near 0 cents; green means within 5 cents for three readings. Listen to the reference drone first, then stop it before checking your voice.</li>
+        <li><strong>Bring the choir together.</strong> Rehearse Soprano, Alto, Tenor and Bass separately, then combine two parts at a time. Hold a comfortable chord, match vowels and listen for a steady blend. Do not force high or low notes; transpose the whole choir if needed.</li>
+      </ol>
+      <p class="dim help">These are rehearsal suggestions based on estimated pitches, not a diagnosis of your choir's tuning. The live tuner checks one singer or dominant pitch, not an entire choir at once. Verify the key and voice assignments by ear or with your choir director.</p>
+    </section>
   </section>
   </div>
 
@@ -195,7 +197,7 @@
         <div><label><input id="include-bass" type="checkbox" checked /> Bass</label><button id="solo-bass" class="btn">Solo bass</button></div>
       </div>
       <div class="row"><button id="playServerPartsBtn" class="btn primary">Play practice mix</button><button id="playServerVocalsBtn" class="btn">Play blended vocals</button><button id="stopServerAudioBtn" class="btn">Stop server audio</button></div>
-      <div class="row"><button id="importServerBtn" class="btn">View pitch chart / save notes</button><select id="serverArtifact" class="input" aria-label="Server output to download"></select><button id="downloadServerBtn" class="btn">Download selected output</button></div>
+      <div class="row"><button id="importServerBtn" class="btn">View rehearsal guide / save notes</button><select id="serverArtifact" class="input" aria-label="Server output to download"></select><button id="downloadServerBtn" class="btn">Download selected output</button></div>
       <p class="dim help">Uncheck a part to mute it, or use Solo. Downloaded WAVs are untransposed server outputs. Pitch charts and MIDI can be transposed in the offline chart view.
         Saving notes does not save server audio or extend its retention.</p>
     </div>

@@ -1,4 +1,4 @@
-# Choir Tune Finder 1.6.1 - Android APK
+# Choir Tune Finder 1.6.2 - Android APK
 
 Upload a song to estimate its **main melody and Soprano, Alto, Tenor, and Bass
 pitches** on-device, with an optional, explicitly consented server-assisted
@@ -7,9 +7,9 @@ ARM64 C++ runtime for offline blended-vocal isolation. Offline analysis and the 
 without an account or server.
 
 - Package: `com.choirtune.app`, label **Choir Tune Finder**
-- Version **1.6.1** / versionCode **9** (updates earlier versions with the same signing key)
+- Version **1.6.2** / versionCode **10** (updates earlier versions with the same signing key)
 - minSdk 23 / targetSdk 34; a recent Android System WebView is required
-- Artifact: `android-choirtune/app/build/ChoirTune-1.6.1.apk`
+- Artifact: `android-choirtune/app/build/ChoirTune-1.6.2.apk`
 - Root download copy: `ChoirTune.apk` (gitignored)
 
 ## Simple song-first interface
@@ -17,7 +17,8 @@ without an account or server.
 By Emmanuel Suah. The home screen focuses on choosing a song, its estimated key,
 and selecting Soprano, Alto, Tenor or Bass for synthesized practice playback.
 The hamburger menu opens the live tuner, optional Demucs isolation, saved tunes, and
-optional server setup. Transpose, exports and the note chart are expandable.
+optional server setup. Transpose and exports are expandable. Written choir-tuning guidance replaces
+the former note table and piano-roll chart.
 Leaving the tuner stops its microphone and reference drone. Navigating does not
 discard the selected song or cancel a background song-analysis job.
 
@@ -148,8 +149,8 @@ The service code and deployment/limitations guide are in
   Missing/invalid configured-model outputs fail rather than falling back silently.
 - A synchronized practice mixer supports solo and mute. Download model stems
   when available, neural-isolated blended vocals/accompaniment, synthesized
-  guides, MIDI and a pitch report. View notes in the existing piano-roll/chart
-  UI; save note data locally, not server audio.
+  guides, MIDI and a pitch report. Read rehearsal guidance in the song result
+  view; save note data locally, not server audio.
 - The supplied service uses a shared operator key, bounded private jobs,
   authenticated artifact downloads, cancellation, deletion and one-hour default
   expiry after completion. Review its operational/privacy guide before hosting.
@@ -216,12 +217,15 @@ harmonic/octave errors; use this mode for individual/dominant notes.
 2. The app decodes and analyzes the recording locally. Progress updates while
    the analysis yields to the UI; selecting another song supersedes old work.
 3. Select **Main melody**, **Soprano**, **Alto**, **Tenor**, or **Bass**. Each
-   part has its own estimated notes, a piano roll, and a timed pitch sheet:
-   note name, measured **pitch in Hz**, start in fractional seconds, duration
-   and beats. The summary shows note counts and guide ranges for all parts.
+   part has written rehearsal guidance with its estimated practice key and first
+   detected note/entrance, or a clear warning when no stable notes were found.
+   The guide explains listening, sectional rehearsal, flat/sharp correction and
+   checking one singer in the live tuner. The summary shows note counts and
+   guide ranges for all parts. These suggestions do not measure whether the
+   choir recording is in tune.
 4. **Play estimated part** synthesizes the selected pitch track (not isolated
    vocal audio). **Play original** plays the uploaded recording. Transposition
-   adjusts note labels, Hz values, synth playback and exports by -6 to +6
+   adjusts the written starting note/practice key, synth playback and exports by -6 to +6
    semitones. Switching parts stops playback.
 5. **Save to library** keeps all estimated parts, the main melody, current
    part and transpose setting; reopen/share/delete later. The library holds
@@ -386,7 +390,7 @@ in this environment. The optional server tests remain model-free as before.
 The Android build runs `node android-choirtune/web/test_navigation.mjs` along with
 the DSP and app suites. Optional browser checks exercise the actual file picker,
 WebAudio analysis, key/part selector, menu focus, responsive pages, library
-round-trip and note chart. A simulated available native bridge verifies that
+round-trip and written choir guidance (including part/transpose updates). A simulated available native bridge verifies that
 ordinary uploads do not start Demucs even after its optional checkbox is enabled:
 
 ```sh

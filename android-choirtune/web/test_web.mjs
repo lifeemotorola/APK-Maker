@@ -59,7 +59,7 @@ check(/FLAG_KEEP_SCREEN_ON/.test(main) && /keepDemucsAwake/.test(bridge), 'visib
 
 check(/loadState/.test(bridge) && /saveState/.test(bridge) && /shareText/.test(bridge) && /saveFile/.test(bridge), 'bridge: loadState/saveState/shareText/saveFile');
 
-for (const id of ['fileInput', 'pickBtn', 'dropZone', 'status', 'results', 'songInfo', 'playTuneBtn', 'playOrigBtn', 'transposeSel', 'saveBtn', 'exportTxtBtn', 'exportMidBtn', 'roll', 'sheetBody', 'library']) {
+for (const id of ['fileInput', 'pickBtn', 'dropZone', 'status', 'results', 'songInfo', 'playTuneBtn', 'playOrigBtn', 'transposeSel', 'saveBtn', 'exportTxtBtn', 'exportMidBtn', 'tuningGuide', 'library']) {
   check(html.includes('id="' + id + '"'), 'control present: ' + id);
 }
 check(html.indexOf('melody.js') > -1 && html.indexOf('melody.js') < html.indexOf('app.js'), 'melody.js loaded before app.js');
@@ -69,13 +69,14 @@ check(/extractTune/.test(app) && /decodeAudioData/.test(app) && /ChoirTuneMelody
 check(/tuneToText/.test(app) && /shareText/.test(app), 'tune sheet share');
 check(/tuneToMidiBytes/.test(app) && /saveFile/.test(app) && /bytesToBase64/.test(app), '.mid export via saveFile');
 check(/saveState/.test(app) && /loadState/.test(app) && /localStorage/.test(app), 'library state load/save with browser fallback');
-check(/roundRect/.test(app) || /fillRect/.test(app), 'piano roll drawn on canvas');
+check(/renderGuidance/.test(app) && /How to tune your choir/.test(html), 'written choir guidance replaces chart');
+check(!/id="(?:roll|sheetBody|noteDetails)"/.test(html) && !/drawRoll|renderSheet/.test(app), 'obsolete chart UI and rendering removed');
 
 check(/ecj\.jar/.test(build) && /d8/.test(build) && /aapt2/.test(build) && /apksigner/.test(build), 'build.sh runs ecj/d8/aapt2/apksigner');
 check(/melody\.js/.test(build), 'build.sh stages melody.js into the APK');
 check(/check_no_emoji\.py/.test(build) && /test_web\.mjs/.test(build), 'build.sh runs emoji gate + this test');
-check(/--version-code 9/.test(build) && /--version-name 1\.6\.1/.test(build), 'versionCode 9 / versionName 1.6.1');
-check(/ChoirTune-1\.6\.1\.apk/.test(build), 'artifact name ChoirTune-1.6.1.apk');
+check(/--version-code 10/.test(build) && /--version-name 1\.6\.2/.test(build), 'versionCode 10 / versionName 1.6.2');
+check(/ChoirTune-1\.6\.2\.apk/.test(build), 'artifact name ChoirTune-1.6.2.apk');
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!EMOJI.test(html + app + melody + css), 'no emoji-range glyphs in web sources');
 
