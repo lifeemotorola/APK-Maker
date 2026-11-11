@@ -74,6 +74,7 @@
 
   async function handleFile(file) {
     if (file.size > 40 * 1024 * 1024) { toast('Please choose a file smaller than 40 MB'); return; }
+    if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     var job = ++analysisId;
     var ctx = null;
     stopTune();
@@ -223,7 +224,9 @@
     $('playOrigBtn').textContent = 'Play original';
   }
 
+  window.ChoirSongPlayback = { stop: stopTune };
   $('playTuneBtn').addEventListener('click', function () {
+    if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     if (!current) return;
     stopTune();
     var AC = window.AudioContext || window.webkitAudioContext;
@@ -264,6 +267,7 @@
   $('stopTuneBtn').addEventListener('click', stopTune);
 
   $('playOrigBtn').addEventListener('click', function () {
+    if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     if (!origAudio) return;
     if (!origAudio.paused) { origAudio.pause(); $('playOrigBtn').textContent = 'Play original'; return; }
     stopTune();

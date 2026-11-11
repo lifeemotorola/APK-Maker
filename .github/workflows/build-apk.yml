@@ -547,7 +547,7 @@ jobs:
           name: ChoirTune-APK
           path: |
             ChoirTune.apk
-            android-choirtune/app/build/ChoirTune-1.1.apk
+            android-choirtune/app/build/ChoirTune-1.2.apk
             android-choirtune/app/build/badging.txt
           if-no-files-found: error
           retention-days: 30
