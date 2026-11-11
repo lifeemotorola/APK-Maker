@@ -76,7 +76,7 @@
     if (window.ChoirLocalDemucs && window.ChoirLocalDemucs.busy()) { toast('Offline isolation is running. Cancel it and wait before choosing another song.'); return; }
     var useDemucs = !!(window.ChoirLocalDemucs && window.ChoirLocalDemucs.enabled());
     if (window.ChoirLocalDemucs) window.ChoirLocalDemucs.clear();
-    if (file.size > 40 * 1024 * 1024) { toast('Please choose a file smaller than 40 MB'); return; }
+    if (file.size > 250 * 1024 * 1024) { toast('Please choose a file no larger than 250 MB'); return; }
     if (window.ChoirLiveTuner) window.ChoirLiveTuner.stop();
     if (window.ChoirServerAudio) window.ChoirServerAudio.stop();
     var job = ++analysisId;
@@ -93,26 +93,49 @@
       if (!AC) throw new Error('Audio decoding is unavailable. Update Android System WebView.');
       ctx = new AC();
       var audioBuf = await new Promise(function (resolve, reject) { ctx.decodeAudioData(buf, resolve, reject); });
+      buf = null;
       await ctx.close();
       ctx = null;
       if (job !== analysisId) return;
-      if (audioBuf.duration > 300) throw new Error('Please choose a song up to 5 minutes long.');
+      if (audioBuf.duration > 900) throw new Error('Please choose a song up to 15 minutes long.');
       if (useDemucs) {
+        if (audioBuf.duration > 30 && !confirm('Full-song offline Demucs may take hours and use significant battery. Keep the app open and powered. Process the entire song?')) {
+          setStatus('Offline isolation cancelled. Uncheck Demucs for faster ordinary pitch estimates.');
+          return;
+        }
         audioBuf = await window.ChoirLocalDemucs.isolate(audioBuf, function (message) {
           if (job === analysisId) setStatus(message);
         }, function () { return job !== analysisId; });
         if (job !== analysisId) return;
       }
-      var pcm = new Float32Array(audioBuf.length);
-      for (var c = 0; c < audioBuf.numberOfChannels; c++) {
-        var d = audioBuf.getChannelData(c);
-        for (var i = 0; i < pcm.length; i++) pcm[i] += d[i] / audioBuf.numberOfChannels;
+      // Pitch DSP works at 11025 Hz. Do not allocate a full-song high-rate
+      // mono copy on top of decoded stereo and the native model.
+      var analysisRate = 11025;
+      var pcm;
+      if (audioBuf.sampleRate === analysisRate && audioBuf.numberOfChannels === 1) {
+        pcm = audioBuf.getChannelData(0);
+      } else {
+        pcm = new Float32Array(Math.floor(audioBuf.length * analysisRate / audioBuf.sampleRate));
+        var ratio = audioBuf.sampleRate / analysisRate;
+        for (var c = 0; c < audioBuf.numberOfChannels; c++) {
+          var d = audioBuf.getChannelData(c);
+          for (var i = 0; i < pcm.length; i++) {
+            var pos = i * ratio, at = Math.floor(pos), f = pos - at;
+            pcm[i] += ((d[at] || 0) * (1 - f) + (d[at + 1] || 0) * f) / audioBuf.numberOfChannels;
+            if (i % 262144 === 0) {
+              await new Promise(function (resolve) { setTimeout(resolve, 0); });
+              if (job !== analysisId) return;
+            }
+          }
+          d = null;
+        }
       }
-      var tune = await M.extractTuneAsync(pcm, audioBuf.sampleRate, function (fraction) {
+      audioBuf = null;
+      var tune = await M.extractTuneAsync(pcm, analysisRate, function (fraction) {
         if (job === analysisId) setStatus('Finding main melody: ' + Math.round(fraction * 35) + '%');
       }, function () { return job !== analysisId; });
       if (job !== analysisId) return;
-      var parts = await S.extractSATBAsync(pcm, audioBuf.sampleRate, tune, function (fraction) {
+      var parts = await S.extractSATBAsync(pcm, analysisRate, tune, function (fraction) {
         if (job === analysisId) setStatus('Estimating SATB pitches: ' + Math.round(35 + fraction * 65) + '%');
       }, function () { return job !== analysisId; });
       if (job !== analysisId) return;

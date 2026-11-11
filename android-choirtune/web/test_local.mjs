@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 const source = readFileSync(new URL('local.js', import.meta.url), 'utf8');
-function harness({ available = true, failBegin = '', failAppend = '', phases = ['loading', 'processing', 'done'], pending = false, badOutput = false } = {}) {
+function harness({ available = true, failBegin = '', failAppend = '', phases = ['loading', 'processing', 'done'], pending = false, badOutput = false, duration = 0.25, clockStep = 0 } = {}) {
   const elements = {}, calls = [], timers = [];
   let statusIndex = 0;
   const element = (id) => elements[id] ||= {
@@ -14,7 +14,8 @@ function harness({ available = true, failBegin = '', failAppend = '', phases = [
     pause() { calls.push(['pause']); }, removeAttribute() {},
     addEventListener(name, fn) { this.listeners[name] = fn; }
   };
-  const frames = 11025, resultSize = frames * 4 + 44;
+  const frames = Math.round(duration * 44100), resultSize = Math.ceil(frames / 4) * 4;
+  let clock = 0;
   const bridge = {
     demucsAvailable: () => available,
     demucsBegin(bytes) { calls.push(['begin', bytes]); return failBegin; },
@@ -22,15 +23,15 @@ function harness({ available = true, failBegin = '', failAppend = '', phases = [
     demucsStart() { calls.push(['start']); return ''; },
     demucsStatus() {
       const phase = pending ? 'processing' : phases[Math.min(statusIndex++, phases.length - 1)];
-      return JSON.stringify({ phase, progress: 0.5, error: phase === 'error' ? 'Test native failure' : '' });
+      return JSON.stringify({ phase, progress: pending ? 0.5 : Math.min(0.9, statusIndex * 0.2), error: phase === 'error' ? 'Test native failure' : '' });
     },
     demucsCancel() { calls.push(['cancel']); },
-    saveFile(...args) { calls.push(['save', ...args]); return '/test/vocals.wav'; }
+    demucsExport() { calls.push(['export']); }
   };
   class Offline {
-    constructor(channels, count, rate) { assert.equal(channels, 2); assert.equal(count, frames); assert.equal(rate, 44100); }
-    createBufferSource() { return { connect() {}, start() {} }; }
-    startRendering() { return Promise.resolve({ getChannelData(c) { return new Float32Array(frames).fill(c === 0 ? 0.5 : -0.25); } }); }
+    constructor(channels, count, rate) { assert.equal(channels, 2); assert.ok(count <= 30 * 44100); this.count = count; assert.equal(rate, 44100); calls.push(['resample', count]); }
+    createBufferSource() { return { connect() {}, disconnect() {}, start(...args) { calls.push(['source', ...args]); } }; }
+    startRendering() { const count = this.count; return Promise.resolve({ getChannelData(c) { return new Float32Array(count).fill(c === 0 ? 0.5 : -0.25); } }); }
   }
   class Decode {
     decodeAudioData(bytes, done) { done({ duration: 0.25, sampleRate: 44100, vocals: true }); }
@@ -41,12 +42,12 @@ function harness({ available = true, failBegin = '', failAppend = '', phases = [
     window, document: { getElementById: element, addEventListener() {} },
     setTimeout(fn) { if (pending) timers.push(fn); else queueMicrotask(fn); },
     fetch: async (url, options) => {
-      assert.equal(url, 'https://appassets.androidplatform.net/demucs/vocals.wav');
+      assert.equal(url, 'https://appassets.androidplatform.net/demucs/analysis.f32');
       assert.equal(options.cache, 'no-store'); calls.push(['fetch']);
-      return { ok: true, arrayBuffer: async () => new ArrayBuffer(badOutput ? 100 : resultSize) };
+      return { ok: true, arrayBuffer: async () => new Float32Array(badOutput ? 25 : resultSize / 4).fill(0.125).buffer };
     },
     URL: { createObjectURL() { return 'blob:fixture'; }, revokeObjectURL() {} },
-    Blob, Uint8Array, DataView, Date, Number, JSON, btoa: (s) => Buffer.from(s, 'binary').toString('base64')
+    Blob, Uint8Array, DataView, Date: clockStep ? { now: () => (clock += clockStep) } : Date, Number, JSON, btoa: (s) => Buffer.from(s, 'binary').toString('base64')
   });
   return { api: window.ChoirLocalDemucs, elements, calls, timers, frames, bridge };
 }
@@ -54,24 +55,28 @@ const audio = { duration: 0.25 };
 const h = harness();
 assert.equal(h.api.enabled(), true);
 const progress = [];
-assert.equal((await h.api.isolate(audio, (text) => progress.push(text))).vocals, true);
+const vocals = await h.api.isolate(audio, (text) => progress.push(text));
+assert.equal(vocals.sampleRate, 11025);
+assert.equal(vocals.length, Math.ceil(h.frames / 4));
+assert.equal(vocals.getChannelData(0)[0], 0.125);
 assert.equal(h.calls.find(([kind]) => kind === 'begin')[1], h.frames * 4);
 const transferred = Buffer.concat(h.calls.filter(([kind]) => kind === 'append').map(([, data]) => data));
 assert.equal(transferred.length, h.frames * 4);
 assert.equal(transferred.readInt16LE(0), 16384);
 assert.equal(transferred.readInt16LE(2), -8192);
 assert.ok(progress.some((s) => /Verifying/.test(s)));
-assert.ok(progress.some((s) => /50%/.test(s)));
-assert.equal(h.elements.localVocalsPlayer.src, 'blob:fixture');
+assert.ok(progress.some((s) => /40%/.test(s)));
+assert.ok(h.elements.localVocalsPlayer.src.startsWith('https://appassets.androidplatform.net/demucs/vocals.wav?job='));
 h.elements.saveLocalVocalsBtn.listeners.click();
-assert.equal(h.calls.find(([kind]) => kind === 'save')[1], 'demucs-blended-vocals.wav');
+assert.ok(h.calls.some(([kind]) => kind === 'export'));
+assert.equal(h.calls.some(([kind]) => kind === 'save'), false);
 assert.equal(h.api.busy(), false);
 assert.equal(h.elements.cancelDemucsBtn.disabled, true);
 assert.equal(h.calls.filter(([kind]) => kind === 'cancel').length, 0);
 
-for (const duration of [0, 0.24, 30.001, 300, NaN]) {
+for (const duration of [0, 0.24, 900.001, 3600, NaN]) {
   const test = harness();
-  await assert.rejects(test.api.isolate({ duration }, () => {}), /0.25 to 30/);
+  await assert.rejects(test.api.isolate({ duration }, () => {}), /15 minutes/);
   assert.equal(test.calls.some(([kind]) => kind === 'begin'), false);
 }
 const browser = harness({ available: false });
@@ -99,4 +104,21 @@ assert.equal(cancel.api.busy(), false);
 const stale = harness();
 await assert.rejects(stale.api.isolate(audio, () => {}, () => true), /cancelled/);
 assert.equal(stale.calls.some(([kind]) => kind === 'begin'), false);
-console.log('CHOIRTUNE LOCAL TEST: stereo transport, native errors, memory rejection, clip bounds, cancellation, stale jobs, offline output and export PASSED');
+// Requested 3-15 minute durations reach the native begin call, not a clip cap.
+for (const duration of [180, 900]) {
+  const test = harness({ duration, failBegin: 'fixture resource rejection' });
+  await assert.rejects(test.api.isolate({ duration }, () => {}), /fixture resource/);
+  assert.equal(test.calls.find(([kind]) => kind === 'begin')[1], duration * 44100 * 4);
+}
+// Real transport across the former limit, including a partial final chunk.
+const long = harness({ duration: 60.25 });
+const longVocals = await long.api.isolate({ duration: 60.25 }, () => {});
+assert.equal(longVocals.length, Math.ceil(60.25 * 44100 / 4));
+assert.deepEqual(long.calls.filter(([kind]) => kind === 'source').map(([, ...args]) => args), [[0, 0, 30], [0, 30, 30], [0, 60, 0.25]]);
+assert.equal(long.calls.filter(([kind]) => kind === 'append').reduce((sum, [, bytes]) => sum + bytes.length, 0), 60.25 * 44100 * 4);
+assert.equal(long.calls.filter(([kind]) => kind === 'start').length, 1); // one native job/model per song
+const slow = harness({ clockStep: 15 * 60 * 1000 });
+await slow.api.isolate(audio, () => {}); // progress continues beyond old 20-minute cutoff
+const stalled = harness({ clockStep: 31 * 60 * 1000 });
+await assert.rejects(stalled.api.isolate(audio, () => {}), /no progress/);
+console.log('CHOIRTUNE LOCAL TEST: stereo transport, native errors, memory rejection, 15-minute bounds, bounded resampling, long transport and stall watchdog, cancellation, stale jobs, offline output and export PASSED');

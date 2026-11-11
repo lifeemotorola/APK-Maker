@@ -35,14 +35,14 @@ class Element {
 }
 const elements = Object.fromEntries([...read('index.html').matchAll(/id="([^"]+)"/g)].map((m) => [m[1], new Element(m[1])]));
 const $ = (id) => elements[id];
-let saved = '{}', exported, shared, decodeFail = false, paused = true, playCount = 0, revoked = 0;
+let saved = '{}', exported, shared, decodeFail = false, decodedDuration = 1, paused = true, playCount = 0, revoked = 0;
 const pcm = new Float32Array(22050);
 for (let i = 0; i < pcm.length; i++) pcm[i] = 0.5 * Math.sin(2 * Math.PI * 440 * i / 22050);
 class AudioContext {
   constructor() { this.currentTime = 0; this.state = 'running'; }
   decodeAudioData(buffer, ok, fail) {
     if (decodeFail) fail(new Error('bad audio'));
-    else ok({ duration: 1, length: pcm.length, sampleRate: 22050, numberOfChannels: 1, getChannelData: () => pcm });
+    else ok({ duration: decodedDuration, length: pcm.length, sampleRate: 22050, numberOfChannels: 1, getChannelData: () => pcm });
   }
   close() { return Promise.resolve(); }
   resume() { return Promise.resolve(); }
@@ -150,6 +150,21 @@ nativeFail = true;
 await upload('Native-error.wav');
 assert($('status').textContent.includes('Native model failed'));
 assert($('results').classList.contains('hidden')); // no silent fallback to mix
+// Duration guard contracts use a short decoded fixture with overridden duration;
+// full-duration sample/timestamp behavior is covered by native streaming_test.
+for (const duration of [180, 900]) {
+  decodedDuration = duration;
+  const before = nativeCalls;
+  await upload('Long-song.wav');
+  assert.equal(nativeCalls, before + 1); // not rejected by old 30s/5min guards
+  assert($('status').textContent.includes('Native model failed'));
+}
+decodedDuration = 900.01;
+const beforeOversized = nativeCalls;
+await upload('Too-long.wav');
+assert.equal(nativeCalls, beforeOversized);
+assert($('status').textContent.includes('15 minutes'));
+decodedDuration = 1;
 sandbox.ChoirLocalDemucs = undefined;
 decodeFail = true;
 await upload('broken.mp3');

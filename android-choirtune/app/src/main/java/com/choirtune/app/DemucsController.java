@@ -14,7 +14,7 @@ import org.json.JSONObject;
 
 /** One bounded, app-private offline job. No audio/model network requests. */
 public final class DemucsController {
-    private static final int MAX_BYTES = 44100 * 30 * 4;
+    private static final int MAX_BYTES = 44100 * 15 * 60 * 4;
     private static final long MODEL_BYTES = 83994361L;
     private static final String MODEL_SHA = "72b17c42d308982ddb5069bc3bf48b81a5aac4cb6516e4366c0fa7cef6df0064";
     // Native progress/cancellation flags are process-wide: serialize across activities.
@@ -31,7 +31,7 @@ public final class DemucsController {
     private static native float progressNative();
     private static native String runNative(String model, String pcm, String wav);
     private final Context context;
-    private final File directory, input, output;
+    private final File directory, input, output, analysis;
     private String phase = "idle", error = "";
     private int expected, written;
     private FileOutputStream upload;
@@ -44,19 +44,22 @@ public final class DemucsController {
         directory.mkdirs();
         input = new File(directory, "input.pcm");
         output = new File(directory, "vocals.wav");
+        analysis = new File(directory, "vocals.wav.analysis.f32");
     }
     public boolean available() { return LOADED; }
+    public synchronized boolean isRunning() { return running; }
     public synchronized String begin(int bytes) {
         if (!LOADED) return "On-device Demucs requires a supported 64-bit ARM phone";
         if (destroyed || running) return "Demucs is still processing or cancelling; please wait";
         cleanup();
-        if (bytes < 44100 || bytes > MAX_BYTES || bytes % 4 != 0) return "Choose a clip between 0.25 and 30 seconds";
+        if (bytes < 44100 || bytes > MAX_BYTES || bytes % 4 != 0) return "Choose audio between 0.25 seconds and 15 minutes";
         ActivityManager.MemoryInfo memory = new ActivityManager.MemoryInfo();
         ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(memory);
         if (memory.lowMemory || memory.totalMem < 3500L * 1024 * 1024 || memory.availMem < 2500L * 1024 * 1024)
             return "Demucs needs at least 2.5 GB currently available RAM (6 GB phones recommended). Close other apps or use ordinary estimates.";
-        if (directory.getUsableSpace() < MODEL_BYTES + MAX_BYTES * 2L + 20 * 1024 * 1024)
-            return "Free at least 120 MB of internal storage before processing";
+        long needed = MODEL_BYTES + bytes * 9L / 4 + 20L * 1024 * 1024;
+        if (directory.getUsableSpace() < needed)
+            return "Free at least " + ((needed + 1048575) / 1048576) + " MB of internal storage for this song";
         try {
             upload = new FileOutputStream(input);
             expected = bytes; written = 0; cancelled = false; error = ""; phase = "receiving";
@@ -99,7 +102,7 @@ public final class DemucsController {
             synchronized (this) {
                 running = false;
                 input.delete();
-                if (cancelled || destroyed) { phase = "cancelled"; output.delete(); }
+                if (cancelled || destroyed) { phase = "cancelled"; output.delete(); analysis.delete(); }
                 else if (failure != null && failure.length() > 0) fail(failure);
                 else phase = "done";
                 if (destroyed) { cleanup(); directory.delete(); }
@@ -151,6 +154,10 @@ public final class DemucsController {
         if (!"done".equals(phase) || destroyed) throw new IOException("No vocal output ready");
         return new FileInputStream(output);
     }
+    public synchronized InputStream analysis() throws IOException {
+        if (!"done".equals(phase) || destroyed) throw new IOException("No vocal analysis ready");
+        return new FileInputStream(analysis);
+    }
     public synchronized void cancel() {
         cancelled = true;
         // Do not cancel another activity's native job while this worker is waiting.
@@ -161,6 +168,6 @@ public final class DemucsController {
     private void fail(String message) { error = message; phase = "error"; cleanup(); }
     private void cleanup() {
         if (upload != null) { try { upload.close(); } catch (IOException ignored) { } upload = null; }
-        input.delete(); output.delete();
+        input.delete(); output.delete(); analysis.delete();
     }
 }

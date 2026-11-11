@@ -6,7 +6,7 @@
 # piano roll + timed sheet with measured Hz, estimated key/BPM, synth
 # playback of each part, transpose, save all parts to
 # a library, share as text, export as .mid (Downloads/ChoirTune).
-# Package com.choirtune.app, versionName 1.4 / versionCode 5.
+# Package com.choirtune.app, versionName 1.5 / versionCode 6.
 #
 # Pipeline (same as the other APKs in this repo):
 #   1. Validate the web shell (node web/test_web.mjs — incl. a functional
@@ -18,7 +18,7 @@
 #   5. python pack_apk.py: align + add classes.dex
 #   6. apksigner: v1+v2 sign with the debug keystore
 #
-# Output: android-choirtune/app/build/ChoirTune-1.4.apk
+# Output: android-choirtune/app/build/ChoirTune-1.5.apk
 #         (also copied to the repo root as ChoirTune.apk)
 # ============================================================================
 set -euo pipefail
@@ -97,7 +97,7 @@ rm -f "$BUILD/res.zip" "$BUILD/unsigned.apk" "$BUILD/aligned.apk" "$BUILD"/Choir
     -I "$TOOLS/android.jar" \
     --manifest "$APP/src/main/AndroidManifest.xml" \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 5 --version-name 1.4 \
+    --version-code 6 --version-name 1.5 \
     "$BUILD/res.zip" \
     -A "$APP/src/main/assets"
 
@@ -118,19 +118,19 @@ echo "==> [6/6] Signing (apksigner, v1+v2, debug key)"
     --ks-key-alias androiddebugkey \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD/ChoirTune-1.4.apk" \
+    --out "$BUILD/ChoirTune-1.5.apk" \
     "$BUILD/aligned.apk"
 
 echo "==> Verifying signature"
-"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/ChoirTune-1.4.apk"
+"$JAVA" -jar "$TOOLS/apksigner.jar" verify --print-certs "$BUILD/ChoirTune-1.5.apk"
 
-python3 "$HERE/native/verify_apk.py" "$BUILD/ChoirTune-1.4.apk"
+python3 "$HERE/native/verify_apk.py" "$BUILD/ChoirTune-1.5.apk"
 
 echo "==> APK badging"
-"$TOOLS/aapt2" dump badging "$BUILD/ChoirTune-1.4.apk" > "$BUILD/badging.txt" || true
+"$TOOLS/aapt2" dump badging "$BUILD/ChoirTune-1.5.apk" > "$BUILD/badging.txt" || true
 head -25 "$BUILD/badging.txt"
 
-cp "$BUILD/ChoirTune-1.4.apk" "$ROOT/ChoirTune.apk"
+cp "$BUILD/ChoirTune-1.5.apk" "$ROOT/ChoirTune.apk"
 echo
-echo "DONE: $BUILD/ChoirTune-1.4.apk"
+echo "DONE: $BUILD/ChoirTune-1.5.apk"
 echo "      (also copied to $ROOT/ChoirTune.apk)"

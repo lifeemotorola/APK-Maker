@@ -44,6 +44,12 @@ check(/ACTION_SEND/.test(main) && /shareText/.test(main), 'share via system shar
 check(/MediaStore\.Downloads/.test(main) && /DIRECTORY_DOWNLOADS \+ "\/ChoirTune"/.test(main), 'exports saved to Downloads/ChoirTune (MediaStore)');
 check(/REQUEST_STORAGE_PERMISSION/.test(main), 'legacy storage permission requested before saving on API<=28');
 
+const controller = readRoot('android-choirtune/app/src/main/java/com/choirtune/app/DemucsController.java');
+check(/44100 \* 15 \* 60 \* 4/.test(controller), 'native input limit covers 15-minute PCM, not only 30 seconds');
+check(main.includes('/demucs/analysis.f32') && /demucs\.analysis\(\)/.test(main), 'trusted local mono analysis endpoint');
+check(/ACTION_CREATE_DOCUMENT/.test(main) && /byte\[65536\]/.test(main) && /demucsExport/.test(bridge), 'large WAV export streams through document picker without base64');
+check(/FLAG_KEEP_SCREEN_ON/.test(main) && /keepDemucsAwake/.test(bridge), 'visible screen stays awake during native processing');
+
 check(/loadState/.test(bridge) && /saveState/.test(bridge) && /shareText/.test(bridge) && /saveFile/.test(bridge), 'bridge: loadState/saveState/shareText/saveFile');
 
 for (const id of ['fileInput', 'pickBtn', 'dropZone', 'status', 'results', 'songInfo', 'playTuneBtn', 'playOrigBtn', 'transposeSel', 'saveBtn', 'exportTxtBtn', 'exportMidBtn', 'roll', 'sheetBody', 'library']) {
@@ -61,8 +67,8 @@ check(/roundRect/.test(app) || /fillRect/.test(app), 'piano roll drawn on canvas
 check(/ecj\.jar/.test(build) && /d8/.test(build) && /aapt2/.test(build) && /apksigner/.test(build), 'build.sh runs ecj/d8/aapt2/apksigner');
 check(/melody\.js/.test(build), 'build.sh stages melody.js into the APK');
 check(/check_no_emoji\.py/.test(build) && /test_web\.mjs/.test(build), 'build.sh runs emoji gate + this test');
-check(/--version-code 5/.test(build) && /--version-name 1\.4/.test(build), 'versionCode 5 / versionName 1.4');
-check(/ChoirTune-1\.4\.apk/.test(build), 'artifact name ChoirTune-1.4.apk');
+check(/--version-code 6/.test(build) && /--version-name 1\.5/.test(build), 'versionCode 6 / versionName 1.5');
+check(/ChoirTune-1\.5\.apk/.test(build), 'artifact name ChoirTune-1.5.apk');
 check(existsSync(join(HERE, 'img', 'icon.png')), 'generated icon.png exists');
 check(!EMOJI.test(html + app + melody + css), 'no emoji-range glyphs in web sources');
 

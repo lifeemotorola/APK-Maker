@@ -25,9 +25,12 @@ def run(expect_ok):
 
 
 # Invalid, oversized and silent audio must fail before model inference.
-for content in [b'', b'123', bytes(44100 * 4), bytes(44100 * 31 * 4)]:
+for content in [b'', b'123', bytes(44100 * 4)]:
     PCM.write_bytes(content)
     run(False)
+with PCM.open('wb') as oversized:
+    oversized.truncate((44100 * 900 + 1) * 4)
+run(False)
 PCM.write_bytes(b''.join(struct.pack('<hh',
     int(8000 * math.sin(2 * math.pi * 220 * i / 44100) + 2000 * math.sin(2 * math.pi * 440 * i / 44100)),
     int(8000 * math.sin(2 * math.pi * 220 * i / 44100) + 2000 * math.sin(2 * math.pi * 440 * i / 44100)))
@@ -40,6 +43,7 @@ with wave.open(str(WAV)) as output:
     data = output.readframes(44100)
     assert any(data), 'Expected nonzero vocal estimate on tone input'
     assert data != PCM.read_bytes(), 'Vocal output must not be a passthrough'
+assert Path(str(WAV) + '.analysis.f32').stat().st_size == 11025 * 4
 print(result.stdout)
 print('PASS: real weights, finite stereo WAV, exact duration, non-passthrough output, silent/malformed/oversized rejection')
 print('Host seconds:', round(elapsed, 2), 'Peak child RSS KiB:', resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss)

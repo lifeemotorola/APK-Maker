@@ -21,7 +21,10 @@ def verify(path):
         assert sha.hexdigest() == '72b17c42d308982ddb5069bc3bf48b81a5aac4cb6516e4366c0fa7cef6df0064'
         assert 'MIT License' in apk.read('assets/demucs/THIRD-PARTY-NOTICES.txt').decode()
         assert 'MPL' in apk.read('assets/www/licenses.html').decode()
-        assert 'demucsBegin' in apk.read('assets/www/local.js').decode()
+        local = apk.read('assets/www/local.js').decode()
+        assert 'demucsBegin' in local and 'audio.duration > 900' in local
+        assert '/demucs/analysis.f32' in local and 'N.demucsExport()' in local
+        assert '15 minutes / 250 MB' in apk.read('assets/www/index.html').decode()
         assert 'SATB estimates' in apk.read('assets/www/app.js').decode()
         assert 'synthesized pitch guides' in apk.read('assets/www/index.html').decode()
         elf = apk.read('lib/arm64-v8a/libchoirdemucs.so')

@@ -1,4 +1,4 @@
-# Choir Tune Finder 1.4 - Android APK
+# Choir Tune Finder 1.5 - Android APK
 
 Upload a song to estimate its **main melody and Soprano, Alto, Tenor, and Bass
 pitches** on-device, with an optional, explicitly consented server-assisted
@@ -7,12 +7,12 @@ ARM64 C++ runtime for offline blended-vocal isolation. Offline analysis and the 
 without an account or server.
 
 - Package: `com.choirtune.app`, label **Choir Tune Finder**
-- Version **1.4** / versionCode **5** (updates earlier versions with the same signing key)
+- Version **1.5** / versionCode **6** (updates earlier versions with the same signing key)
 - minSdk 23 / targetSdk 34; a recent Android System WebView is required
-- Artifact: `android-choirtune/app/build/ChoirTune-1.4.apk`
+- Artifact: `android-choirtune/app/build/ChoirTune-1.5.apk`
 - Root download copy: `ChoirTune.apk` (gitignored)
 
-## Bundled offline Demucs (1.4)
+## Bundled offline Demucs (1.5 full-song processing)
 
 The APK includes **htdemucs four-stem f16 weights** (83,994,361 bytes) and a
 C++17/Eigen inference engine, not a model-download button or server dependency.
@@ -21,15 +21,19 @@ Android 6+ devices; no 32-bit ARM or x86 native libraries are included.
 
 1. In **Upload a song**, leave **Isolate blended vocals with bundled Demucs**
    checked (default when the native library loads).
-2. Choose a **0.25-30 second** audio clip, at most 40 MB. Longer clips are
-   rejected, never silently cut. Keep the app open while it processes.
+2. Choose an audio file up to **15 minutes / 250 MB**, including 3-15 minute
+   songs. Short test clips from 0.25 seconds still work; there is no three-minute
+   minimum. Songs over 15 minutes are rejected, never silently cut. Confirm the
+   long-job warning for songs over 30 seconds. Keep the app open and powered;
+   the visible screen stays awake during native processing.
 3. Listen to or export **Demucs blended vocals**, then inspect the estimated
    SATB pitches, synthesized part playback, transpose, MIDI/text and library.
 4. **Cancel offline isolation** stops transfer or requests cooperative native
    cancellation. A current matrix operation may need to finish before memory
    is released. A new job is rejected until the worker has stopped.
-5. Uncheck Demucs to use the existing ordinary estimates for up to five minutes,
-   or use the separate optional server workflow for longer recordings.
+5. Uncheck Demucs for faster ordinary pitch estimates, also up to 15 minutes.
+   The separate optional server still has its own 5-minute / 40 MB limit;
+   it is not automatically used as a fallback.
 
 **Honest output contract:** standard Demucs estimates vocals/drums/instrumental
 bass/other. Only **stem 3, blended vocals**, is passed to the existing SATB
@@ -38,21 +42,44 @@ estimator. Instrumental bass is never used as choir Bass. Four SATB tracks are
 is not a SATB-trained neural model and does not promise all four voices will
 be found correctly. Empty or ambiguous parts remain possible.
 
+**How long songs are bounded:** the web layer resamples at most 30 seconds of
+stereo at a time, transferring small PCM16 chunks to private disk. Native code
+loads the model once per song and processes 20-second cores with up to two
+seconds of surrounding context on each side (at most 24 seconds at once).
+Context is trimmed when writing: every input frame has exactly one output
+frame, including the last partial block. Silent sections keep their timestamps
+and bypass unsafe zero-variance normalization. Entirely silent/DC/phase-cancelled
+songs are rejected. Context reduces but does not eliminate audible seams or
+estimation changes at joins. Output uses fixed gain with PCM16 clipping, not
+per-block volume normalization.
+
+Native code writes the stereo vocal WAV and a quarter-rate mono float analysis
+stream (11025 Hz) sequentially. The web estimator fetches only the mono stream
+(about 40 MB for 15 minutes), not the roughly 159 MB WAV. Vocal playback streams
+from native storage, and WAV export uses Android's document picker with a
+64 KiB copy buffer, not one huge base64 string. Ordinary analysis also avoids
+allocating a full high-rate mono copy. **The original song is still decoded in
+full by WebAudio**, so this is bounded neural inference, not a constant-memory
+end-to-end audio decoder. File format, sample rate, channels, WebView heap and
+Android memory pressure still affect whether a device can complete a long job.
+
 **Memory and time:** approximately 6 GB device RAM is recommended; at least
-2.5 GB currently available RAM and roughly 120 MB free internal storage are
-checked before processing. Devices below about 4 GB physical RAM are refused.
-A one-second synthetic host test peaked around 1.7 GB RSS and took about a
-minute; this is not a phone-speed benchmark. Model segment buffers are large
-regardless of clip length. Long clips can take many minutes, heat the phone,
-consume battery, or still be killed by Android memory pressure. A 20-minute UI
-deadline requests cancellation. Low-memory/allocation errors are shown, not
-silently replaced by ordinary estimates. Native CPU processing is single-job,
-single-threaded Eigen, with no OpenMP/BLAS dependency.
+2.5 GB currently available RAM is checked after decoding. Devices below about
+4 GB physical RAM are refused. Free disk space is checked for the input PCM,
+WAV, mono analysis, model and a safety margin; allow roughly **500 MB internal
+storage for 15 minutes**. A one-second real-model host test uses roughly 1.7 GB
+RSS; it is not a phone-speed benchmark. **Full-song isolation may take hours**,
+heat the phone, consume substantial battery, or be killed by Android. There
+is no longer a whole-job 20-minute cutoff: only 30 minutes with no progress
+requests cancellation, or the user can cancel at any time. No background
+service/resumption is implemented: keep the app visible and powered. Low-memory
+and allocation errors are shown, not silently replaced by ordinary estimates.
+Native CPU inference is single-job, single-threaded Eigen with no OpenMP/BLAS.
 
 **Offline/privacy:** no network request is needed for the model or isolation.
 The verified model is copied from APK assets into app-private files on first
-use and verified by SHA-256 before each run. Input PCM and the one vocal WAV
-live in private cache; input is deleted on completion, and output is deleted
+use and verified by SHA-256 before each run. Input PCM, the vocal WAV and mono
+analysis stream live in private cache; input is deleted on completion, and output is deleted
 on cancellation, replacement or activity destruction. After a crash, Android
 may retain cache until app storage is cleared. Saving notes does not save
 vocal audio; explicitly export the WAV to retain it. App backup is disabled
@@ -157,7 +184,7 @@ harmonic/octave errors; use this mode for individual/dominant notes.
 
 ## Use uploaded-song analysis
 
-1. Choose an audio file, up to **5 minutes / 40 MB**. MP3, WAV, M4A and other
+1. Choose an audio file, up to **15 minutes / 250 MB**. MP3, WAV, M4A and other
    device-supported formats work; codec availability depends on the device.
 2. The app decodes and analyzes the recording locally. Progress updates while
    the analysis yields to the UI; selecting another song supersedes old work.
@@ -287,6 +314,7 @@ export PATH="$HOME/apk-venv/bin:$PATH"
 python android-choirtune/native/fetch.py
 cmake -S android-choirtune/native -B .cache/demucs-native/host -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build .cache/demucs-native/host -j 2
+.cache/demucs-native/host/streaming_test .cache/demucs-native/stream-test
 python android-choirtune/native/test_inference.py
 python android-choirtune/native/verify_apk.py ChoirTune.apk
 node android-choirtune/web/test_local.mjs
@@ -296,10 +324,21 @@ The native smoke test loads all 533 actual checkpoint tensors, performs learned
 inference, checks a non-passthrough stereo 44.1 kHz WAV of the exact duration,
 and rejects malformed/oversized/silent input. Synthetic tones do **not** assess
 choir separation quality. The local JS harness covers PCM stereo interleaving,
-clip limits, memory rejection, polling/errors, cancellation, stale work, WAV
-retrieval and export. App tests verify that the **vocal output**, not original
+15-minute limits, bounded resampling and multi-chunk transfer, memory rejection,
+polling/stall watchdog, cancellation, stale work, mono analysis retrieval and
+native streaming export. App tests verify that the **vocal output**, not original
 PCM, feeds pitch extraction and that native failures never silently fall back.
-These tests do not replace Android WebView/JNI/device integration testing.
+The model-free C++ streaming test processes **3-minute (plus a partial final
+block) and 15-minute files**, verifies every output sample including joins,
+silence and end-of-song, bounds the predictor input, checks progress and
+analysis length, tests cancellation, and rejects input over 15 minutes.
+Its predictor is a simple gain fixture, not learned Demucs. The real-weight
+smoke test separately validates the actual model/engine path on a short input.
+A separate 20.25-second real-weight host run crossed two contextual blocks,
+loaded the model once, preserved WAV/analysis duration, took about 219 seconds
+and peaked around 1.9 GB RSS; that still is not a phone-speed benchmark.
+A 15-minute learned run has NOT been completed on a phone or host. These tests
+do not replace Android WebView/JNI/device integration testing.
 
 This sandbox's ARM64 APK was built with the NDK r22 mirror at
 `denoland/android_ndk@401019bf85744311b26c88ced255cd53401af8b7` because official
@@ -310,6 +349,7 @@ alignment is checked in either case, not inferred from the NDK version.
 Before claiming phone readiness, install on a physical ARM64 phone, turn off
 Wi-Fi/mobile data, run a short licensed choir-with-accompaniment clip, listen
 to the blended vocals, verify SATB labels/exports, cancel mid-run and retry,
-exercise background/rotation/destruction, and check low-memory/storage errors.
+exercise background/rotation/destruction, then test complete 3-15 minute songs
+and streamed WAV export, and check low-memory/storage errors.
 No physical-device execution or real-choir quality benchmark has been completed
 in this environment. The optional server tests remain model-free as before.
